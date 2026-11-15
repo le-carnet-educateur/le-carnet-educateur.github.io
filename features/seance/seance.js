@@ -59,7 +59,7 @@ function ajoutChoisir(code) {
         localStorage.removeItem(seKey());
         localStorage.removeItem(seMetaKey());
       } catch (e) {}
-      SMETA = { titre: "", public: "" };
+      SMETA = { titre: "", public: "", schemaPlace: "non" };
       SE = null;
       seLoad();
       addSel(code);

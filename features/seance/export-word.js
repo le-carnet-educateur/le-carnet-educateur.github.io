@@ -14,7 +14,7 @@ function buildSeanceDoc(logo) {
   if (typeof isCreps === "function" && isCreps()) return buildCrepsDoc(logo);
   const D = window.docx;
   const imgPar = v => {
-    const u = v && v.schOn && (v.img || v.imgJeu);
+    const u = v && v.schOn && schemaPlace() !== "page" && (v.img || v.imgJeu);
     const r = u && typeof crepsImgRun === "function" && crepsImgRun(D, u, 420, 150);
     return r ? [new D.Paragraph({ children: [r], spacing: { after: 60 } })] : [];
   };
@@ -274,7 +274,7 @@ function buildSeanceDoc(logo) {
           hd("EXERCICE / DÉFI / JEU", "E3EEF8", "2B5A9E", T[0]),
           hd("PLUS DIFFICILE (+)", "B2543A", "FBE6E4", T[1]),
           hd("PLUS FACILE (–)", "2E6F3E", "E6F2E8", T[2]),
-          hd("CRITÈRES DE RÉUSSITE", "B2263A", "FBE6E4", T[3]),
+          hd("CRITÈRES DE RÉUSSITE", "5B4B9A", "ECE8F6", T[3]),
         ],
         true
       ),
@@ -323,7 +323,7 @@ function buildSeanceDoc(logo) {
           ),
           cell([P([R("")])], { w: T[1], f: "FDF3F2" }),
           cell([P([R("")])], { w: T[2], f: "F1F8F2" }),
-          cell([P([R("")])], { w: T[3], f: "FDF3F2" }),
+          cell([P([R("")])], { w: T[3], f: "F6F4FB" }),
         ])
       );
       s.views.forEach(x => {
@@ -381,15 +381,15 @@ function buildSeanceDoc(logo) {
             cell(
               cr.length
                 ? cr.map(l =>
-                    P([R("✓ ", { c: "2E6F3E", b: true }), R(l, { size: 17 })], { af: 30 })
+                    P([R("✓ ", { c: "5B4B9A", b: true }), R(l, { size: 17 })], { af: 30 })
                   )
                 : [
-                    P([R("✓ ", { c: "2E6F3E", b: true }), ph("[critère observable]")], { af: 60 }),
-                    P([R("✓ ", { c: "2E6F3E", b: true }), ph("[critère observable]")]),
+                    P([R("✓ ", { c: "5B4B9A", b: true }), ph("[critère observable]")], { af: 60 }),
+                    P([R("✓ ", { c: "5B4B9A", b: true }), ph("[critère observable]")]),
                   ],
               {
                 w: T[3],
-                f: "FDF3F2",
+                f: "F6F4FB",
                 m: { top: 60, bottom: 60, left: 120, right: 100 },
                 va: VerticalAlign.TOP,
               }
@@ -444,6 +444,21 @@ function buildSeanceDoc(logo) {
       F
     )
   );
+  /* schémas sur une page à part (réglage « Page à part ») */
+  if (schemaPlace() === "page") {
+    const LS = [...M.echSubs, ...M.subs]
+      .flatMap(s2 => s2.views)
+      .map(x => ({ x, r: x.v && x.v.schOn && (x.v.img || x.v.imgJeu) && crepsImgRun(D, x.v.img || x.v.imgJeu, 480, 240) }))
+      .filter(o => o.r);
+    LS.forEach((o, i) => {
+      if (i === 0)
+        out.push(
+          new Paragraph({ pageBreakBefore: true, alignment: AlignmentType.CENTER, spacing: { before: 0, after: 80 }, children: [R("Schémas", { b: true, size: 24 })] })
+        );
+      out.push(new Paragraph({ spacing: { before: 120, after: 40 }, children: [R(o.x.name, { b: true, size: 18 })] }));
+      out.push(new Paragraph({ spacing: { after: 60 }, children: [o.r] }));
+    });
+  }
   return new Document({
     creator: "Base de données des jeux d'escalade",
     title: S.titre || "Ma séance",

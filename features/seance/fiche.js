@@ -34,8 +34,15 @@ function subLabel(s, k, def) {
   return n.length ? (t ? t + " — " : "") + n.join(", ") : t;
 }
 /* schéma de cet exercice dans la fiche : choix propre à l'exercice (it.schOn), sinon réglage général de la séance */
-const itemSchOn = it =>
-  typeof it.schOn === "boolean" ? it.schOn : typeof isCreps === "function" && isCreps() ? true : !!(SMETA && SMETA.schemaStd);
+/* où vont les schémas dans la fiche : "non" (aucun) · "sous" (sous chaque exercice) · "page" (page à part).
+   Les anciennes séances n'ont pas ce réglage : on le déduit de l'ancien (schemaMode / schemaStd). */
+function schemaPlace() {
+  const m = SMETA && SMETA.schemaPlace;
+  if (m === "non" || m === "sous" || m === "page") return m;
+  if (typeof isCreps === "function" && isCreps()) return SMETA && SMETA.schemaMode === "sous" ? "sous" : "page";
+  return SMETA && SMETA.schemaStd ? "sous" : "non";
+}
+const itemSchOn = it => (typeof it.schOn === "boolean" ? it.schOn : schemaPlace() !== "non");
 /* durée fixe du retour au calme, comptée pour tous les groupes */
 const RC_MIN = 5;
 /* vue normalisée d'un jeu (bibliothèque ou libre) */
@@ -236,7 +243,7 @@ function sheetHTML() {
   /* échauffement : une sous-section par jeu ou exercice libre, avec ses groupes et sa durée (fond vert) */
   const echItem = x => {
     const v = x.v;
-    const img = v.schOn && (v.img || v.imgJeu) ? `<div style="margin:4px 0 0 12px"><img src="${esc(v.img || v.imgJeu)}" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:200px;object-fit:contain" onerror="this.remove()"></div>` : "";
+    const img = v.schOn && schemaPlace() !== "page" && (v.img || v.imgJeu) ? `<div style="margin:4px 0 0 12px"><img src="${esc(v.img || v.imgJeu)}" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:200px;object-fit:contain" onerror="this.remove()"></div>` : "";
     const tete = x.same
       ? ""
       : `<b style="color:${C1}">▸</b> ${lk(v, `<b>${esc(x.name)}</b>`)}${v.code ? ` <span style="color:#6B7280;font-size:11px">(${esc(v.code)})</span>` : ""}`;
@@ -282,17 +289,17 @@ function sheetHTML() {
       ? `<div style="margin:0 0 3px">${x.steps.map(l => `<div><b style="color:${C1}">▸</b> ${esc(l)}</div>`).join("")}</div>`
       : `<b style="color:${C1}">▸</b> ${lk(v, `<b>${n}. ${nm}</b>`)}${v.code ? ` <span style="color:#6B7280;font-size:11px">(${esc(v.code)})</span>` : ""}<div style="margin:2px 0;white-space:pre-line">${esc(v.desc)}</div>`;
     return (
-      `<div style="padding:6px 10px;border-bottom:1px solid #D5DAE5;font-size:12px">${first}<div style="color:#6B7280;font-size:11px;font-style:italic">${x.same && v.code ? lk(v, `Fiche ${esc(v.code)} ↗`) + " · " : ""}${esc(v.meta)}</div>${avecSchema && v.schOn && (v.img || v.imgJeu) ? `<div style="margin-top:6px;text-align:center"><img src="${esc(v.img || v.imgJeu)}" onerror="this.remove()" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:200px;object-fit:contain"></div>` : ""}</div>` +
+      `<div style="padding:6px 10px;border-bottom:1px solid #D5DAE5;font-size:12px">${first}<div style="color:#6B7280;font-size:11px;font-style:italic">${x.same && v.code ? lk(v, `Fiche ${esc(v.code)} ↗`) + " · " : ""}${esc(v.meta)}</div>${avecSchema && v.schOn && schemaPlace() !== "page" && (v.img || v.imgJeu) ? `<div style="margin-top:6px;text-align:center"><img src="${esc(v.img || v.imgJeu)}" onerror="this.remove()" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:200px;object-fit:contain"></div>` : ""}</div>` +
       (schema ? "" : col(v.plus, C2, "+", "#FDF3F2")) +
       (schema ? "" : col(v.moins, "#2E6F3E", "–", "#F1F8F2")) +
       (schema
         ? `<div style="background:#fff;padding:6px;border-bottom:1px solid #D5DAE5;text-align:center">${v.img ? `<img src="${esc(v.img)}" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:260px;object-fit:contain;cursor:pointer" ${v.code ? `data-jeu="${esc(v.code)}"` : ""} onerror="this.remove()">` : ph("—")}</div>`
-        : `<div style="background:#FDF3F2;padding:6px 10px;border-bottom:1px solid #D5DAE5;font-size:12px">${cr.length ? cr.map(l => `<div><b style="color:#2E6F3E">✓</b> ${esc(l)}</div>`).join("") : ph("✓ [critère observable]") + "<br>" + ph("✓ [critère observable]")}</div>`)
+        : `<div style="background:#F6F4FB;padding:6px 10px;border-bottom:1px solid #D5DAE5;font-size:12px">${cr.length ? cr.map(l => `<div><b style="color:#5B4B9A">✓</b> ${esc(l)}</div>`).join("") : ph("✓ [critère observable]") + "<br>" + ph("✓ [critère observable]")}</div>`)
     );
   };
   if (M.subs.length) {
     let n = 0;
-    h += `<div style="display:grid;grid-template-columns:${schema ? "1.6fr 1.4fr" : "3.2fr 1.2fr 1.2fr 1.3fr"};margin-top:8px"><div style="background:#2B5A9E;color:#E3EEF8;font-weight:700;font-size:11px;padding:5px 10px">EXERCICE / DÉFI / JEU</div>${schema ? "" : th("PLUS DIFFICILE (+)", "#B2543A", "#FBE6E4")}${schema ? "" : th("PLUS FACILE (–)", "#2E6F3E", "#E6F2E8")}${schema ? th("SCHÉMA", "#2B5A9E", "#E3EEF8") : th("CRITÈRES DE RÉUSSITE", "#B2263A", "#FBE6E4")}`;
+    h += `<div style="display:grid;grid-template-columns:${schema ? "1.6fr 1.4fr" : "3.2fr 1.2fr 1.2fr 1.3fr"};margin-top:8px"><div style="background:#2B5A9E;color:#E3EEF8;font-weight:700;font-size:11px;padding:5px 10px">EXERCICE / DÉFI / JEU</div>${schema ? "" : th("PLUS DIFFICILE (+)", "#B2543A", "#FBE6E4")}${schema ? "" : th("PLUS FACILE (–)", "#2E6F3E", "#E6F2E8")}${schema ? th("SCHÉMA", "#2B5A9E", "#E3EEF8") : th("CRITÈRES DE RÉUSSITE", "#5B4B9A", "#ECE8F6")}`;
     M.subs.forEach((s, k) => {
       const who =
         s.idx.length < M.G.length
@@ -320,5 +327,16 @@ function sheetHTML() {
   const fb = (t, b, bg = "#F2F3F5") =>
     `<div style="background:${bg};padding:8px 12px;font-size:12px;border-left:3px solid #fff"><b style="font-size:11px">${t}</b><br>${b}</div>`;
   h += `<div style="display:grid;grid-template-columns:1.6fr 1.3fr 1.1fr 1.4fr;margin-top:12px">${fb("OBJECTIF COLLECTIF", S.objCol ? esc(S.objCol).replace(/\n/g, "<br>") : ph("[ce que le groupe doit réussir]"))}${fb("MATÉRIEL", M.mats.length ? M.mats.map(m => esc(capf(m.t))).join(" · ") : "Aucun matériel particulier.")}${fb("SÉCURITÉ", S.secu ? esc(S.secu).replace(/\n/g, "<br>") : ph("[rappels : hauteur, tapis, pas de saut…]"))}${fb("RETOUR AU CALME · " + RC_MIN + " min", M.G.map(g => `<b style="color:${g.c}">${esc(g.nom)} :</b> ${v(g.rc, "[étirements, bilan…]")}`).join("<br>"))}</div></div>`;
+  /* schémas sur une page à part (réglage « Page à part ») */
+  if (avecSchema && schemaPlace() === "page") {
+    const LS = [...M.echSubs, ...M.subs]
+      .flatMap(s2 => s2.views)
+      .filter(x => x.v && x.v.schOn && (x.v.img || x.v.imgJeu));
+    if (LS.length)
+      h += `<div style="page-break-before:always;break-before:page;margin-top:14px"><div style="background:#2B5A9E;color:#fff;text-align:center;font-weight:700;padding:6px">Schémas</div><div style="display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #D5DAE5">${LS.map(
+        x =>
+          `<div class="sch" style="border:1px solid #D5DAE5"><div style="background:#F4F6FA;font-size:11px;padding:3px 8px">${esc(x.name)}</div><div style="min-height:150px;display:flex;align-items:center;justify-content:center"><img src="${esc(x.v.img || x.v.imgJeu)}" alt="Schéma : ${esc(x.name)}" onerror="this.closest('.sch').remove()" style="max-width:100%;max-height:230px;object-fit:contain"></div></div>`
+      ).join("")}</div></div>`;
+  }
   return h + bilanFicheHTML();
 }

@@ -270,7 +270,7 @@ const capf = t => t.charAt(0).toUpperCase() + t.slice(1);
 
 /* changement de discipline : on recharge le brouillon de séance de la discipline choisie */
 function seSwitch() {
-  SMETA = { titre: "", public: "" };
+  SMETA = { titre: "", public: "", schemaPlace: "non" };
   try {
     SMETA = Object.assign(SMETA, JSON.parse(localStorage.getItem(seMetaKey()) || "{}"));
   } catch (e) {}

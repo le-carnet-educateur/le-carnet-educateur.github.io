@@ -305,7 +305,7 @@ function terrainDessin() {
   } else {
     corps = `${
       c.dur
-        ? `<div class="trt"><div id="trT" class="${TR.restant <= 0 ? "fin" : ""}">${mmss(TR.restant)}</div><div class="trtb"><a data-tr="m1">−1</a><a data-tr="play" class="big">${TR.tourne ? "⏸" : "▶"}</a><a data-tr="p1">+1</a><a data-tr="rst">↺</a></div></div>`
+        ? `<div class="trt"><div id="trT" class="${TR.restant <= 0 ? "fin" : ""}">${mmss(TR.restant)}</div><div class="trtb"><a data-tr="m1">−1</a><a data-tr="play" class="big">${TR.tourne ? "⏸" : "▶"}</a><a data-tr="p1">+1</a><a data-tr="rst">↺</a></div></div>${TR.tourne ? '<div class="trnote">⏱ Le chrono tourne. Il sonne seulement si l\'écran reste allumé : ne verrouille pas ton téléphone.</div>' : ""}`
         : ""
     }${c.img ? `<div style="margin:8px 0"><a class="trbtn" data-tr="img" style="background:#2B5A9E">🖼 Voir le schéma en grand</a></div>` : ""}${c.dos ? `<div class="trs"><b>Dosage :</b> ${esc(c.dos)}</div>` : ""}${c.mat ? `<div class="trs"><b>Matériel :</b> ${esc(c.mat)}</div>` : ""}${puces(c.steps)}${c.crit && c.crit.length ? `<div class="trs"><b>✔ Critères de réussite</b>${puces(c.crit)}</div>` : ""}${c.moins ? `<div class="trs trv" style="background:#F1F8F2;color:#1F4F2E"><b style="color:#2E6F3E">↓ Plus facile :</b> ${esc(c.moins)}</div>` : ""}${c.plus ? `<div class="trs trv" style="background:#FDF3F2;color:#5A2A1E"><b style="color:#C2571A">↑ Plus difficile :</b> ${esc(c.plus)}</div>` : ""}`;
   }

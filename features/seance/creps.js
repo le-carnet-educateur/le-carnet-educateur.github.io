@@ -27,7 +27,8 @@ const CREPS_COLS = [
 ];
 const isCreps = () => SMETA && SMETA.modele === "creps";
 /* schémas : « page » = sur une page à part (défaut) ; « sous » = sous chaque situation */
-const schemaSous = () => SMETA && SMETA.schemaMode === "sous";
+/* « Page à part » : tous les schémas sur une page ; sinon (sous chaque situation, ou cochés un par un) : sous la situation */
+const schemaSous = () => schemaPlace() !== "page";
 /* fiche du jeu de la bibliothèque (ou null pour un exercice libre) */
 const crepsJeu = it => (it.t === "lib" ? DATA.find(x => key(x) === it.k) : null);
 /* lignes de la table : échauffement puis chaque exercice = une situation */
@@ -94,7 +95,11 @@ const crepsImg = g =>
       ? "schemas/" + g.Code + ".webp"
       : driveImg(g["Schéma (lien)"] || g["Schéma"]) || "";
 /* image de la situation : le schéma dessiné pour elle (it.sch) sinon celui du jeu */
-const crepsImgRow = r => r.src && r.src.schOn === false ? "" : (r.src && r.src.sch && edSvgUrl(r.src.sch)) || crepsImg(r.g);
+const crepsImgRow = r => {
+  if (!r.src) return "";
+  const on = typeof r.src.schOn === "boolean" ? r.src.schOn : schemaPlace() !== "non";
+  return on ? (r.src.sch && edSvgUrl(r.src.sch)) || crepsImg(r.g) : "";
+};
 function crepsHTML() {
   const M = seModel(),
     S = SMETA,
@@ -149,13 +154,13 @@ function crepsHTML() {
 }
 /* ---- formulaire : sélecteur de modèle + champs propres au modèle CREPS ---- */
 function crepsChoixHTML() {
-  const b = (m, l) =>
-    `<button data-sa="modele" data-m="${m}" class="${(SMETA.modele === "creps" ? "creps" : "std") === m ? "on" : ""}">${l}</button>`;
-  return `<div class="tools" style="margin:8px 0 4px"><span style="font-weight:700">Modèle de fiche :</span><div class="seg">${b("std", "Fiche simplifiée")}${b("creps", "Fiche complète")}</div><span style="color:#6B7280;font-size:13px">Même séance, autre présentation (tableau à 8 colonnes).</span></div>${
-    isCreps()
-      ? `<div class="tools" style="margin:0 0 4px"><span style="font-weight:700">Schémas :</span><div class="seg"><button data-sa="schemode" data-m="page" class="${schemaSous() ? "" : "on"}">Sur une page à part</button><button data-sa="schemode" data-m="sous" class="${schemaSous() ? "on" : ""}">Sous chaque situation</button></div></div>`
-      : `<div class="tools" style="margin:0 0 4px"><span style="font-weight:700">Schémas :</span><div class="seg"><button data-sa="schestd" class="${schemaStd() ? "on" : ""}">${schemaStd() ? "✓ Schémas dans la fiche (tous)" : "Ajouter les schémas de tous les jeux"}</button></div><span style="color:#6B7280;font-size:13px">Ou choisis exercice par exercice (case dans chaque exercice).</span></div>`
-  }`;
+  const cur = isCreps() ? "creps" : "std",
+    pl = schemaPlace();
+  const o = (v, l, c) => `<option value="${v}"${c === v ? " selected" : ""}>${l}</option>`;
+  return `<div class="sfich noprint"><label class="sfl">Modèle<select class="ssel" data-ssel="modele">${o("std", "Simplifiée", cur)}${o("creps", "Complète", cur)}</select></label><label class="sfl">Schémas<select class="ssel" data-ssel="schema">${o("non", "Sans schémas", pl)}${o("sous", "Sous chaque exercice", pl)}${o("page", "Page à part", pl)}</select></label><button type="button" class="sfq" data-sa="aidefiche" title="Quelle différence ?" aria-label="Aide : modèle de fiche et schémas">?</button></div>`;
+}
+function aideFicheHTML() {
+  return `<p><b>Modèle</b></p><p><b>Simplifiée</b> : un déroulé court, lisible d'un coup d'œil : durées par groupe, exercices, variantes et critères de réussite.<br><b>Complète</b> : un tableau à 8 colonnes (objectif, but, comportements attendus, critères, variantes, organisation…), pour un dossier ou une évaluation.</p><p><b>Schémas</b></p><p><b>Sans schémas</b> : aucune image dans la fiche.<br><b>Sous chaque exercice</b> : le schéma du jeu s'affiche sous l'exercice.<br><b>Page à part</b> : tous les schémas sont regroupés sur une page à la fin.</p><p style="color:#6B7280;font-size:13px">Tu peux aussi cocher ou décocher « Afficher le schéma dans la fiche » exercice par exercice : ce choix passe avant le réglage général.</p>`;
 }
 /* champs propres au modèle CREPS d'une situation (r : ligne de crepsLignes) — placés dans le cadre de l'exercice lui-même */
 function crepsChampsHTML(r) {

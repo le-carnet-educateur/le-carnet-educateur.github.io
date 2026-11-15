@@ -322,7 +322,7 @@ function seanceBind() {
       ) {
         SE = seNew();
         seSave();
-        SMETA = {};
+        SMETA = { schemaPlace: "non" };
         try {
           localStorage.removeItem(seMetaKey());
         } catch (e) {}
@@ -385,7 +385,10 @@ document.addEventListener("click", e => {
     if (j >= 0 && j < arr.length) [arr[i], arr[j]] = [arr[j], arr[i]];
   };
   let re = true;
-  if (a === "modele") {
+  if (a === "aidefiche") {
+    modal("Modèle de fiche et schémas", aideFicheHTML(), 520);
+    re = false;
+  } else if (a === "modele") {
     SMETA.modele = b.dataset.m === "creps" ? "creps" : "std";
     saveMeta();
   } else if (a === "schestd") {
@@ -468,6 +471,21 @@ document.addEventListener("click", e => {
     buildNav();
     render();
   }
+});
+
+/* listes déroulantes « Modèle » et « Schémas » de l'onglet Informations */
+document.addEventListener("change", e => {
+  const s = e.target.closest && e.target.closest("[data-ssel]");
+  if (!s || (VIEW !== "seance" && !SEPOP)) return;
+  if (s.dataset.ssel === "modele") SMETA.modele = s.value === "creps" ? "creps" : "std";
+  else {
+    SMETA.schemaPlace = ["non", "sous", "page"].includes(s.value) ? s.value : "non";
+    seToutesSubs().forEach(x => x.items.forEach(i => delete i.schOn));
+  }
+  saveMeta();
+  seSave();
+  buildNav();
+  render();
 });
 
 /* imprime uniquement la fiche de séance (A4 paysage) */

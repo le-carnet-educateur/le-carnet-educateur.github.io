@@ -13,7 +13,7 @@ const saveSel = () => {
 /* le brouillon de séance est séparé par discipline (escalade / prépa physique) */
 const seKey = () => "maSeance2" + (DISC === "prepa" ? "_prepa" : "");
 const seMetaKey = () => "maSeanceMeta" + (DISC === "prepa" ? "_prepa" : "");
-let SMETA = { titre: "", public: "" };
+let SMETA = { titre: "", public: "", schemaPlace: "non" };
 try {
   SMETA = Object.assign(SMETA, JSON.parse(localStorage.getItem(seMetaKey()) || "{}"));
 } catch (e) {}
