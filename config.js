@@ -9,7 +9,7 @@ window.SITE_CONFIG = {
    // Lien du formulaire Google « Retour terrain sur un jeu »
   RETOUR_FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSfZ1VoBuK9Z4B7UZs3UaV8b6YXSK9r0Xb2s9NfXuc0sGYYqgA/viewform",
   // Adresse CSV publiée de l'onglet des retours terrain
-  RETOURS_CSV_URL: "https://docs.google.com/forms/d/1qIJ0b1RUGx2FrTII8Fj23eOcZSPpPgc29hSXVzccQ0k/edit",
+  RETOURS_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQU8IKWzcnRRfsM5uF912AZcTaEY2ifiTBhM8m0dvzn61eOv4NO1ITMw8EbMTJp-UHoKFW3BXccVH_T/pub?gid=845156928&single=true&output=csv",
   // Lien du modèle « Fiche de séance » (Google Docs)
   TEMPLATE_SEANCE_URL: "https://docs.google.com/document/d/1WYO8XRIGlURyQb3O30aNZdbvGOwT5fCT/edit",
   // Lien du modèle « Cycle de formation » (Google Docs)
