@@ -2,6 +2,7 @@
 const CONFIG = Object.assign(
   {
     SHEET_CSV_URL: "",
+    PREPA_CSV_URL: "",
     FORM_URL: "",
     RETOUR_FORM_URL: "",
     RETOURS_CSV_URL: "",

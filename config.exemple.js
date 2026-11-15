@@ -3,6 +3,8 @@
 window.SITE_CONFIG = {
   // Adresse CSV publiée de la feuille Google (Fichier > Partager > Publier sur le Web > CSV)
   SHEET_CSV_URL: "",
+  // Adresse CSV publiée de l'onglet « Prépa » (facultatif : vide = les jeux de prépa restent lus dans l'onglet des jeux)
+  PREPA_CSV_URL: "",
   // Lien du formulaire Google « Proposer un jeu »
   FORM_URL: "",
   // Lien du formulaire Google « Retour terrain sur un jeu »

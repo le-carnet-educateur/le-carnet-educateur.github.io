@@ -37,9 +37,21 @@ async function loadSheet() {
   try {
     const r = await fetch(CONFIG.SHEET_CSV_URL, { cache: "no-store" });
     if (!r.ok) throw 0;
-    const rows = parseCSV(await r.text())
+    let rows = parseCSV(await r.text())
       .filter(pubOK)
       .filter(g => g.Titre);
+    /* onglet « Prépa » (facultatif) : si son chargement échoue, les jeux d'escalade s'affichent quand même */
+    if (CONFIG.PREPA_CSV_URL) {
+      try {
+        const rp = await fetch(CONFIG.PREPA_CSV_URL, { cache: "no-store" });
+        if (rp.ok)
+          rows = rows.concat(
+            parseCSV(await rp.text())
+              .filter(pubOK)
+              .filter(g => g.Titre)
+          );
+      } catch (e) {}
+    }
     if (rows.length) {
       CODES_DOUBLONS = codesEnDouble(rows);
       DATA = avecPrepa(rows);

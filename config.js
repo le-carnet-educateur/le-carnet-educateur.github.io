@@ -3,6 +3,7 @@
 window.SITE_CONFIG = {
   // Adresse CSV publiée de la feuille Google (Fichier > Partager > Publier sur le Web > CSV)
   SHEET_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQU8IKWzcnRRfsM5uF912AZcTaEY2ifiTBhM8m0dvzn61eOv4NO1ITMw8EbMTJp-UHoKFW3BXccVH_T/pub?gid=184470260&single=true&output=csv",
+  PREPA_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQU8IKWzcnRRfsM5uF912AZcTaEY2ifiTBhM8m0dvzn61eOv4NO1ITMw8EbMTJp-UHoKFW3BXccVH_T/pub?gid=582998912&single=true&output=csv",
   // Lien du formulaire Google « Proposer un jeu »
   FORM_URL: "https://docs.google.com/forms/d/e/1FAIpQLSeokGQtbVpxUZbj3x1WuiJpjp2HQ_xCuHugtjK_CQ35gpcQmg/viewform",
    // Lien du formulaire Google « Retour terrain sur un jeu »
