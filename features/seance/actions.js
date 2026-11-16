@@ -419,6 +419,7 @@ document.addEventListener("click", e => {
   else if (a === "addsub")
     SE.subs.push({ id: SEUID++, titre: "", gs: null, d: SMETA.groups.map(() => 10), items: [] });
   else if (a === "addsolofree") {
+    const ech = b.dataset.ech === "1";
     const so = {
       id: SEUID++,
       solo: true,
@@ -427,8 +428,8 @@ document.addEventListener("click", e => {
       d: SMETA.groups.map(() => 10),
       items: [{ id: SEUID++, t: "free", nom: "", titre: "", desc: "", part: "", mat: "", plus: "", moins: "", crit: "" }],
     };
-    seVideInitial();
-    SE.subs.push(so);
+    seVideInitial(ech);
+    (ech ? SE.ech.subs : SE.subs).push(so);
   } else if (a === "tosolo") {
     const t = seSubFind(sid);
     if (t && t.items.length === 1) {
@@ -630,3 +631,24 @@ document.addEventListener("drop", e => {
   RG_ID = 0;
 });
 document.addEventListener("dragend", () => (RG_ID = 0));
+
+/* Clic sur le code / nom d'un jeu dans le formulaire : fiche détail en lecture seule (sans quitter la séance) */
+function jeuApercuHTML(g) {
+  const f = (l, v) => (v ? `<div class="fact"><b>${l}</b>${esc(v)}</div>` : "");
+  return (
+    `<p style="margin:0 0 8px">${boldTitles(g.Principe || "")}</p>` +
+    `<div class="facts">${f("PARTICIPANTS", g.Participants)}${f("MATÉRIEL", g["Matériel"])}${f("ESPACE", g.Espace)}${f("DURÉE", g["Durée"])}${f("INTENSITÉ", g["Intensité"])}</div>` +
+    fichePleine(g) +
+    (g["Variantes"] ? `<div class="tip" style="margin-bottom:10px"><b>VARIANTES</b><br>${esc(g["Variantes"]).replace(/\n/g, "<br>")}</div>` : "") +
+    (g.Conseil ? `<div class="tip"><b>CONSEIL</b> ${esc(g.Conseil)}</div>` : "")
+  );
+}
+registerClick(e => {
+  const b = e.target.closest("[data-jv]");
+  if (!b) return;
+  e.preventDefault();
+  const g = DATA.find(x => key(x) === b.dataset.jv);
+  if (!g) return true;
+  modal(`<span style="color:${famOf(g).d}">${esc(g.Code || "★")}</span> · ${esc(g.Titre)}`, jeuApercuHTML(g), 640);
+  return true;
+});

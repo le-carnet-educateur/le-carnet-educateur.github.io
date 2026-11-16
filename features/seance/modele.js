@@ -138,19 +138,21 @@ const seSave = () => {
 const selCount = () => (SE && Array.isArray(SE.subs) ? SE.subs.reduce((a, s) => a + (s && Array.isArray(s.items) ? s.items.length : 0), 0) : 0);
 const seHas = c => seToutesSubs().some(s => s.items.some(i => i.t === "lib" && i.k === c));
 /* retire le bloc vide que contient une séance toute neuve, avant d'y ajouter un exercice seul */
-function seVideInitial() {
-  if (SE.subs.length === 1 && !SE.subs[0].solo && !SE.subs[0].titre && !SE.subs[0].items.length) SE.subs = [];
+function seVideInitial(ech) {
+  const L = ech ? SE.ech.subs : SE.subs;
+  if (L.length === 1 && !L[0].solo && !L[0].titre && !L[0].items.length) L.length = 0;
 }
-/* subId = un bloc existant ; sinon (0) : l'exercice est ajouté seul (nouvelle ligne de la fiche) */
+/* subId = un bloc existant ; 0 : exercice seul dans le corps de séance ; -1 : exercice seul dans l'échauffement */
 function seAdd(c, subId) {
   const g = DATA.find(x => key(x) === c);
   if (!g || seHas(c)) return;
   let s = seSubFind(subId);
   if (s && s.solo) s = null;
   if (!s) {
-    seVideInitial();
+    const ech = +subId === -1;
+    seVideInitial(ech);
     s = { id: SEUID++, solo: true, titre: "", gs: null, d: (SMETA.groups || [1, 2]).map(() => 10), items: [] };
-    SE.subs.push(s);
+    (ech ? SE.ech.subs : SE.subs).push(s);
   }
   s.items.push({ id: SEUID++, t: "lib", k: c, crit: critDefaut(c) });
   seSave();

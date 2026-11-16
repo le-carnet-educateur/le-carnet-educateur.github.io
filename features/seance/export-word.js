@@ -215,9 +215,9 @@ function buildSeanceDoc(logo) {
         P(
           [
             ...runs,
-            R(subLabel(s, k, "") || "Échauffement", { b: true, c: "2E6F3E", size: 17 }),
+            R(echLabel(s, k) || "Échauffement", { b: true, c: uniteCol(s).wf, size: 17 }),
             ...(s.idx.length < M.G.length
-              ? [R("  · " + nomsGroupes(M, s.idx) + " seulement", { c: "2E6F3E", size: 16 })]
+              ? [R("  · " + nomsGroupes(M, s.idx) + " seulement", { c: uniteCol(s).wf, size: 16 })]
               : []),
           ],
           { af: 20 }

@@ -36,7 +36,7 @@ function rxOuvrir(subId) {
   RX.sub = subId;
   RX.sel = "";
   /* échauffement : l'objectif « Échauffement » est présélectionné */
-  if (seEchSubs().some(x => x.id === subId)) GLF.obj = "Échauffement";
+  if (subId === -1 || seEchSubs().some(x => x.id === subId)) GLF.obj = "Échauffement";
   else if (GLF.obj === "Échauffement") GLF.obj = "";
   modal(
     "🔍 Chercher un exercice",

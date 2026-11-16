@@ -39,6 +39,8 @@ function unitLabel(s, k) {
   const one = s.views && s.views.length === 1 ? s.views[0].name : "";
   return s.titre || one || "Bloc " + (k + 1);
 }
+/* intitulé d'une étape de l'échauffement : le nom de l'exercice (exercice seul) ou le titre / les jeux du bloc */
+const echLabel = (s, k) => (s.solo ? unitLabel(s, k) : subLabel(s, k, ""));
 /* couleurs du bandeau : exercice seul = bleu-vert, bloc = violet */
 const uniteCol = s => (s.solo ? { bg: "#D5ECF5", fg: "#1B6A8A", w: "D5ECF5", wf: "1B6A8A" } : { bg: "#ECE7F8", fg: "#5B4BA8", w: "ECE7F8", wf: "5B4BA8" });
 /* schéma de cet exercice dans la fiche : choix propre à l'exercice (it.schOn), sinon réglage général de la séance */
@@ -147,6 +149,7 @@ function seModel() {
     });
   });
   const echSubs = mapSubs(seEchSubs());
+  echSubs.forEach(s => s.solo && s.views.forEach(x => (x.same = true)));
   const echViews = echSubs.flatMap(s => s.views);
   const mats = {};
   subs
@@ -279,12 +282,13 @@ function sheetHTML() {
         s.idx.length < M.G.length
           ? ` <span style="font-weight:400">· ${esc(nomsGroupes(M, s.idx))} seulement</span>`
           : "";
-      h += `<div style="background:#D3ECEA;padding:4px 10px;font-size:12px;font-weight:700;color:#1D6A66;margin-top:2px">${tgs(M, s.d, s.idx)
+      const uc = uniteCol(s);
+      h += `<div style="background:${uc.bg};padding:4px 10px;font-size:12px;font-weight:700;color:${uc.fg};margin-top:2px">${tgs(M, s.d, s.idx)
         .map(
           x =>
             `<span style="display:inline-block;background:#fff;color:${x.c};border:1px solid ${x.c};padding:0 6px;margin-right:4px;min-width:26px;text-align:center">${x.t}</span>`
         )
-        .join("")} &nbsp;${esc(subLabel(s, k, "") || "Échauffement")}${who}</div><div style="padding:4px 10px;font-size:12px;background:#fff">${s.views.map(echItem).join("") || `<div>${ph("▸ [Ajouter un jeu ou un exercice]")}</div>`}</div>`;
+        .join("")} &nbsp;${esc(echLabel(s, k) || "Échauffement")}${who}</div><div style="padding:4px 10px;font-size:12px;background:#fff">${s.views.map(echItem).join("") || `<div>${ph("▸ [Ajouter un jeu ou un exercice]")}</div>`}</div>`;
     });
   }
   h += band(tgs(M, M.c, M.all), "CORPS DE SÉANCE", "#E3EEF8", "#2B5A9E");

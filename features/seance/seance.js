@@ -25,8 +25,8 @@ function ajoutChoisir(code) {
     return `<select id="ajSub" style="width:100%;padding:7px">${lib}</select>`;
   };
   const optsDraft = () =>
-    seEchSubs()
-      .map((s, k) => `<option value="${s.id}" ${echauf && k === 0 ? "selected" : ""}>Échauffement — ${esc(s.titre || "bloc " + (k + 1))}</option>`)
+    [`<option value="-1" ${echauf ? "selected" : ""}>Échauffement — nouvel exercice seul</option>`]
+      .concat(seEchSubs().filter(s => !s.solo).map(s => `<option value="${s.id}">Échauffement — bloc « ${esc(s.titre || "sans titre")} »</option>`))
       .concat([`<option value="0" ${!echauf ? "selected" : ""}>Corps — nouvel exercice seul</option>`])
       .concat(SE.subs.filter(s => !s.solo).map(s => `<option value="${s.id}">Corps — bloc « ${esc(s.titre || "sans titre")} »</option>`))
       .join("");
