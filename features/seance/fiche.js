@@ -25,14 +25,22 @@ function itemDesc(it, g) {
     return P.filter((_, i) => !it.pn.includes(i)).join("\n\n");
   return g["Principe"] || g["Résumé"] || "";
 }
-/* intitulé d'une sous-section dans la fiche : titre — nom du ou des jeux (sauf si identique au titre) */
+/* intitulé d'un bloc dans la fiche : titre — nom du ou des jeux (sauf si identique au titre) */
 function subLabel(s, k, def) {
-  const t = s.titre || (def !== undefined ? def : "Sous-section " + (k + 1));
+  const t = s.titre || (def !== undefined ? def : "Bloc " + (k + 1));
   const n = (s.views || [])
     .map(x => x.v.titre)
     .filter((x, i, a) => x && norm(x) !== norm(s.titre || "") && a.indexOf(x) === i);
   return n.length ? (t ? t + " — " : "") + n.join(", ") : t;
 }
+/* intitulé d'une unité du corps de séance : le nom de l'exercice (exercice seul), ou le titre du bloc */
+function unitLabel(s, k) {
+  if (s.solo) return (s.views && s.views[0] && s.views[0].name) || "Exercice";
+  const one = s.views && s.views.length === 1 ? s.views[0].name : "";
+  return s.titre || one || "Bloc " + (k + 1);
+}
+/* couleurs du bandeau : exercice seul = bleu-vert, bloc = violet */
+const uniteCol = s => (s.solo ? { bg: "#D5ECF5", fg: "#1B6A8A", w: "D5ECF5", wf: "1B6A8A" } : { bg: "#ECE7F8", fg: "#5B4BA8", w: "ECE7F8", wf: "5B4BA8" });
 /* schéma de cet exercice dans la fiche : choix propre à l'exercice (it.schOn), sinon réglage général de la séance */
 /* où vont les schémas dans la fiche : "non" (aucun) · "sous" (sous chaque exercice) · "page" (page à part).
    Les anciennes séances n'ont pas ce réglage : on le déduit de l'ancien (schemaMode / schemaStd). */
@@ -126,6 +134,18 @@ function seModel() {
     return R;
   };
   const subs = mapSubs(SE.subs);
+  /* numérotation : chaque exercice seul et chaque bloc a son numéro (sa place dans la liste) ;
+     dans un bloc, les exercices de la bibliothèque sont numérotés « n.1 », « n.2 »… */
+  subs.forEach((s, k) => {
+    s.num = k + 1;
+    let q = 0;
+    s.views.forEach(x => {
+      if (s.solo) {
+        x.same = true;
+        x.n = String(s.num);
+      } else x.n = x.it.t === "lib" ? s.num + "." + ++q : "";
+    });
+  });
   const echSubs = mapSubs(seEchSubs());
   const echViews = echSubs.flatMap(s => s.views);
   const mats = {};
@@ -240,7 +260,7 @@ function sheetHTML() {
       : v.url
         ? `<a href="${esc(v.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline dotted">${inner}</a>`
         : inner;
-  /* échauffement : une sous-section par jeu ou exercice libre, avec ses groupes et sa durée (fond vert) */
+  /* échauffement : un bloc par jeu ou exercice libre, avec ses groupes et sa durée (fond vert) */
   const echItem = x => {
     const v = x.v;
     const img = v.schOn && schemaPlace() !== "page" && (v.img || v.imgJeu) ? `<div style="margin:4px 0 0 12px"><img src="${esc(v.img || v.imgJeu)}" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:200px;object-fit:contain" onerror="this.remove()"></div>` : "";
@@ -287,7 +307,7 @@ function sheetHTML() {
     const cr = L(v.crit);
     const first = x.same
       ? `<div style="margin:0 0 3px">${x.steps.map(l => `<div><b style="color:${C1}">▸</b> ${esc(l)}</div>`).join("")}</div>`
-      : `<b style="color:${C1}">▸</b> ${lk(v, `<b>${n}. ${nm}</b>`)}${v.code ? ` <span style="color:#6B7280;font-size:11px">(${esc(v.code)})</span>` : ""}<div style="margin:2px 0;white-space:pre-line">${esc(v.desc)}</div>`;
+      : `<b style="color:${C1}">▸</b> ${lk(v, `<b>${x.n ? x.n + " " : ""}${nm}</b>`)}${v.code ? ` <span style="color:#6B7280;font-size:11px">(${esc(v.code)})</span>` : ""}<div style="margin:2px 0;white-space:pre-line">${esc(v.desc)}</div>`;
     return (
       `<div style="padding:6px 10px;border-bottom:1px solid #D5DAE5;font-size:12px">${first}<div style="color:#6B7280;font-size:11px;font-style:italic">${x.same && v.code ? lk(v, `Fiche ${esc(v.code)} ↗`) + " · " : ""}${esc(v.meta)}</div>${avecSchema && v.schOn && schemaPlace() !== "page" && (v.img || v.imgJeu) ? `<div style="margin-top:6px;text-align:center"><img src="${esc(v.img || v.imgJeu)}" onerror="this.remove()" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:200px;object-fit:contain"></div>` : ""}</div>` +
       (schema ? "" : col(v.plus, C2, "+", "#FDF3F2")) +
@@ -305,7 +325,8 @@ function sheetHTML() {
         s.idx.length < M.G.length
           ? ` <span style="font-weight:400">· ${esc(nomsGroupes(M, s.idx))} seulement</span>`
           : "";
-      h += `<div style="background:#ECE7F8;padding:4px 10px;font-size:12px;font-weight:700;color:#5B4BA8">${tgs(
+      const uc = uniteCol(s);
+      h += `<div style="background:${uc.bg};padding:4px 10px;font-size:12px;font-weight:700;color:${uc.fg}">${tgs(
         M,
         s.d,
         s.idx
@@ -316,9 +337,8 @@ function sheetHTML() {
         )
         .join(
           ""
-        )} &nbsp;${esc(subLabel(s, k))}${who}</div>${schema ? "" : '<div style="background:#FDF3F2"></div><div style="background:#F1F8F2"></div>'}<div style="background:#F6F4FB"></div>`;
+        )} &nbsp;${s.num}. ${esc(unitLabel(s, k))}${who}</div>${schema ? "" : '<div style="background:#FDF3F2"></div><div style="background:#F1F8F2"></div>'}<div style="background:#F6F4FB"></div>`;
       s.views.forEach(x => {
-        if (!x.same) n++;
         h += exo(x, n);
       });
     });

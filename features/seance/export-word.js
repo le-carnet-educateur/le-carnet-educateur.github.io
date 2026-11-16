@@ -308,18 +308,18 @@ function buildSeanceDoc(logo) {
             [
               P([
                 ...runs,
-                R(subLabel(s, k), { b: true, c: "5B4BA8", size: 17 }),
+                R(s.num + ". " + unitLabel(s, k), { b: true, c: uniteCol(s).wf, size: 17 }),
                 ...(s.idx.length < M.G.length
                   ? [
                       R("  · " + nomsGroupes(M, s.idx) + " seulement", {
-                        c: "5B4BA8",
+                        c: uniteCol(s).wf,
                         size: 16,
                       }),
                     ]
                   : []),
               ]),
             ],
-            { w: T[0], f: "ECE7F8", m: { top: 40, bottom: 40, left: 140, right: 100 } }
+            { w: T[0], f: uniteCol(s).w, m: { top: 40, bottom: 40, left: 140, right: 100 } }
           ),
           cell([P([R("")])], { w: T[1], f: "FDF3F2" }),
           cell([P([R("")])], { w: T[2], f: "F1F8F2" }),
@@ -328,7 +328,6 @@ function buildSeanceDoc(logo) {
       );
       s.views.forEach(x => {
         const v = x.v;
-        if (!x.same) n++;
         const main = x.same
           ? [
               ...x.steps.map(l =>
@@ -343,10 +342,10 @@ function buildSeanceDoc(logo) {
                     ? [
                         new D.ExternalHyperlink({
                           link: v.url,
-                          children: [R(n + ". " + x.name, { b: true, c: "2B5A9E" })],
+                          children: [R((x.n ? x.n + " " : "") + x.name, { b: true, c: "2B5A9E" })],
                         }),
                       ]
-                    : [R(n + ". " + x.name, { b: true })]),
+                    : [R((x.n ? x.n + " " : "") + x.name, { b: true })]),
                   ...(v.code ? [R("  (" + v.code + ")", { c: "6B7280", size: 16 })] : []),
                 ],
                 { af: 30 }

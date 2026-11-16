@@ -1,5 +1,5 @@
 /* Créer une séance — recherche d'exercices en fenêtre : filtres, liste et aperçu de la fiche du jeu.
-   Ouverte par « 🔍 Chercher un exercice » dans une sous-section ; on peut ajouter plusieurs jeux sans la fermer. */
+   Ouverte par « 🔍 Chercher un exercice » dans un bloc ou pour un exercice seul ; on peut ajouter plusieurs jeux sans la fermer. */
 const RX = { sub: 0, q: "", sel: "" };
 function rxListe() {
   const q = norm(RX.q);

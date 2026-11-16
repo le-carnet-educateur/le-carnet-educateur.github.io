@@ -317,7 +317,7 @@ function seanceBind() {
     cl.addEventListener("click", () => {
       if (
         confirm(
-          "Effacer tout le contenu de cette séance (informations, échauffement, sous-sections et exercices) ?\n\nLe logo de la salle est conservé."
+          "Effacer tout le contenu de cette séance (informations, échauffement, blocs et exercices) ?\n\nLe logo de la salle est conservé."
         )
       ) {
         SE = seNew();
@@ -418,10 +418,35 @@ document.addEventListener("click", e => {
     SE.ech.subs.push({ id: SEUID++, titre: "", gs: null, d: SMETA.groups.map(() => 10), items: [] });
   else if (a === "addsub")
     SE.subs.push({ id: SEUID++, titre: "", gs: null, d: SMETA.groups.map(() => 10), items: [] });
+  else if (a === "addsolofree") {
+    const so = {
+      id: SEUID++,
+      solo: true,
+      titre: "",
+      gs: null,
+      d: SMETA.groups.map(() => 10),
+      items: [{ id: SEUID++, t: "free", nom: "", titre: "", desc: "", part: "", mat: "", plus: "", moins: "", crit: "" }],
+    };
+    seVideInitial();
+    SE.subs.push(so);
+  } else if (a === "tosolo") {
+    const t = seSubFind(sid);
+    if (t && t.items.length === 1) {
+      if (t.titre && !(t.items[0].nom || "").trim()) t.items[0].nom = t.titre;
+      t.titre = "";
+      t.solo = true;
+    }
+  } else if (a === "tobloc") {
+    const t = seSubFind(sid);
+    if (t) {
+      t.solo = false;
+      t.titre = "";
+    }
+  }
   else if (a === "srm") {
     if (
       seSubFind(sid).items.length &&
-      !confirm("Supprimer cette sous-section et ses jeux ?")
+      !confirm(seSubFind(sid).solo ? "Supprimer cet exercice ?" : "Supprimer ce bloc et ses exercices ?")
     )
       return;
     if (SE.ech.subs.some(s => s.id === sid)) SE.ech.subs = SE.ech.subs.filter(s => s.id !== sid);
@@ -535,7 +560,7 @@ function logoDepuisFichier(file, cb) {
   r.readAsDataURL(file);
 }
 
-/* ---------- réorganiser les sous-sections (fenêtre : glisser-déposer ou flèches) ---------- */
+/* ---------- réorganiser les blocs et exercices (fenêtre : glisser-déposer ou flèches) ---------- */
 function reorgListe() {
   const bloc = (L, nom) =>
     L.length < 2
@@ -543,12 +568,12 @@ function reorgListe() {
       : `<h4 style="margin:12px 0 6px">${nom}</h4>` +
         L.map(
           (s, k) =>
-            `<div class="rgl" draggable="true" data-rgid="${s.id}" style="display:flex;align-items:center;gap:8px;border:1px solid #D5DAE5;border-radius:8px;padding:8px 10px;margin:4px 0;background:#fff;cursor:grab"><span style="color:#9AA3B5;font-size:18px">⠿</span><b style="flex:1">${esc(s.titre || "Sous-section " + (k + 1))}</b><span style="color:#6B7280;font-size:12px">${s.items.length} exercice${s.items.length > 1 ? "s" : ""}</span><button class="chip" data-rg="up" data-rgid="${s.id}" ${k ? "" : "disabled"}>↑</button><button class="chip" data-rg="dn" data-rgid="${s.id}" ${k < L.length - 1 ? "" : "disabled"}>↓</button></div>`
+            `<div class="rgl" draggable="true" data-rgid="${s.id}" style="display:flex;align-items:center;gap:8px;border:1px solid #D5DAE5;border-radius:8px;padding:8px 10px;margin:4px 0;background:#fff;cursor:grab"><span style="color:#9AA3B5;font-size:18px">⠿</span><b style="flex:1">${esc(s.solo && s.items[0] ? (s.items[0].nom || "").trim() || (itemView(s.items[0]) || {}).titre || "Exercice" : s.titre || "Bloc " + (k + 1))}</b><span style="color:#6B7280;font-size:12px">${s.solo ? "exercice seul" : s.items.length + " exercice" + (s.items.length > 1 ? "s" : "")}</span><button class="chip" data-rg="up" data-rgid="${s.id}" ${k ? "" : "disabled"}>↑</button><button class="chip" data-rg="dn" data-rgid="${s.id}" ${k < L.length - 1 ? "" : "disabled"}>↓</button></div>`
         ).join("");
-  return bloc(SE.ech.subs, "Échauffement") + bloc(SE.subs, "Corps de séance") || "<p>Il faut au moins deux sous-sections.</p>";
+  return bloc(SE.ech.subs, "Échauffement") + bloc(SE.subs, "Corps de séance") || "<p>Il faut au moins deux blocs ou exercices.</p>";
 }
 function reorgOuvrir() {
-  modal("⇅ Réorganiser les sous-sections", `<p class="hint" style="margin:0 0 6px">Glisse une ligne ou utilise les flèches.</p><div id="rgBox">${reorgListe()}</div><div class="tools" style="margin-top:12px"><a class="chip" data-modal="fermer" data-mid="mpop">Terminé</a></div>`, 560, { fond: false });
+  modal("⇅ Réorganiser les blocs et exercices", `<p class="hint" style="margin:0 0 6px">Glisse une ligne ou utilise les flèches.</p><div id="rgBox">${reorgListe()}</div><div class="tools" style="margin-top:12px"><a class="chip" data-modal="fermer" data-mid="mpop">Terminé</a></div>`, 560, { fond: false });
 }
 function reorgMaj() {
   seSave();

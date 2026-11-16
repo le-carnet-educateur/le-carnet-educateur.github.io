@@ -59,17 +59,15 @@ function crepsLignes(M) {
     };
   };
   if (M.ech.on) M.echSubs.forEach(s => s.views.forEach(x => rows.push(ligne(s, x, "Échauffement"))));
-  let n = 0;
   M.subs.forEach((s, k) =>
     s.views.forEach(x => {
-      n++;
       const v = x.v,
         it = x.it,
         g = crepsJeu(it);
       rows.push({
-        nom: "Situation " + n,
+        nom: "Situation " + (x.n || s.num),
         titre: x.name + (v.code ? " (" + v.code + ")" : ""),
-        sub: s.titre || "",
+        sub: s.solo ? "" : s.titre || "",
         fx: "it",
         src: it,
         obj: it.cp_obj || (g && g.Objectif) || "",

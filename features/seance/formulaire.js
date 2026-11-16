@@ -37,7 +37,7 @@ function seFriseHTML(M) {
   const B = [{ t: "Accueil", d: M.G.map(g => g.acc), idx: M.all, c: "#8A6D12", bg: "#FDF3D3" }];
   if (M.ech.on)
     M.echSubs.forEach((s, k) => B.push({ t: subLabel(s, k, "") || "Échauffement", d: s.d, idx: s.idx, c: "#2E6F3E", bg: "#E1F1E3", id: s.id, tab: "ech" }));
-  M.subs.forEach((s, k) => B.push({ t: s.titre || "Sous-section " + (k + 1), d: s.d, idx: s.idx, c: "#2B5A9E", bg: "#DEEAF8", id: s.id, tab: "corps" }));
+  M.subs.forEach((s, k) => B.push({ t: s.num + ". " + unitLabel(s, k), d: s.d, idx: s.idx, c: uniteCol(s).fg, bg: uniteCol(s).bg, id: s.id, tab: "corps" }));
   B.push({ t: "Retour au calme", d: M.G.map(() => RC_MIN), idx: M.all, c: "#7A4FA0", bg: "#EEE6F6" });
   const tot = M.G.map(g => `<b style="color:${g.c}">${M.tot[g.i]} min</b>`).join(" · ");
   return `<div class="frise noprint" data-stab="ech corps"><div class="frise-bar">${B.map(b => {
@@ -70,7 +70,7 @@ function seanceView() {
   const gl = i => esc(M.G[i].nom);
   const head = SEPOP
     ? ""
-    : `<h2 class="pt">Créer une séance ${aide("<b>Comment faire ?</b><br>1. Remplissez les informations générales (titre, date, thème…).<br>2. Ajoutez des exercices : un jeu du site (bouton « Ajouter à ma séance » sur sa fiche) ou un exercice libre.<br>3. Enregistrez dans la bibliothèque, ou exportez en Word, PDF ou texte.<br>Votre brouillon reste dans ce navigateur.")}</h2><p class="lead">Construisez votre séance comme dans votre modèle : accueil, échauffement, puis un corps de séance découpé en autant de sous-sections que vous voulez, pour tous les groupes ou seulement certains (deux groupes par défaut, quatre au maximum). Les exercices viennent de la bibliothèque de jeux ou s'écrivent librement. Tout est enregistré dans ce navigateur ; exportez en Word, en PDF ou en texte.</p>`;
+    : `<h2 class="pt">Créer une séance ${aide("<b>Comment faire ?</b><br>1. Remplissez les informations générales (titre, date, thème…).<br>2. Ajoutez des exercices : un jeu du site (bouton « Ajouter à ma séance » sur sa fiche) ou un exercice libre.<br>3. Enregistrez dans la bibliothèque, ou exportez en Word, PDF ou texte.<br>Votre brouillon reste dans ce navigateur.")}</h2><p class="lead">Construisez votre séance comme dans votre modèle : accueil, échauffement, puis un corps de séance fait d'exercices seuls et de blocs (un bloc regroupe plusieurs petits exercices), pour tous les groupes ou seulement certains (deux groupes par défaut, quatre au maximum). Les exercices viennent de la bibliothèque de jeux ou s'écrivent librement. Tout est enregistré dans ce navigateur ; exportez en Word, en PDF ou en texte.</p>`;
   const inp = (k, l, p, span) =>
     `<label class="sml" style="${span ? "grid-column:1/-1" : ""}">${l}<input data-sm="${k}" value="${esc(S[k])}" placeholder="${esc(p)}"></label>`;
   const colf = (cls, c) => `border-left:4px solid ${c};padding-left:8px`;
@@ -86,6 +86,9 @@ function seanceView() {
     const gsel = two
       ? `<div class="sml" style="grid-column:1/-1">Pour<div class="gchk">${M.G.map(g => `<label class="fl"><input type="checkbox" data-gs="1" data-sub="${s.id}" data-gi="${g.i}" ${sv.idx.includes(g.i) ? "checked" : ""}><span style="color:${g.c};font-weight:700">■</span> ${esc(g.nom)}</label>`).join("")}</div></div>`
       : "";
+    const solo = !ech && !!s.solo && sv.items.length === 1;
+    const dursHTML = `<div class="smg" style="align-items:end;margin-top:8px">${gsel}<div class="durs">${sv.idx.map(i => num(`data-gd="sub" data-n="1" data-sub="${s.id}" data-gi="${i}"`, "Durée" + (two ? " — " + gl(i) : "") + " (min)", s.d[i], M.G[i].c)).join("")}</div></div>`;
+    const sbtn = `<span class="noprint" style="white-space:nowrap"><button class="chip" data-sa="sup" data-sub="${s.id}" title="Monter">↑</button> <button class="chip" data-sa="sdn" data-sub="${s.id}" title="Descendre">↓</button> <button class="chip" data-sa="srm" data-sub="${s.id}" title="Supprimer l'exercice">✕</button></span>`;
     const items = sv.items
       .map((it, j) => {
         const v = itemView(it);
@@ -120,11 +123,11 @@ function seanceView() {
           openM = SEOPEN.has("m" + it.id);
         const ico = (v.img || v.imgJeu) && v.schOn ? '<span class="sitico" title="Schéma affiché dans la fiche">🖼</span>' : "";
         const wrap = (style, sumInner, essential, more) =>
-          `<details class="sit${it.t === "lib" ? "" : " free"}" style="${style}" data-sd="i${it.id}"${open ? " open" : ""}><summary class="sitsum"><span class="sitcar">▸</span>${sumInner}<span class="sitact">${mv}</span></summary><div class="sitbody">${essential}<details class="sitmore" data-sd="m${it.id}"${openM ? " open" : ""}><summary>Matériel, variantes, critères…</summary><div class="sitmorebody">${more}</div></details></div></details>`;
+          `<details class="sit${it.t === "lib" ? "" : " free"}${solo ? " solo" : ""}" ${solo ? `id="ssub-${s.id}" ` : ""}style="${style}" data-sd="i${it.id}"${open ? " open" : ""}><summary class="sitsum"><span class="sitcar">▸</span>${solo ? `<b class="sitnum">${sv.num}</b>` : ""}${sumInner}${solo ? `<span class="sitdur">${sv.idx.map(i => (+s.d[i] || 0) + "'").join(" · ")}</span>` : ""}<span class="sitact">${solo ? sbtn : mv}</span></summary><div class="sitbody">${solo ? dursHTML : ""}${essential}<details class="sitmore" data-sd="m${it.id}"${openM ? " open" : ""}><summary>Matériel, variantes, critères…</summary><div class="sitmorebody">${more}${solo ? `<div style="margin-top:8px"><a class="chip" data-sa="tobloc" data-sub="${s.id}" style="cursor:pointer">↦ Mettre dans un bloc</a></div>` : ""}</div></details></div></details>`;
         if (it.t === "lib") {
           const mod = ["txt", "mat", "nom", "vp", "vm", "crit", "dos"].some(k => typeof it[k] === "string" && it[k].trim() !== "");
           return wrap(
-            `border-left:4px solid ${famOf(v.fam).d}`,
+            solo ? "" : `border-left:4px solid ${famOf(v.fam).d}`,
             `<b class="sitcode" style="color:${famOf(v.fam).d}">${esc(v.code || "★")}</b><span class="sitname">${esc(vw ? vw.name : v.titre)}</span>${mod ? '<span class="sitbadge">modifié</span>' : ""}${ico}`,
             nmf + consf(it),
             matf(it) + dosf(it, DATA.find(x => key(x) === it.k)) + (ech ? "" : varf(it) + `<label class="sml" style="margin-top:8px">Critères de réussite (un par ligne)<textarea rows="2" data-si="crit" data-id="${it.id}" placeholder="Ex. Le pied est posé sans bruit">${esc(critEff(it))}</textarea></label>`) + schf + crepsItemHTML(it, CL)
@@ -141,9 +144,10 @@ function seanceView() {
       })
       .join("");
     const bs = "padding:3px 10px;font-size:12px;font-weight:700;cursor:pointer;";
-    return `<div class="ssub" id="ssub-${s.id}"><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap"><label class="sml" style="flex:1;min-width:220px">Titre de la sous-section<input data-ss="titre" data-sub="${s.id}" value="${esc(s.titre)}" placeholder="${ech ? "Ex. Jeux de déplacement (ou le nom du jeu)" : "Ex. Poser les pieds"}"></label><span class="noprint" style="white-space:nowrap;padding-bottom:6px"><button class="chip" style="${bs}background:#DCE6F5;border-color:#9DB4D8;color:#26364D" title="Monter" data-sa="sup" data-sub="${s.id}">↑</button> <button class="chip" style="${bs}background:#DCE6F5;border-color:#9DB4D8;color:#26364D" title="Descendre" data-sa="sdn" data-sub="${s.id}">↓</button> <button class="chip" style="${bs}background:#FBE3E6;border-color:#E8A9B2;color:#B2263A" data-sa="srm" data-sub="${s.id}">✕ Supprimer</button></span></div><div class="smg" style="align-items:end;margin-top:8px">${gsel}<div class="durs">${sv.idx.map(i => num(`data-gd="sub" data-n="1" data-sub="${s.id}" data-gi="${i}"`, "Durée" + (two ? " — " + gl(i) : "") + " (min)", s.d[i], M.G[i].c)).join("")}</div>
+    if (solo) return items;
+    return `<div class="ssub${ech ? "" : " bloc"}" id="ssub-${s.id}">${ech ? "" : `<div class="bhead">Bloc ${sv.num}${sv.items.length === 1 ? ` <a class="chip" data-sa="tosolo" data-sub="${s.id}" style="cursor:pointer;font-weight:400">↦ Exercice seul</a>` : ""}</div>`}<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap"><label class="sml" style="flex:1;min-width:220px">Titre du bloc<input data-ss="titre" data-sub="${s.id}" value="${esc(s.titre)}" placeholder="${ech ? "Ex. Jeux de déplacement (ou le nom du jeu)" : "Ex. Poser les pieds"}"></label><span class="noprint" style="white-space:nowrap;padding-bottom:6px"><button class="chip" style="${bs}background:#DCE6F5;border-color:#9DB4D8;color:#26364D" title="Monter" data-sa="sup" data-sub="${s.id}">↑</button> <button class="chip" style="${bs}background:#DCE6F5;border-color:#9DB4D8;color:#26364D" title="Descendre" data-sa="sdn" data-sub="${s.id}">↓</button> <button class="chip" style="${bs}background:#FBE3E6;border-color:#E8A9B2;color:#B2263A" data-sa="srm" data-sub="${s.id}">✕ Supprimer le bloc</button></span></div><div class="smg" style="align-items:end;margin-top:8px">${gsel}<div class="durs">${sv.idx.map(i => num(`data-gd="sub" data-n="1" data-sub="${s.id}" data-gi="${i}"`, "Durée" + (two ? " — " + gl(i) : "") + " (min)", s.d[i], M.G[i].c)).join("")}</div>
 </div>
-     ${items || `<p class="hint" style="margin:8px 0">${ech ? "Ajoute un jeu de la bibliothèque et/ou un exercice libre : le déroulé reste vide tant que tu n'en ajoutes pas." : "Aucun exercice dans cette sous-section."}</p>`}
+     ${items || `<p class="hint" style="margin:8px 0">${ech ? "Ajoute un jeu de la bibliothèque et/ou un exercice libre : le déroulé reste vide tant que tu n'en ajoutes pas." : "Aucun exercice dans ce bloc."}</p>`}
      <div class="sadd"><button class="chip" data-sa="rxopen" data-sub="${s.id}" style="background:#26364D;color:#fff;border-color:#26364D">${ech ? "🔍 Chercher un jeu de la bibliothèque" : "🔍 Chercher un exercice de la bibliothèque"}</button><button class="chip" data-sa="addfree" data-sub="${s.id}">＋ Exercice libre</button></div></div>`;
   };
   const dl = "";
@@ -159,7 +163,7 @@ function seanceView() {
   <div class="box noprint" data-stab="ech" style="border-left:6px solid #7FCB8F;background:#F4FAF3"><label class="fl" style="margin:0 0 8px"><input type="checkbox" id="seEchOn" ${E.on ? "checked" : ""}> <b>Échauffement</b></label>${E.on ? ` <span style="color:#6B7280;font-size:13px">— total : ${M.G.map(g => `<b style="color:${g.c}">${M.ce[g.i]} min</b>`).join(" · ")}</span> ${seDeplierBtns()}` : ""}
    ${E.on ? `<div style="margin-top:8px">${seEchSubs().map((s, k) => subHTML(s, k, true)).join("")}</div><div style="margin-top:10px"><a class="chip" data-sa="addech" style="cursor:pointer;background:#2E6F3E;color:#fff">＋ Ajouter un bloc d'échauffement</a></div>` : ""}${crepsEchHTML()}</div>
   <div class="box noprint" data-stab="corps" style="border-left:6px solid #6EA8DC;background:#EEF1F6"><b>Corps de séance</b> <span style="color:#6B7280;font-size:13px">— total : ${M.G.map(g => `<b style="color:${g.c}">${M.c[g.i]} min</b>`).join(" · ")}</span> ${seDeplierBtns()}
-   <div style="margin-top:8px">${SE.subs.map((s, k) => subHTML(s, k, false)).join("")}</div><div style="margin-top:10px"><a class="chip" data-sa="addsub" style="cursor:pointer;background:#26364D;color:#fff">＋ Ajouter une sous-section</a> <a class="chip" data-rgo="1" style="cursor:pointer">⇅ Réorganiser les sous-sections</a></div>${dl}</div>
+   <div style="margin-top:8px">${SE.subs.map((s, k) => subHTML(s, k, false)).join("")}</div><div style="margin-top:10px"><span class="noprint" style="font-size:13px;font-weight:700;color:#5B6B82">Ajouter ${aide("<b>Exercice seul</b> : une ligne de la fiche, avec sa durée, ses groupes et ses consignes (bandeau bleu-vert).<br><b>Bloc</b> : un ensemble de petits exercices avec son titre et sa durée (bandeau violet). Les exercices de la bibliothèque y sont numérotés 1.1, 1.2…")}</span> <a class="chip" data-sa="rxopen" data-sub="0" style="cursor:pointer;background:#1B6A8A;color:#fff;border-color:#1B6A8A">🔍 Exercice de la bibliothèque</a> <a class="chip" data-sa="addsolofree" style="cursor:pointer;background:#fff;color:#1B6A8A;border-color:#1B6A8A">✎ Exercice libre</a> <a class="chip" data-sa="addsub" style="cursor:pointer;background:#5B4BA8;color:#fff;border-color:#5B4BA8">＋ Bloc</a> <a class="chip" data-rgo="1" style="cursor:pointer">⇅ Réorganiser</a></div>${dl}</div>
   <div class="box noprint" data-stab="bas"><b>Bas de fiche</b><div class="smg" style="margin-top:8px">${txa("objCol", "Objectif collectif", "Ce que le groupe doit réussir")}${txa("secu", "Sécurité", "Hauteur, tapis, pas de saut…")}${M.G.map(g => `<label class="sml" style="${colf(0, g.c)}">Retour au calme${two ? " — " + esc(g.nom) : ""} <span style="font-weight:400">(${RC_MIN} min comptées)</span><textarea rows="2" data-gm="rc" data-gi="${g.i}" placeholder="Étirements, bilan…">${esc(g.rc)}</textarea></label>`).join("")}</div></div>
   <div data-stab="ctl">${seControleHTML()}${bilanFormHTML()}</div><div data-stab="apercu"><h3 class="noprint" style="margin:18px 0 8px;color:#26364D">Aperçu de la fiche</h3><div id="sheet" style="border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12)">${sheetHTML()}</div></div>
 `
@@ -186,7 +190,7 @@ function seanceText() {
   }
   t += `\nCORPS DE SÉANCE [${d(M.c)} min]\n`;
   M.subs.forEach((s, k) => {
-    t += `\n${s.titre || "Sous-section " + (k + 1)}${s.idx.length < M.G.length ? " · " + nomsGroupes(M, s.idx) + " seulement" : ""} [${d(s.d, s.idx)} min]\n`;
+    t += `\n${s.num}. ${unitLabel(s, k)}${s.idx.length < M.G.length ? " · " + nomsGroupes(M, s.idx) + " seulement" : ""} [${d(s.d, s.idx)} min]\n`;
     s.views.forEach(x => {
       t += `- ${x.name}${x.v.code ? " (" + x.v.code + ")" : ""} — ${x.v.resume}\n`;
     });

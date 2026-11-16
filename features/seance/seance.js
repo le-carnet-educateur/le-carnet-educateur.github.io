@@ -12,7 +12,7 @@ registerNav({
     ),
 });
 registerView({ match: v => v === "seance", html: () => seanceView(), bind: () => seanceBind() });
-/* « Ajouter à ma séance » : choix de la séance (en cours, enregistrée ou nouvelle) et de la sous-section */
+/* « Ajouter à ma séance » : choix de la séance (en cours, enregistrée ou nouvelle) et de l'endroit (exercice seul ou bloc) */
 function ajoutChoisir(code) {
   const g = DATA.find(x => key(x) === code);
   if (!g) return;
@@ -27,12 +27,13 @@ function ajoutChoisir(code) {
   const optsDraft = () =>
     seEchSubs()
       .map((s, k) => `<option value="${s.id}" ${echauf && k === 0 ? "selected" : ""}>Échauffement — ${esc(s.titre || "bloc " + (k + 1))}</option>`)
-      .concat(SE.subs.map((s, k) => `<option value="${s.id}" ${!echauf && k === SE.subs.length - 1 ? "selected" : ""}>Corps — ${esc(s.titre || "sous-section " + (k + 1))}</option>`))
+      .concat([`<option value="0" ${!echauf ? "selected" : ""}>Corps — nouvel exercice seul</option>`])
+      .concat(SE.subs.filter(s => !s.solo).map(s => `<option value="${s.id}">Corps — bloc « ${esc(s.titre || "sans titre")} »</option>`))
       .join("");
   modal(
     "Ajouter « " + esc(g.Titre) + " » à…",
     `<label class="fl" style="display:block;margin:8px 0"><input type="radio" name="ajC" value="draft" checked> <b>Ma séance en cours</b> ${SMETA.titre ? "(" + esc(SMETA.titre) + ")" : "(brouillon de « Créer une séance »)"}</label>
-    <div id="ajDraft" style="margin:0 0 10px 22px"><span class="sml">Dans quelle sous-section ?</span>${dest(0, optsDraft())}</div>
+    <div id="ajDraft" style="margin:0 0 10px 22px"><span class="sml">Où ?</span>${dest(0, optsDraft())}</div>
     ${mes.length ? `<label class="fl" style="display:block;margin:8px 0"><input type="radio" name="ajC" value="rec"> <b>Une séance enregistrée</b></label><div id="ajRec" style="margin:0 0 10px 22px;display:none"><select id="ajRecSel" style="width:100%;padding:7px">${mes.map(r => `<option value="${esc(r.id)}">${esc(r.titre || "sans titre")}${r.theme ? " — " + esc(r.theme) : ""}</option>`).join("")}</select><span class="hint">Elle s'ouvre en modification : le jeu est ajouté à la fin du corps de séance (à toi de le déplacer).</span></div>` : ""}
     <label class="fl" style="display:block;margin:8px 0"><input type="radio" name="ajC" value="new"> <b>Une nouvelle séance</b></label>
     <div id="ajNew" style="margin:0 0 10px 22px;display:none"><span class="hint">Le brouillon actuel de « Créer une séance » sera remplacé${selCount() ? " (il contient " + selCount() + " exercice(s) : enregistre-le d'abord si besoin)" : ""}.</span></div>
@@ -75,8 +76,7 @@ function ajoutChoisir(code) {
         modalFermer("mpop", true);
         sepopOuvrir(d, id);
         if (!seHas(code)) {
-          const last = SE.subs[SE.subs.length - 1];
-          seAdd(code, last && last.id);
+          seAdd(code, 0);
           SEPOP.dirty = true;
           sepopRedraw();
         }
