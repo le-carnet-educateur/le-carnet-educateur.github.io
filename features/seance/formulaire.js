@@ -1,7 +1,7 @@
 const SE_ONGLETS = [["info", "📋 Informations"], ["ech", "🔥 Échauffement"], ["corps", "🧗 Corps de séance"], ["bas", "🏁 Bas de fiche"], ["ctl", "✓ Contrôle et bilan"], ["apercu", "👁 Aperçu"]];
 let SETAB = "info";
 function seTabAppliquer() {
-  document.querySelectorAll("[data-stab]").forEach(e => (e.style.display = e.dataset.stab === SETAB ? "" : "none"));
+  document.querySelectorAll("[data-stab]").forEach(e => (e.style.display = e.dataset.stab.split(" ").includes(SETAB) ? "" : "none"));
   document.querySelectorAll("[data-stabgo]").forEach(b => b.classList.toggle("on", b.dataset.stabgo === SETAB));
 }
 function seTab(k) {
@@ -29,26 +29,24 @@ document.addEventListener(
   },
   true
 );
-/* frise du déroulé : un bloc par étape, largeur proportionnelle à la durée, minutes par groupe */
-function seFriseHTML(M, cur) {
+/* frise du déroulé (fine, hors des blocs) : un bloc par étape, largeur proportionnelle à la durée ; le survol donne le texte complet */
+function seFriseHTML(M) {
   const mx = (d, idx) => Math.max(0, ...idx.map(i => +d[i] || 0));
   const tag = (d, idx) => idx.map(i => `<i style="background:${M.G[i].c}">${+d[i] || 0}'</i>`).join("");
+  const tip = (t, d, idx) => t + " — " + idx.map(i => (M.two ? M.G[i].nom + " : " : "") + (+d[i] || 0) + " min").join(" · ");
   const B = [{ t: "Accueil", d: M.G.map(g => g.acc), idx: M.all, c: "#8A6D12", bg: "#FDF3D3" }];
   if (M.ech.on)
-    M.echSubs.forEach((s, k) =>
-      B.push({ t: subLabel(s, k, "") || "Échauffement", d: s.d, idx: s.idx, c: "#2E6F3E", bg: "#E1F1E3", id: s.id, tab: "ech", cur: cur === "ech" })
-    );
-  M.subs.forEach((s, k) =>
-    B.push({ t: s.titre || "Sous-section " + (k + 1), d: s.d, idx: s.idx, c: "#2B5A9E", bg: "#DEEAF8", id: s.id, tab: "corps", cur: cur === "corps" })
-  );
+    M.echSubs.forEach((s, k) => B.push({ t: subLabel(s, k, "") || "Échauffement", d: s.d, idx: s.idx, c: "#2E6F3E", bg: "#E1F1E3", id: s.id, tab: "ech" }));
+  M.subs.forEach((s, k) => B.push({ t: s.titre || "Sous-section " + (k + 1), d: s.d, idx: s.idx, c: "#2B5A9E", bg: "#DEEAF8", id: s.id, tab: "corps" }));
   B.push({ t: "Retour au calme", d: M.G.map(() => RC_MIN), idx: M.all, c: "#7A4FA0", bg: "#EEE6F6" });
   const tot = M.G.map(g => `<b style="color:${g.c}">${M.tot[g.i]} min</b>`).join(" · ");
-  return `<div class="frise noprint"><div class="frise-bar">${B.map(b => {
+  return `<div class="frise noprint" data-stab="ech corps"><div class="frise-bar">${B.map(b => {
     const m = mx(b.d, b.idx);
     const go = b.id ? ` data-sa="sgo" data-sub="${b.id}" data-tab="${b.tab}" role="button" tabindex="0"` : "";
-    return `<div class="fr-b${b.id ? " go" : ""}" style="flex:${Math.max(m, 4)} 1 84px;background:${b.bg};color:${b.c}"${go}><span class="fr-t">${esc(b.t)}</span><span class="fr-m">${tag(b.d, b.idx)}</span></div>`;
-  }).join("")}</div><div class="frise-pied"><span>Durée totale : ${tot}</span><span class="frise-act"><a class="chip" data-sa="sdeplier">Tout déplier</a> <a class="chip" data-sa="srepli">Tout replier</a></span></div></div>`;
+    return `<div class="fr-b${b.id ? " go" : ""}" title="${esc(tip(b.t, b.d, b.idx))}" style="flex:${Math.max(m, 4)} 1 108px;background:${b.bg};color:${b.c}"${go}><span class="fr-t">${esc(b.t)}</span><span class="fr-m">${tag(b.d, b.idx)}</span></div>`;
+  }).join("")}</div><div class="frise-pied">Durée totale : ${tot}</div></div>`;
 }
+const seDeplierBtns = () => `<span class="frise-act noprint"><a class="chip" data-sa="sdeplier">Tout déplier</a> <a class="chip" data-sa="srepli">Tout replier</a></span>`;
 /* ---------- éditeur ---------- */
 function seanceView() {
   seDefaults();
@@ -153,14 +151,15 @@ function seanceView() {
   return (
     head +
     bar +
+    seFriseHTML(M) +
     `<div class="box noprint" data-stab="info"><b>Informations de la séance</b>${crepsChoixHTML()}
    <div class="smg">${inp("titre", "Cycle et séance", "Ex. Cycle 1 — Séance 4")}${inp("periode", "Période", "Ex. octobre")}${inp("theme", "Thème", "Ex. Pose de pieds & transfert de poids")}${inp("educ", "Éducateurs", "Prénoms")}${inp("objectif", "Objectif général", "Ce que la séance doit permettre d'apprendre", 1)}${inp("dates", "Dates", "Ex. 7 & 10 octobre")}</div>
    <p class="noprint" style="font-size:12px;color:#6B7280;margin:6px 0 0">RGPD : prénoms seulement, aucune information de santé.</p>
    <div class="grps">${M.G.map(g => `<div class="grp"><label class="sml" style="${colf(0, g.c)}">Groupe ${g.i + 1}<input data-gm="nom" data-gi="${g.i}" value="${esc(S.groups[g.i].nom)}" placeholder="Groupe ${g.i + 1}"></label>${num(`data-gm="acc" data-n="1" data-gi="${g.i}"`, "Accueil (min)", g.acc, g.c)}${two ? `<a class="chip" data-grm="${g.i}" title="Retirer ce groupe" style="cursor:pointer">✕</a>` : ""}</div>`).join("")}${M.G.length < GMAX ? `<a class="chip" id="gAdd" style="cursor:pointer;align-self:flex-start">＋ Ajouter un groupe</a>` : ""}</div></div>
-  <div class="box noprint" data-stab="ech" style="border-left:6px solid #7FCB8F;background:#F4FAF3"><label class="fl" style="margin:0 0 8px"><input type="checkbox" id="seEchOn" ${E.on ? "checked" : ""}> <b>Échauffement</b></label>${E.on ? ` <span style="color:#6B7280;font-size:13px">— total : ${M.G.map(g => `<b style="color:${g.c}">${M.ce[g.i]} min</b>`).join(" · ")}</span>` : ""}
-   ${E.on ? `${seFriseHTML(M, "ech")}<div style="margin-top:8px">${seEchSubs().map((s, k) => subHTML(s, k, true)).join("")}</div><div style="margin-top:10px"><a class="chip" data-sa="addech" style="cursor:pointer;background:#2E6F3E;color:#fff">＋ Ajouter un bloc d'échauffement</a></div>` : ""}${crepsEchHTML()}</div>
-  <div class="box noprint" data-stab="corps" style="border-left:6px solid #6EA8DC;background:#EEF1F6"><b>Corps de séance</b> <span style="color:#6B7280;font-size:13px">— total : ${M.G.map(g => `<b style="color:${g.c}">${M.c[g.i]} min</b>`).join(" · ")}</span>
-   ${seFriseHTML(M, "corps")}<div style="margin-top:8px">${SE.subs.map((s, k) => subHTML(s, k, false)).join("")}</div><div style="margin-top:10px"><a class="chip" data-sa="addsub" style="cursor:pointer;background:#26364D;color:#fff">＋ Ajouter une sous-section</a> <a class="chip" data-rgo="1" style="cursor:pointer">⇅ Réorganiser les sous-sections</a></div>${dl}</div>
+  <div class="box noprint" data-stab="ech" style="border-left:6px solid #7FCB8F;background:#F4FAF3"><label class="fl" style="margin:0 0 8px"><input type="checkbox" id="seEchOn" ${E.on ? "checked" : ""}> <b>Échauffement</b></label>${E.on ? ` <span style="color:#6B7280;font-size:13px">— total : ${M.G.map(g => `<b style="color:${g.c}">${M.ce[g.i]} min</b>`).join(" · ")}</span> ${seDeplierBtns()}` : ""}
+   ${E.on ? `<div style="margin-top:8px">${seEchSubs().map((s, k) => subHTML(s, k, true)).join("")}</div><div style="margin-top:10px"><a class="chip" data-sa="addech" style="cursor:pointer;background:#2E6F3E;color:#fff">＋ Ajouter un bloc d'échauffement</a></div>` : ""}${crepsEchHTML()}</div>
+  <div class="box noprint" data-stab="corps" style="border-left:6px solid #6EA8DC;background:#EEF1F6"><b>Corps de séance</b> <span style="color:#6B7280;font-size:13px">— total : ${M.G.map(g => `<b style="color:${g.c}">${M.c[g.i]} min</b>`).join(" · ")}</span> ${seDeplierBtns()}
+   <div style="margin-top:8px">${SE.subs.map((s, k) => subHTML(s, k, false)).join("")}</div><div style="margin-top:10px"><a class="chip" data-sa="addsub" style="cursor:pointer;background:#26364D;color:#fff">＋ Ajouter une sous-section</a> <a class="chip" data-rgo="1" style="cursor:pointer">⇅ Réorganiser les sous-sections</a></div>${dl}</div>
   <div class="box noprint" data-stab="bas"><b>Bas de fiche</b><div class="smg" style="margin-top:8px">${txa("objCol", "Objectif collectif", "Ce que le groupe doit réussir")}${txa("secu", "Sécurité", "Hauteur, tapis, pas de saut…")}${M.G.map(g => `<label class="sml" style="${colf(0, g.c)}">Retour au calme${two ? " — " + esc(g.nom) : ""} <span style="font-weight:400">(${RC_MIN} min comptées)</span><textarea rows="2" data-gm="rc" data-gi="${g.i}" placeholder="Étirements, bilan…">${esc(g.rc)}</textarea></label>`).join("")}</div></div>
   <div data-stab="ctl">${seControleHTML()}${bilanFormHTML()}</div><div data-stab="apercu"><h3 class="noprint" style="margin:18px 0 8px;color:#26364D">Aperçu de la fiche</h3><div id="sheet" style="border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.12)">${sheetHTML()}</div></div>
 `

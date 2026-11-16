@@ -463,17 +463,15 @@ body.trOn > *:not(#terrain):not(#trImg):not(#hors):not(#trStop) {
 .sitmore>summary::-webkit-details-marker{display:none}
 .sitmore>summary::before{content:"▸";display:inline-block;font-size:11px;transition:transform .15s}
 .sitmorebody{padding:0 10px 10px}
-/* frise du déroulé */
-.frise{margin:8px 0 12px}
-.frise-bar{display:flex;flex-wrap:wrap;gap:4px}
-.fr-b{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;min-width:0;border:2px solid transparent;font-size:12px}
+/* frise du déroulé (fine) */
+.frise{margin:0 0 10px}
+.frise-bar{display:flex;flex-wrap:wrap;gap:3px}
+.fr-b{display:flex;align-items:center;gap:6px;padding:2px 7px;border-radius:6px;min-width:0;font-size:11.5px;line-height:1.5;white-space:nowrap;overflow:hidden}
 .fr-b.go{cursor:pointer}
-.fr-b.go:hover{filter:brightness(.96)}
-.fr-b.cur{border-color:currentColor}
-.fr-t{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.fr-m{display:flex;gap:3px;flex-wrap:wrap}
-.fr-m i{font-style:normal;font-size:11px;font-weight:700;color:#fff;border-radius:8px;padding:0 6px}
-.frise-pied{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px;font-size:13px;color:#5B6B82}
-.frise-act .chip{cursor:pointer;font-size:12px;padding:2px 9px}
-.sitact .chip{padding:2px 9px;font-size:12px;line-height:1.5}
-.sitact{display:flex;gap:4px}
+.fr-b.go:hover{filter:brightness(.95)}
+.fr-t{font-weight:700;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1 1 auto}
+.fr-m{display:inline-flex;gap:3px;flex:0 0 auto}
+.fr-m i{font-style:normal;font-size:10.5px;font-weight:700;color:#fff;border-radius:8px;padding:0 5px}
+.frise-pied{margin-top:4px;font-size:12px;color:#5B6B82;text-align:right}
+.frise-act{margin-left:8px;white-space:nowrap}
+.frise-act .chip{cursor:pointer;font-size:12px;padding:1px 9px}

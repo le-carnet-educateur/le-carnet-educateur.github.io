@@ -592,3 +592,5 @@ Tout est dans `features/seance/terrain.js` (chargé avant `controle.js`).
 - **v127** : correctif « Cannot read properties of null (reading 'items') » (modele.js) en ouvrant « Dessiner » depuis Admin > À illustrer (prépa) : une séance de prépa enregistrée dans le navigateur contenait une sous-section vide. `seLoad()` remet maintenant la séance d'aplomb (sous-sections et exercices vides retirés) et `selCount()` ne plante plus.
 
 - **v128** : fiche simplifiée : la cellule vide de la colonne « Critères de réussite » sur la ligne de titre de chaque sous-section avait encore le rose de « Plus difficile » ; elle prend maintenant le fond violet pâle (`#F6F4FB`) comme le reste de la colonne.
+
+- **v129** : frise du déroulé plus fine et sortie des blocs (une seule, sous la barre d'onglets, visible dans Échauffement et Corps de séance : `data-stab="ech corps"`, `seTabAppliquer` accepte une liste) ; le texte complet et les minutes par groupe s'affichent au survol (`title`) ; boutons « Tout déplier / Tout replier » dans l'en-tête de chaque bloc.
