@@ -19,6 +19,16 @@ function seLoad() {
   } catch (e) {
     SE = null;
   }
+  /* séance enregistrée abîmée (sous-section vide, liste d'exercices absente…) : on la remet d'aplomb */
+  const sain = L =>
+    (Array.isArray(L) ? L : [])
+      .filter(x => x && typeof x === "object")
+      .map(x => ({ ...x, items: (Array.isArray(x.items) ? x.items : []).filter(i => i && typeof i === "object") }));
+  if (SE && Array.isArray(SE.subs)) {
+    SE.subs = sain(SE.subs);
+    if (!SE.subs.length) SE.subs = seNew().subs;
+    if (SE.ech && Array.isArray(SE.ech.subs)) SE.ech.subs = sain(SE.ech.subs);
+  }
   if (!SE || !Array.isArray(SE.subs)) {
     SE = seNew();
     if (SEL && SEL.length && DISC !== "prepa") {
@@ -125,7 +135,7 @@ const seSave = () => {
     localStorage.setItem(seKey(), JSON.stringify(SE));
   } catch (e) {}
 };
-const selCount = () => (SE ? SE.subs.reduce((a, s) => a + s.items.length, 0) : 0);
+const selCount = () => (SE && Array.isArray(SE.subs) ? SE.subs.reduce((a, s) => a + (s && Array.isArray(s.items) ? s.items.length : 0), 0) : 0);
 const seHas = c => seToutesSubs().some(s => s.items.some(i => i.t === "lib" && i.k === c));
 function seAdd(c, subId) {
   const g = DATA.find(x => key(x) === c);

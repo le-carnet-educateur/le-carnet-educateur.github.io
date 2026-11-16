@@ -316,7 +316,7 @@ function sheetHTML() {
         )
         .join(
           ""
-        )} &nbsp;${esc(subLabel(s, k))}${who}</div>${schema ? "" : '<div style="background:#FDF3F2"></div><div style="background:#F1F8F2"></div>'}<div style="background:#FDF3F2"></div>`;
+        )} &nbsp;${esc(subLabel(s, k))}${who}</div>${schema ? "" : '<div style="background:#FDF3F2"></div><div style="background:#F1F8F2"></div>'}<div style="background:#F6F4FB"></div>`;
       s.views.forEach(x => {
         if (!x.same) n++;
         h += exo(x, n);

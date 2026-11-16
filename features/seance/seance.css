@@ -43,8 +43,8 @@
   background: #fff;
   border: 1px solid #e1e6ef;
   border-radius: 8px;
-  padding: 10px;
-  margin-top: 10px;
+  padding: 0;
+  margin-top: 8px;
 }
 .sit.free {
   border-left: 4px solid #e0a030;
@@ -443,3 +443,37 @@ body.trOn > *:not(#terrain):not(#trImg):not(#hors):not(#trStop) {
 .ssel{width:100%;box-sizing:border-box;font:inherit;font-size:14px;font-weight:600;color:#26364D;padding:7px 4px 7px 8px;border:1px solid #D5DAE5;border-radius:8px;background:#fff;cursor:pointer;text-overflow:ellipsis}
 .ssel:focus{outline:2px solid #B8CBEA;outline-offset:1px}
 .sfq{flex:0 0 28px;width:28px;height:28px;border-radius:50%;border:1px solid #B8CBEA;background:#E4EEFB;color:#2B5A9E;font:700 14px/1 system-ui,sans-serif;cursor:pointer;margin-bottom:5px}
+
+/* exercices repliables */
+.sitsum{display:flex;align-items:center;gap:8px;padding:9px 10px;cursor:pointer;list-style:none;min-height:34px}
+.sitsum::-webkit-details-marker{display:none}
+.sitcar{display:inline-block;color:#7A8AA3;font-size:12px;transition:transform .15s;flex:0 0 auto}
+.sit[open]>.sitsum .sitcar,.sitmore[open]>summary::before{transform:rotate(90deg)}
+.sitcode{flex:0 0 auto;font-size:13px}
+.sitname{flex:1 1 auto;min-width:0;font-weight:600;color:#26364D;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sit[open]>.sitsum .sitname{white-space:normal}
+.sitbadge{flex:0 0 auto;font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;background:#FFF1D6;color:#8A5A00}
+.sitbadge.free{background:#F1F3F8;color:#5B6B82}
+.sitico{flex:0 0 auto;font-size:13px}
+.sitact{flex:0 0 auto;margin-left:auto}
+.sitbody{padding:0 10px 10px;border-top:1px solid #EEF1F6}
+.sitbody>.sml:first-child,.sitbody>.smg:first-child{margin-top:8px}
+.sitmore{margin-top:10px;border:1px dashed #C9D3E3;border-radius:8px;background:#FAFBFD}
+.sitmore>summary{display:flex;align-items:center;gap:6px;padding:7px 10px;cursor:pointer;font-size:13px;font-weight:600;color:#5B6B82;list-style:none}
+.sitmore>summary::-webkit-details-marker{display:none}
+.sitmore>summary::before{content:"▸";display:inline-block;font-size:11px;transition:transform .15s}
+.sitmorebody{padding:0 10px 10px}
+/* frise du déroulé */
+.frise{margin:8px 0 12px}
+.frise-bar{display:flex;flex-wrap:wrap;gap:4px}
+.fr-b{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:8px;min-width:0;border:2px solid transparent;font-size:12px}
+.fr-b.go{cursor:pointer}
+.fr-b.go:hover{filter:brightness(.96)}
+.fr-b.cur{border-color:currentColor}
+.fr-t{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fr-m{display:flex;gap:3px;flex-wrap:wrap}
+.fr-m i{font-style:normal;font-size:11px;font-weight:700;color:#fff;border-radius:8px;padding:0 6px}
+.frise-pied{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;margin-top:6px;font-size:13px;color:#5B6B82}
+.frise-act .chip{cursor:pointer;font-size:12px;padding:2px 9px}
+.sitact .chip{padding:2px 9px;font-size:12px;line-height:1.5}
+.sitact{display:flex;gap:4px}

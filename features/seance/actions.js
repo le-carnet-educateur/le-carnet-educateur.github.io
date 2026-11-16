@@ -385,7 +385,17 @@ document.addEventListener("click", e => {
     if (j >= 0 && j < arr.length) [arr[i], arr[j]] = [arr[j], arr[i]];
   };
   let re = true;
-  if (a === "aidefiche") {
+  if (a === "sgo") {
+    if (b.dataset.tab && typeof seTab === "function") seTab(b.dataset.tab);
+    const el = document.getElementById("ssub-" + sid);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    re = false;
+  } else if (a === "sdeplier" || a === "srepli") {
+    SEOPEN = new Set();
+    if (a === "sdeplier") seToutesSubs().forEach(x => x.items.forEach(i => (SEOPEN.add("i" + i.id), SEOPEN.add("m" + i.id))));
+    document.querySelectorAll("details[data-sd]").forEach(d => (d.open = a === "sdeplier" ? true : false));
+    re = false;
+  } else if (a === "aidefiche") {
     modal("Modèle de fiche et schémas", aideFicheHTML(), 520);
     re = false;
   } else if (a === "modele") {
