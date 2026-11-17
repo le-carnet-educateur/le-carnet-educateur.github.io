@@ -517,3 +517,8 @@ body.trOn > *:not(#terrain):not(#trImg):not(#hors):not(#trStop) {
 .grp.gdragging{opacity:.55;background:#EEF4FB;border-radius:8px}
 .grp.gover-up{box-shadow:inset 0 3px 0 #26364D}
 .grp.gover-down{box-shadow:inset 0 -3px 0 #26364D}
+.ghandle.in{padding:0 4px;align-self:center;font-size:16px;flex:0 0 auto}
+.sitsum .ghandle{margin-right:2px}
+.gdragging{opacity:.55}
+.ssub.gover-up,.sit.gover-up{box-shadow:0 -3px 0 #26364D}
+.ssub.gover-down,.sit.gover-down{box-shadow:0 3px 0 #26364D}

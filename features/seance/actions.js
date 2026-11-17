@@ -136,6 +136,53 @@ registerClick(e => {
   return true;
 });
 /* ---------- actions ---------- */
+/* glisser-déposer générique (souris et doigt) : `rows` = éléments dans l'ordre, `from` = rang de celui qu'on déplace,
+   `apply(from, to)` modifie les données. Le survol marque l'endroit d'arrivée ; le clic qui suit un glisser est ignoré. */
+function seDrag(e, rows, from, apply) {
+  e.preventDefault();
+  let to = from;
+  rows[from].classList.add("gdragging");
+  const marque = () =>
+    rows.forEach((r, k) => {
+      r.classList.toggle("gover-up", k === to && to < from);
+      r.classList.toggle("gover-down", k === to && to > from);
+    });
+  const move = ev => {
+    let best = from,
+      dist = 1e9;
+    rows.forEach((r, k) => {
+      const b = r.getBoundingClientRect(),
+        d = Math.abs(ev.clientY - (b.top + b.height / 2));
+      if (d < dist) {
+        dist = d;
+        best = k;
+      }
+    });
+    to = best;
+    marque();
+  };
+  const fin = () => {
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", fin);
+    document.removeEventListener("pointercancel", fin);
+    rows.forEach(r => r.classList.remove("gdragging", "gover-up", "gover-down"));
+    const bloque = ev => {
+      ev.stopPropagation();
+      ev.preventDefault();
+    };
+    document.addEventListener("click", bloque, { capture: true, once: true });
+    setTimeout(() => document.removeEventListener("click", bloque, true), 50);
+    if (to !== from) {
+      apply(from, to);
+      seSave();
+      render();
+    }
+  };
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", fin);
+  document.addEventListener("pointercancel", fin);
+}
+const seMoveIn = (arr, from, to) => arr.splice(to, 0, arr.splice(from, 1)[0]);
 function seanceBind() {
   if (typeof glBind === "function") glBind();
   const upd = () => {
@@ -280,6 +327,28 @@ function seanceBind() {
       seSave();
       render();
     });
+  /* glisser-déposer des exercices seuls / blocs (même liste) et des exercices d'un bloc */
+  document.querySelectorAll("[data-udrag],[data-idrag]").forEach(h => {
+    h.addEventListener("mousedown", e => e.preventDefault());
+    h.addEventListener("dragstart", e => e.preventDefault());
+    h.addEventListener("pointerdown", e => {
+      if (h.dataset.udrag) {
+        const el = document.getElementById("ssub-" + h.dataset.udrag),
+          rows = [...el.parentElement.children].filter(c => /^ssub-/.test(c.id)),
+          ids = rows.map(c => +c.id.slice(5)),
+          arr = [SE.subs, seEchSubs()].find(a => a.some(x => x.id === ids[0]));
+        if (!arr) return;
+        seDrag(e, rows, ids.indexOf(+h.dataset.udrag), (f, t) => seMoveIn(arr, arr.findIndex(x => x.id === ids[f]), arr.findIndex(x => x.id === ids[t])));
+      } else {
+        const f = seFind(+h.dataset.idrag),
+          bloc = h.closest(".ssub.bloc");
+        if (!f || !bloc) return;
+        const rows = [...bloc.querySelectorAll(":scope > details.sit")],
+          ids = rows.map(c => +c.dataset.sd.slice(1));
+        seDrag(e, rows, ids.indexOf(+h.dataset.idrag), (a, t) => seMoveIn(f.s.items, f.s.items.findIndex(x => x.id === ids[a]), f.s.items.findIndex(x => x.id === ids[t])));
+      }
+    });
+  });
   /* glisser-déposer des groupes (souris et doigt) : on attrape la poignée ⠿ et on dépose sur la ligne voulue */
   document.querySelectorAll("[data-gdrag]").forEach(h => {
     h.addEventListener("mousedown", e => e.preventDefault());

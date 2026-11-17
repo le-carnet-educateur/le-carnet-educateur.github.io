@@ -90,3 +90,7 @@ function imgCompresser(file, max = 1100, q = 0.82) {
     im.src = u;
   });
 }
+
+/* Logo du site : un seul fichier (assets/logo.webp), utilisé dans l'en-tête (index.html) et comme image par défaut des jeux sans schéma */
+const LOGO_URL = "assets/logo.webp";
+const logoRepli = "this.onerror=null;this.src='" + LOGO_URL + "';this.className='dflt'";

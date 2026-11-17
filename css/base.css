@@ -35,10 +35,49 @@ a {
 .brand {
   padding: 4px 10px 14px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.logo {
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.brand .logo {
+  width: 52px;
+  height: 52px;
+}
+.bar .logo {
+  width: 34px;
+  height: 34px;
+}
+/* logo affiché à la place d'un schéma absent */
+.dflt {
+  display: block;
+  margin: 8px auto 0;
+  width: 190px;
+  max-width: 60%;
+  height: auto;
+  border-radius: 50%;
+  opacity: 0.92;
+}
+.ai.ai-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+}
+.ai.ai-logo img {
+  width: 96px;
+  height: auto;
+  max-height: none;
+  border-radius: 50%;
 }
 .brand h1 {
   margin: 0;
-  font-size: 22px;
+  font-size: 20px;
+  line-height: 1.15;
   color: var(--navy);
 }
 .brand small {
@@ -384,4 +423,79 @@ h2.pt {
 }
 .navgrp .nav.on {
   background: var(--navy);
+}
+#fiche .pane img.dflt {
+  width: 150px;
+  max-width: 50%;
+  border: 0;
+  padding: 0;
+  background: none;
+  box-shadow: none;
+  border-radius: 50%;
+  opacity: 0.9;
+}
+.gl-l {
+  margin: 22px 0 4px;
+  font-size: 20px;
+  color: var(--navy);
+  border-bottom: 2px solid #E3E8F2;
+  padding-bottom: 2px;
+}
+.gl-abc {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 10px 0 14px;
+}
+.gl-abc a {
+  cursor: pointer;
+  min-width: 28px;
+  text-align: center;
+  padding: 4px 6px;
+  border-radius: 7px;
+  background: #EEF1F8;
+  color: #26364D;
+  font-weight: 700;
+  font-size: 13px;
+}
+.gl-abc a:hover {
+  background: #26364D;
+  color: #fff;
+}
+.gl-act {
+  cursor: pointer;
+  font-size: 12px;
+  color: #6B7280;
+  margin-left: 4px;
+  font-weight: 400;
+}
+.gl-act:hover {
+  color: #26364D;
+}
+details.man > summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 16px;
+  color: var(--navy);
+}
+details.man > summary::-webkit-details-marker {
+  display: none;
+}
+details.man > summary::before {
+  content: "▸ ";
+  color: #8A93A3;
+}
+details.man[open] > summary::before {
+  content: "▾ ";
+}
+.man-b {
+  margin-top: 8px;
+  font-size: 14.5px;
+  line-height: 1.5;
+}
+.man-b ul {
+  padding-left: 20px;
+}
+.man-b li {
+  margin: 5px 0;
 }

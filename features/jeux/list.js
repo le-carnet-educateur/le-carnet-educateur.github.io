@@ -13,7 +13,7 @@ function thumb(g) {
     .filter(Boolean)
     .map(x => `<span>${esc(x)}</span>`)
     .join("") + typePill(g);
-  return `<div class="auto"><div class="ah"><div class="af">${esc((g.Famille || "").toUpperCase())}</div><div class="ac">${esc(g.Code || "★")}</div><div class="at">${esc(g.Titre)}</div><div class="ar">${esc(g["Résumé"])}</div></div>${s ? `<div class="ai"><img loading="lazy" src="${esc(s)}" alt="" onerror="this.parentNode.remove()"></div>` : ""}<div class="ap">${puces}</div></div>`;
+  return `<div class="auto"><div class="ah"><div class="af">${esc((g.Famille || "").toUpperCase())}</div><div class="ac">${esc(g.Code || "★")}</div><div class="at">${esc(g.Titre)}</div><div class="ar">${esc(g["Résumé"])}</div></div>${s ? `<div class="ai"><img loading="lazy" src="${esc(s)}" alt="" onerror="this.onerror=null;this.src='${LOGO_URL}';this.parentNode.classList.add('ai-logo')"></div>` : `<div class="ai ai-logo"><img loading="lazy" src="${LOGO_URL}" alt=""></div>`}<div class="ap">${puces}</div></div>`;
 }
 function viewTitle(v) {
   if (v === "home") return ["Accueil", ""];
