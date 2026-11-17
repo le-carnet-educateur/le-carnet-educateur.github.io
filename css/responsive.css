@@ -21,6 +21,13 @@
   .hero {
     padding: 22px 18px;
   }
+  .hero::after {
+    width: 130px;
+    height: 130px;
+    right: 10px;
+    top: 62px;
+    opacity: 0.14;
+  }
   .hero h2 {
     font-size: 25px;
   }

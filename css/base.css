@@ -45,12 +45,17 @@ a {
   object-fit: cover;
 }
 .brand .logo {
-  width: 52px;
-  height: 52px;
+  position: absolute;
+  left: 0;
+  top: 2px;
+  width: 84px;
+  height: 84px;
+  opacity: 0.2;
+  z-index: 0;
 }
 .bar .logo {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
 }
 /* logo affiché à la place d'un schéma absent */
 .dflt {

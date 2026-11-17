@@ -86,7 +86,7 @@ function seLoad() {
 }
 /* sous-sections de l'échauffement (blocs : jeu ou exercice libre, groupes et durées) puis du corps de séance */
 const seEchSubs = () => (SE && SE.ech && Array.isArray(SE.ech.subs) ? SE.ech.subs : []);
-const seToutesSubs = () => seEchSubs().concat(SE.subs);
+const seToutesSubs = () => seEchSubs().concat(SE && Array.isArray(SE.subs) ? SE.subs : []).filter(s => s && Array.isArray(s.items));
 const seSubFind = id => seToutesSubs().find(x => x.id === +id);
 /* anciennes séances : échauffement à texte unique / par groupe + jeux → blocs */
 function echMigrer() {
