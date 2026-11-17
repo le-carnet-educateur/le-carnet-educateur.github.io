@@ -479,9 +479,11 @@ body.trOn > *:not(#terrain):not(#trImg):not(#hors):not(#trStop) {
 /* exercice seul (bleu-vert) et bloc (violet) */
 .sit.solo{border-left:4px solid #1B6A8A}
 .sitnum{flex:0 0 auto;min-width:22px;height:22px;line-height:22px;text-align:center;border-radius:11px;background:#D5ECF5;color:#1B6A8A;font-size:12px}
-.sitdur{flex:0 0 auto;font-size:11.5px;font-weight:700;color:#5B6B82}
+.sitdur{flex:0 0 auto;display:inline-flex;gap:3px;flex-wrap:wrap;justify-content:flex-end}
+.gtag{font-style:normal;font-size:10.5px;font-weight:700;color:#fff;border-radius:9px;padding:1px 7px;white-space:nowrap}
+.sitgap{flex:1 1 8px;align-self:stretch;min-width:8px}
 .ssub.bloc{border-left:4px solid #5B4BA8;background:#F7F5FC;border-color:#DDD6F0}
-.bhead{font-size:13px;font-weight:700;color:#5B4BA8;margin-bottom:6px}
+.bhead{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#5B4BA8;margin-bottom:6px}
 .sitact .chip{padding:2px 9px;font-size:12px;line-height:1.5}
 .sitact{display:flex;gap:4px}
 /* petits boutons de conversion bloc <-> exercice seul, avec info-bulle immédiate */
@@ -493,5 +495,18 @@ body.trOn > *:not(#terrain):not(#trImg):not(#hors):not(#trStop) {
 [data-tip]{position:relative}
 [data-tip]:hover::after,[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:0;top:calc(100% + 6px);z-index:40;width:max-content;max-width:250px;background:#26364D;color:#fff;font-size:12px;font-weight:500;line-height:1.35;padding:6px 10px;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.25);white-space:normal;pointer-events:none;text-align:left}
 
-.sitlink{display:flex;flex:1 1 auto;min-width:0;gap:6px;align-items:baseline;text-decoration:none;cursor:pointer}
+.sitlink{display:flex;flex:0 1 auto;min-width:0;max-width:100%;gap:6px;align-items:baseline;text-decoration:none;cursor:pointer}
 .sitlink:hover .sitname{text-decoration:underline}
+
+/* groupes + durées : une seule ligne compacte */
+.gdrow{display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 8px;margin-top:8px}
+.gdl{font-size:12px;font-weight:700;color:#5B6B82;padding-bottom:5px}
+.gd{display:flex;flex-direction:column;gap:2px;padding:3px 7px 4px;border-radius:8px;background:#fff;border:1.5px solid var(--gc);min-width:84px}
+.gd.off{border-color:#D5DAE5;background:#F1F3F7;opacity:.75}
+.gdn{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--gc);cursor:pointer;white-space:nowrap}
+.gd.off .gdn{color:#8A93A3}
+.gdn input{margin:0}
+.gdv{display:flex;align-items:center;gap:4px}
+.gdv input{width:52px;font:inherit;font-size:13px;padding:2px 4px;border:1px solid #D5DAE5;border-radius:6px;background:#fff}
+.gdv input:disabled{background:#E7EAF0;color:#9AA3B2;cursor:not-allowed}
+.gdv small{font-size:11px;color:#6B7280}

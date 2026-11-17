@@ -193,6 +193,11 @@ function buildSeanceDoc(logo) {
       "8A6D12"
     )
   );
+  const lines = t =>
+    String(t || "")
+      .split(/\n/)
+      .map(l => l.replace(/^\s*[•\-–]\s*/, "").trim())
+      .filter(Boolean);
   if (M.ech.on) {
     out.push(...band(tg(M.ce, M.all), "ÉCHAUFFEMENT", "E6F2E6", "2E6F3E"));
     M.echSubs.forEach((s, k) => {
@@ -262,11 +267,6 @@ function buildSeanceDoc(logo) {
       m: { top: 50, bottom: 50, left: 140, right: 100 },
       b: { bottom: bd("D5DAE5") },
     });
-  const lines = t =>
-    String(t || "")
-      .split(/\n/)
-      .map(l => l.replace(/^\s*[•\-–]\s*/, "").trim())
-      .filter(Boolean);
   if (M.subs.length) {
     const rows = [
       row(

@@ -210,8 +210,8 @@ function propView() {
   return (
     head +
     `<div class="box">${propFormHTML(v, DISC, k => `data-pf="${esc(k)}"`, k => `data-pt="${esc(k)}"`)}<div class="pgrp" style="${propTheme(v, DISC)}"><h3>SCHÉMA</h3>
-    <div class="sml" style="grid-column:1/-1">Schéma <span style="font-weight:400;color:#6B7280"> — facultatif : dessinez-le, ou choisissez-en un déjà envoyé</span>
-      <div class="tools" style="margin:6px 0"><a class="btn" data-pr="draw" style="background:#26364D;color:#fff;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block">✏ Dessiner un schéma</a><a class="btn" data-pr="pick" style="background:#EEF1F8;color:#26364D;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block">🖼 Choisir un schéma existant</a>${lien ? `<a class="chip" data-pr="nolink" style="cursor:pointer">Retirer</a>` : ""}</div>
+    <div class="sml" style="grid-column:1/-1">Schéma <span style="font-weight:400;color:#6B7280"> — facultatif : dessinez-le, envoyez une photo, ou choisissez-en un déjà envoyé</span>
+      <div class="tools" style="margin:6px 0"><a class="btn" data-pr="draw" style="background:#26364D;color:#fff;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block">✏ Dessiner un schéma</a><a class="btn" data-pr="photo" style="background:#EEF1F8;color:#26364D;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block">📷 Photo / image</a><a class="btn" data-pr="pick" style="background:#EEF1F8;color:#26364D;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block">🖼 Choisir un schéma existant</a>${lien ? `<a class="chip" data-pr="nolink" style="cursor:pointer">Retirer</a>` : ""}</div>
       <input data-pf="Schéma (lien)" value="${esc(lien)}" placeholder="ou collez ici le lien d'une image">${prev}</div></div>${choix}
     ${msg}<div class="tools" style="margin-top:14px"><a class="btn" data-pr="send" style="background:#2E7D4F;color:#fff;border-radius:8px;padding:10px 20px;font-weight:700;cursor:pointer;display:inline-block">${PROP.busy ? "Envoi…" : "Envoyer ma proposition"}</a></div></div>`
   );
@@ -296,6 +296,44 @@ registerClick(e => {
     delete PROP.v["Schéma (lien)"];
     propSave();
     render();
+  } else if (a === "photo") {
+    let f = $("#propPhoto");
+    if (f) f.remove();
+    f = document.createElement("input");
+    f.type = "file";
+    f.accept = "image/*";
+    f.id = "propPhoto";
+    f.style.display = "none";
+    f.addEventListener("change", async () => {
+      const fic = f.files && f.files[0];
+      if (!fic) return;
+      try {
+        PROP.msg = "";
+        toast("Compression de l'image…");
+        const im = await imgCompresser(fic);
+        const r = await fetch(CONFIG.GAME_ADD_URL, {
+          method: "POST",
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({
+            action: "schema",
+            name: "photo-" + Date.now().toString(36),
+            ext: "jpg",
+            data: im.data,
+            key: CONFIG.SCHEMA_UPLOAD_URL ? CONFIG.SCHEMA_UPLOAD_KEY || "" : CONFIG.GAME_ADD_KEY || "",
+          }),
+        });
+        const j = await r.json();
+        if (!j.ok) throw new Error(j.error || "refusé");
+        propSetSchema(j.url);
+        toast("✓ Image envoyée (" + im.ko + " Ko).");
+        render();
+      } catch (err) {
+        PROP.msg = "Image : " + err.message;
+        render();
+      }
+    });
+    document.body.appendChild(f);
+    f.click();
   } else if (a === "draw") {
     ED.ctx = null;
     ED.back = "proposer";

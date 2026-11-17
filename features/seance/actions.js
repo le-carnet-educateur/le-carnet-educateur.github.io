@@ -433,7 +433,8 @@ document.addEventListener("click", e => {
   } else if (a === "tosolo") {
     const t = seSubFind(sid);
     if (t && t.items.length === 1) {
-      if (t.titre && !(t.items[0].nom || "").trim()) t.items[0].nom = t.titre;
+      /* le nom du jeu remplace celui du bloc ; le titre du bloc ne sert que pour un exercice libre sans nom */
+      if (t.items[0].t === "free" && !(t.items[0].titre || "").trim()) t.items[0].titre = t.titre || "";
       t.titre = "";
       t.solo = true;
     }
@@ -643,12 +644,14 @@ function jeuApercuHTML(g) {
     (g.Conseil ? `<div class="tip"><b>CONSEIL</b> ${esc(g.Conseil)}</div>` : "")
   );
 }
+function jeuApercuOuvrir(g) {
+  modal(`<span style="color:${famOf(g).d}">${esc(g.Code || "★")}</span> · ${esc(g.Titre)}`, jeuApercuHTML(g), 640);
+}
 registerClick(e => {
   const b = e.target.closest("[data-jv]");
   if (!b) return;
   e.preventDefault();
   const g = DATA.find(x => key(x) === b.dataset.jv);
-  if (!g) return true;
-  modal(`<span style="color:${famOf(g).d}">${esc(g.Code || "★")}</span> · ${esc(g.Titre)}`, jeuApercuHTML(g), 640);
+  if (g) jeuApercuOuvrir(g);
   return true;
 });

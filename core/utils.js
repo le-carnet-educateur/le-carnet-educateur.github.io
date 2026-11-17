@@ -60,3 +60,33 @@ function driveImg(u) {
     ? "https://drive.google.com/thumbnail?id=" + m[1] + "&sz=w1600"
     : u;
 }
+
+/* Photo / dessin importé : redimensionné (côté max 1100 px) et recompressé en JPEG dans le navigateur, avant tout envoi.
+   Renvoie { data (base64 sans en-tête), w, h, ko (taille en Ko) }. */
+function imgCompresser(file, max = 1100, q = 0.82) {
+  return new Promise((ok, ko) => {
+    if (!file || !/^image\//.test(file.type)) return ko(new Error("Ce fichier n'est pas une image."));
+    const u = URL.createObjectURL(file),
+      im = new Image();
+    im.onload = () => {
+      const k = Math.min(1, max / Math.max(im.width, im.height)),
+        w = Math.round(im.width * k),
+        h = Math.round(im.height * k),
+        c = document.createElement("canvas");
+      c.width = w;
+      c.height = h;
+      const x = c.getContext("2d");
+      x.fillStyle = "#fff";
+      x.fillRect(0, 0, w, h);
+      x.drawImage(im, 0, 0, w, h);
+      URL.revokeObjectURL(u);
+      const d = c.toDataURL("image/jpeg", q).split(",")[1];
+      ok({ data: d, w, h, ko: Math.round((d.length * 3) / 4 / 1024) });
+    };
+    im.onerror = () => {
+      URL.revokeObjectURL(u);
+      ko(new Error("Image illisible (format non pris en charge par ce navigateur)."));
+    };
+    im.src = u;
+  });
+}
