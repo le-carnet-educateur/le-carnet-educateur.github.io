@@ -114,7 +114,7 @@ function seModel() {
     ...g,
     i,
     nom: g.nom || "Groupe " + (i + 1),
-    c: GCOL[i],
+    c: GCOL[g.ci >= 0 && g.ci < GCOL.length ? g.ci : i],
   }));
   const all = G.map(g => g.i);
   const mapSubs = L => {

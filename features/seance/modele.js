@@ -235,6 +235,16 @@ function seDefaults() {
     ["g1", "g2", "acc1", "acc2", "rc1", "rc2", "deux"].forEach(k => delete S[k]);
   }
   S.groups = S.groups.slice(0, GMAX);
+  /* chaque groupe garde SA couleur (ci = rang dans GCOL), même quand on change l'ordre des groupes ; groupes anciens : couleur de leur rang */
+  {
+    const used = new Set(S.groups.map(g => g.ci).filter(c => c >= 0 && c < GCOL.length));
+    S.groups.forEach((g, i) => {
+      if (g.ci >= 0 && g.ci < GCOL.length) return;
+      const c = !used.has(i) ? i : GCOL.map((_, k) => k).find(k => !used.has(k));
+      g.ci = c === undefined ? i % GCOL.length : c;
+      used.add(g.ci);
+    });
+  }
   const n = S.groups.length;
   const E = SE.ech;
   if (E.d1 !== undefined || E.d2 !== undefined) {
@@ -261,6 +271,21 @@ function seDefaults() {
   });
 }
 /* retire un groupe de toute la séance */
+/* change l'ordre des groupes (i ↔ i+dir) : tout ce qui est rangé par groupe suit, et chaque groupe garde sa couleur */
+function seMoveGroup(i, dir) {
+  const j = i + dir,
+    G = SMETA.groups;
+  if (j < 0 || j >= G.length) return;
+  const sw = (a, x, y) => {
+    if (Array.isArray(a)) [a[x], a[y]] = [a[y], a[x]];
+  };
+  sw(G, i, j);
+  seToutesSubs().forEach(s => {
+    sw(s.d, i, j);
+    if (Array.isArray(s.gs)) s.gs = s.gs.map(x => (x === i ? j : x === j ? i : x)).sort((a, b) => a - b);
+  });
+  if (SE.ech) sw(SE.ech.gtxt, i, j);
+}
 function seDropGroup(i) {
   SMETA.groups.splice(i, 1);
   seToutesSubs().forEach(s => {

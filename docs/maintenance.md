@@ -606,3 +606,7 @@ Tout est dans `features/seance/terrain.js` (chargé avant `controle.js`).
 - **v134** : photo / image par jeu. `imgCompresser()` (core/utils.js) réduit à 1100 px max et recompresse en JPEG dans le navigateur ; bouton « 📷 Photo / image » dans l'admin (`data-adm="photo"`, action `admin_schema` avec `ext:"jpg"`) et dans « Proposer un jeu » (`data-pr="photo"`, action `schema`). **serveur_site.gs modifié** (`extImage`, `nomFichier` accepte .jpg) : à recopier et redéployer. Le fichier est écrit dans `schemas/<code>.jpg` du dépôt ; le lien va dans « Schéma (lien) ».
 
 - **v135** : e-mail à l'auteur à la première publication de son jeu (`adminEnregistrer` dans serveur_site.gs). Envoyé seulement si l'auteur avait un compte, si les e-mails sont activés et si la proposition est « en attente » dans l'onglet « Propositions » (statut passe à « publié » : pas de doublon à la republication). **serveur_site.gs modifié.**
+
+- **v136** : réorganiser les groupes (↑ ↓ dans « Informations ») en gardant la couleur de chaque groupe : champ `ci` (rang dans `GCOL`) sur chaque groupe, attribué dans `seDefaults` (groupes anciens : couleur de leur rang) ; `seMoveGroup(i, dir)` permute groupes, durées `d`, groupes cochés `gs` et textes d'échauffement par groupe. Un nouveau groupe prend la première couleur libre.
+
+- **v137** : groupes réordonnables par glisser-déposer (poignée ⠿ `data-gdrag`, événements pointer : souris et tactile ; `seanceBind` dans actions.js). Les flèches ↑ ↓ restent en secours.

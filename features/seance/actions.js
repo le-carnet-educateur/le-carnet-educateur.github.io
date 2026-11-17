@@ -280,6 +280,64 @@ function seanceBind() {
       seSave();
       render();
     });
+  /* glisser-déposer des groupes (souris et doigt) : on attrape la poignée ⠿ et on dépose sur la ligne voulue */
+  document.querySelectorAll("[data-gdrag]").forEach(h => {
+    h.addEventListener("mousedown", e => e.preventDefault());
+    h.addEventListener("dragstart", e => e.preventDefault());
+    h.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      const from = +h.dataset.gdrag,
+        rows = [...document.querySelectorAll("[data-grow]")];
+      let to = from;
+      const row = i => rows.find(r => +r.dataset.grow === i);
+      row(from).classList.add("gdragging");
+      const marque = () =>
+        rows.forEach(r => {
+          const k = +r.dataset.grow;
+          r.classList.toggle("gover-up", k === to && to < from);
+          r.classList.toggle("gover-down", k === to && to > from);
+        });
+      const move = ev => {
+        const y = ev.clientY;
+        let best = from,
+          dist = 1e9;
+        rows.forEach(r => {
+          const b = r.getBoundingClientRect(),
+            d = Math.abs(y - (b.top + b.height / 2));
+          if (d < dist) {
+            dist = d;
+            best = +r.dataset.grow;
+          }
+        });
+        to = best;
+        marque();
+      };
+      const fin = () => {
+        document.removeEventListener("pointermove", move);
+        document.removeEventListener("pointerup", fin);
+        document.removeEventListener("pointercancel", fin);
+        rows.forEach(r => r.classList.remove("gdragging", "gover-up", "gover-down"));
+        if (to !== from) {
+          const sens = to > from ? 1 : -1;
+          for (let k = from; k !== to; k += sens) seMoveGroup(k, sens);
+          saveMeta();
+          seSave();
+          render();
+        }
+      };
+      document.addEventListener("pointermove", move);
+      document.addEventListener("pointerup", fin);
+      document.addEventListener("pointercancel", fin);
+    });
+  });
+  document.querySelectorAll("[data-gmv]").forEach(i =>
+    i.addEventListener("click", () => {
+      seMoveGroup(+i.dataset.gmv, +i.dataset.dir);
+      saveMeta();
+      seSave();
+      render();
+    })
+  );
   document.querySelectorAll("[data-grm]").forEach(i =>
     i.addEventListener("click", () => {
       const g = SMETA.groups[+i.dataset.grm];
