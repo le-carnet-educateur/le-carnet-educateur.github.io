@@ -44,7 +44,7 @@ a {
 .brand > div {
   position: relative;
   z-index: 1;
-  margin-left: 25px;
+  margin-left: 10px;
 }
 .logo {
   flex: 0 0 auto;
