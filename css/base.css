@@ -52,13 +52,14 @@ a {
   object-fit: cover;
 }
 .brand .logo {
-  position: relative;
+  position: absolute;
   left: 10px;
-  top: -6px;
+  top: 50%;
   transform: translateY(-50%);
   width: 66px;
   height: 66px;
   opacity: 0.38;
+  z-index: 0;
 }
 .bar .logo {
   width: 40px;
