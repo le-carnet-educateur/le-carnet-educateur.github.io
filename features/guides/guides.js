@@ -2,6 +2,7 @@
 const GUIDES = [
   ["secu", "Règles de sécurité", "⚠"],
   ["organiser", "Organiser ses séances", "▲"],
+  ["progression", "Progression du 1er cycle", "↗"],
   ["equipes", "Former les équipes", "⚑"],
   ["gloss", "Glossaire", "Aa"],
   ["manuel", "Manuel d'utilisation", "?"],
@@ -36,7 +37,7 @@ registerClick(e => {
   return true;
 });
 function guideView(k) {
-  if (k === "seances" || k === "cycle") k = "seancetype"; /* anciens liens */
+  if (k === "seances") k = "seancetype"; /* anciens liens */
   if (k === "materiel") k = "organiser";
   if (k === "organiser" || (!ORG.on && ORG_TABS.some(t => t[0] === k))) return organiserView(k === "organiser" ? "" : k);
   if (k === "secu")
@@ -78,6 +79,7 @@ function guideView(k) {
       ).join("") +
       `</div><div class="box" style="margin-top:16px"><b>Pour équilibrer</b><ul>${AX.EQ_RULES.map(r => `<li>${esc(r)}</li>`).join("")}</ul></div><div class="box"><b>Quelle taille d'équipe pour quel jeu</b><table class="tl" style="margin-top:8px">${AX.EQ_SIZES.map(([a, b]) => `<tr><td style="white-space:normal">${esc(a)}</td><td>${b.split(" · ").map(codeLk).join(" ")}</td></tr>`).join("")}</table></div>`
     );
+  if (k === "progression") return progressionView();
   if (k === "gloss") return glossaireView();
   if (k === "manuel") return manuelView();
   return '<div class="empty">Page introuvable.</div>';

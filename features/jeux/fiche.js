@@ -50,7 +50,15 @@ function syncModal() {
   $("#ov").classList.remove("open");
   document.body.style.overflow = "";
 }
+/* vraie fiche ouverte par-dessus une séance : on ferme sans changer de page */
+let FICHE_LOCAL = false;
 function closeFiche() {
+  if (FICHE_LOCAL) {
+    FICHE_LOCAL = false;
+    $("#ov").classList.remove("open");
+    document.body.style.overflow = "";
+    return;
+  }
   go(VIEW);
 }
 function tab(p) {
@@ -74,7 +82,10 @@ registerClick(e => {
   }
 });
 document.addEventListener("keydown", e => {
-  if (e.key === "Escape" && MODAL) closeFiche();
+  if (e.key === "Escape" && FICHE_LOCAL) {
+    e.stopImmediatePropagation();
+    closeFiche();
+  } else if (e.key === "Escape" && MODAL) closeFiche();
 });
 
 /* Impression d'une fiche de jeu : tout le contenu sur une seule page A4 */

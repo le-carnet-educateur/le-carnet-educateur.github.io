@@ -38,6 +38,13 @@ a {
   display: flex;
   align-items: center;
   gap: 10px;
+  position: relative;
+  min-height: 66px;
+}
+.brand > div {
+  position: relative;
+  z-index: 1;
+  margin-left: 52px;
 }
 .logo {
   flex: 0 0 auto;
@@ -46,11 +53,11 @@ a {
 }
 .brand .logo {
   position: absolute;
-  left: 0;
-  top: 2px;
-  width: 84px;
-  height: 84px;
-  opacity: 0.2;
+  left: 14px;
+  top: 0;
+  width: 66px;
+  height: 66px;
+  opacity: 0.38;
   z-index: 0;
 }
 .bar .logo {

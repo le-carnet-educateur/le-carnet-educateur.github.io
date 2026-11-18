@@ -7,13 +7,10 @@ document.addEventListener("click", e => {
 registerClick(e => {
   const j = e.target.closest("[data-jeu]");
   if (j) {
-    /* depuis une séance (aperçu, fenêtre de séance) : fiche en popup au premier plan, sans quitter la séance */
-    if (j.closest("#sheet, #epop, #pop") && typeof jeuApercuOuvrir === "function") {
-      const g = DATA.find(x => x.Code === j.dataset.jeu);
-      if (g) {
-        jeuApercuOuvrir(g);
-        return true;
-      }
+    /* depuis une séance (aperçu, fenêtre de séance) : vraie fiche du jeu au premier plan, sans quitter la séance (pas de changement de page) */
+    if ((FICHE_LOCAL || j.closest("#sheet, #epop, #pop, #mpop")) && openFiche(j.dataset.jeu)) {
+      FICHE_LOCAL = true;
+      return true;
     }
     go("jeu/" + encodeURIComponent(j.dataset.jeu));
     return true;

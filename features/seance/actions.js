@@ -772,6 +772,10 @@ function jeuApercuHTML(g) {
   );
 }
 function jeuApercuOuvrir(g) {
+  if (typeof openFiche === "function" && openFiche(key(g))) {
+    FICHE_LOCAL = true;
+    return;
+  }
   modal(`<span style="color:${famOf(g).d}">${esc(g.Code || "★")}</span> · ${esc(g.Titre)}`, jeuApercuHTML(g), 640);
 }
 registerClick(e => {
