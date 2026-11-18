@@ -25,10 +25,12 @@ async function glossaireCharger() {
 }
 registerLoader(glossaireCharger);
 /* liste fusionnée : les mots ajoutés remplacent ceux de départ qui portent le même nom ; tri alphabétique (accents ignorés) */
+/* un mot de départ « supprimé » est enregistré avec cette définition spéciale : il n'est plus affiché */
+const GL_MASQUE = "[masqué]";
 function glossListe() {
   const m = new Map();
   glBase().forEach(([t, d]) => m.set(glCle(t), { t, d, ajout: false }));
-  GLOSS_AJOUTS.filter(x => x.d === glDisc()).forEach(x => m.set(glCle(x.t), { t: x.t, d: x.def, ajout: true }));
+  GLOSS_AJOUTS.filter(x => x.d === glDisc()).forEach(x => (x.def === GL_MASQUE ? m.delete(glCle(x.t)) : m.set(glCle(x.t), { t: x.t, d: x.def, ajout: true })));
   const col = new Intl.Collator("fr", { sensitivity: "base", ignorePunctuation: true });
   return [...m.values()].sort((a, b) => col.compare(a.t, b.t));
 }
@@ -54,7 +56,7 @@ function glossaireView() {
     corps += `<h3 class="gl-l" id="gl-${l === "#" ? "x" : l}">${l}</h3><dl class="gl">${L.filter(x => glLettre(x.t) === l)
       .map(
         x =>
-          `<dt data-glt="${esc(glCle(x.t))}">${esc(x.t)}${adm ? ` <a class="gl-act noprint" data-gl="edit" data-t="${esc(x.t)}" title="Modifier">✎</a>${x.ajout ? ` <a class="gl-act noprint" data-gl="del" data-t="${esc(x.t)}" title="Supprimer ce mot">✕</a>` : ""}` : ""}</dt><dd>${esc(x.d)}</dd>`
+          `<dt data-glt="${esc(glCle(x.t))}">${esc(x.t)}${adm ? ` <a class="gl-act noprint" data-gl="edit" data-t="${esc(x.t)}" title="Modifier">✎</a><a class="gl-act noprint" data-gl="del" data-t="${esc(x.t)}" title="Supprimer ce mot">✕</a>` : ""}</dt><dd>${esc(x.d)}</dd>`
       )
       .join("")}</dl>`;
   });
@@ -104,8 +106,16 @@ async function glossaireEnregistrer() {
 async function glossaireSupprimer(t) {
   if (!confirm("Supprimer le mot « " + t + " » du glossaire ?")) return;
   try {
-    await admPost("admin_glossaire", { op: "supprimer", disc: glDisc(), terme: t });
-    GLOSS_AJOUTS = GLOSS_AJOUTS.filter(x => !(x.d === glDisc() && glCle(x.t) === glCle(t)));
+    const depart = glBase().some(([bt]) => glCle(bt) === glCle(t));
+    if (depart) {
+      /* mot de départ : on le masque (écrase aussi une éventuelle version modifiée) */
+      await admPost("admin_glossaire", { op: "enregistrer", disc: glDisc(), terme: t, def: GL_MASQUE, avant: t });
+      GLOSS_AJOUTS = GLOSS_AJOUTS.filter(x => !(x.d === glDisc() && glCle(x.t) === glCle(t)));
+      GLOSS_AJOUTS.push({ d: glDisc(), t, def: GL_MASQUE });
+    } else {
+      await admPost("admin_glossaire", { op: "supprimer", disc: glDisc(), terme: t });
+      GLOSS_AJOUTS = GLOSS_AJOUTS.filter(x => !(x.d === glDisc() && glCle(x.t) === glCle(t)));
+    }
     offPut("glossaire", GLOSS_AJOUTS);
     render();
   } catch (err) {
