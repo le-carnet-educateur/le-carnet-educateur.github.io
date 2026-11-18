@@ -61,6 +61,16 @@ function progressionView() {
 registerClick(e => {
   const b = e.target.closest("[data-cyc]");
   if (!b) return;
+  document.body.classList.add("pg");
+  let fini = false;
+  const net = () => {
+    if (fini) return;
+    fini = true;
+    document.body.classList.remove("pg");
+    window.removeEventListener("afterprint", net);
+  };
+  window.addEventListener("afterprint", net);
+  setTimeout(net, 60000);
   window.print();
   return true;
 });
