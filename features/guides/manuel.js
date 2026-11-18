@@ -41,6 +41,18 @@ const MANUEL = [
     <li><b>Créer un cycle</b> assemble plusieurs séances en un programme.</li></ul>`,
   ],
   [
+    "Équipes et notifications",
+    `<p><b>Une équipe</b> est un groupe de personnes (identifiées par leur adresse Google) qui travaillent ensemble sur les mêmes séances et cycles.</p>
+    <ul><li><b>Créer une équipe</b> : menu <i>Mes équipes</i>, donnez un nom et ajoutez les adresses des membres. Vous en êtes le <b>responsable</b> : vous seul pouvez la modifier ou la supprimer. Un membre peut à tout moment <b>quitter</b> l'équipe.</li>
+    <li><b>Partager</b> : depuis <i>Séances et cycles</i>, « Partager » une séance ou un cycle avec des personnes ou une équipe. Les membres la voient dans leur liste. Ils doivent se connecter avec <b>l'adresse Google</b> utilisée pour l'invitation.</li></ul>
+    <p><b>Qui est prévenu, et comment</b></p>
+    <ul><li><b>Une personne ajoutée à une équipe</b> est prévenue par e-mail. Seules les personnes <b>nouvellement ajoutées</b> reçoivent un message, pas celles qui y étaient déjà.</li>
+    <li><b>Une séance partagée</b> : les personnes concernées (ou les membres de l'équipe) reçoivent un e-mail avec le lien vers la séance. Vous pouvez modifier le message avant l'envoi.</li>
+    <li><b>Mode d'envoi</b> : par défaut, le site ouvre un e-mail <b>prérempli dans votre propre messagerie</b>, et il part de votre adresse, vous n'avez qu'à l'envoyer. L'administrateur peut aussi activer l'envoi automatique ou désactiver les e-mails : dans ce cas, prévenez les personnes vous-même.</li>
+    <li><b>Un jeu que vous proposez</b> : vous recevez un e-mail de confirmation à la réception, puis un autre quand il est <b>publié</b>, ou <b>refusé</b> avec la raison. Cela suppose d'être connecté avec Google au moment de la proposition.</li>
+    <li><b>La création d'un jeu ou d'une séance par quelqu'un d'autre ne déclenche aucune notification</b> : les nouveaux jeux apparaissent simplement dans « Dernières fiches ajoutées » sur l'accueil. Les séances et cycles, eux, ne sont visibles que par leur auteur et les personnes avec qui il les partage.</li></ul>`,
+  ],
+  [
     "Mode terrain",
     `<p>Depuis une séance enregistrée, le bouton <b>Terrain</b> ouvre une version pensée pour la salle : écran plein, étapes dans l'ordre (accueil, échauffement, corps de séance, retour au calme, bilan), chronomètre et notes. Le chronomètre tourne bien en arrière-plan, mais <b>il ne sonne que si l'écran est allumé</b> : laissez l'écran actif pendant la séance.</p>`,
   ],
