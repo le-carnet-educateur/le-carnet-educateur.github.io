@@ -44,7 +44,6 @@ a {
 .brand > div {
   position: relative;
   z-index: 1;
-  margin-left: 52px;
 }
 .logo {
   flex: 0 0 auto;
@@ -53,8 +52,9 @@ a {
 }
 .brand .logo {
   position: absolute;
-  left: 14px;
-  top: 0;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
   width: 66px;
   height: 66px;
   opacity: 0.38;

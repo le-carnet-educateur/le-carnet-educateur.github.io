@@ -28,6 +28,7 @@
   transform: translateY(-50%);
   background: url(../../assets/logo.webp) center/cover no-repeat;
   border-radius: 50%;
+  opacity: 0.6;
   pointer-events: none;
 }
 .hero > * {

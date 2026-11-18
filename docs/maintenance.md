@@ -622,3 +622,4 @@ Tout est dans `features/seance/terrain.js` (chargé avant `controle.js`).
 - **v143** : logo uniquement en vignette (plus dans la fiche ouverte) ; logo agrandi en filigrane derrière le titre (haut gauche) et dans le bandeau bleu de l'accueil (`.hero::after`).
 - **v144** : logo du bandeau d'accueil plein (sans filigrane) ; logo du menu plus petit, décalé à droite, texte du titre décalé.
 - **v145** : guide « Progression du 1er cycle » (`features/guides/progression.js`, texte seulement) ; clic sur un jeu depuis une séance (aperçu, fenêtre, formulaire) = vraie fiche du jeu au premier plan (`#ov` z-index 250, `FICHE_LOCAL` : fermeture sans changer de page, Échap ne ferme que la fiche).
+- **v146** : logo du menu à droite, centré verticalement sur le titre (texte à gauche) ; logo du bandeau d'accueil en léger filigrane (0,6).
