@@ -254,18 +254,23 @@ function equipesView() {
   const head = gsec(
     "Mes équipes",
     "Une équipe est un groupe de personnes (adresses Google). Partager une séance avec l'équipe la rend lisible par tous ses membres.",
-    "<b>Comment faire ?</b><br>Créez une équipe, ajoutez les adresses Google de ses membres (une par ligne). Ensuite, dans une séance ou un cycle, choisissez « Partager » puis cette équipe."
+    "<b>Comment faire ?</b><br>Créez une équipe, ajoutez les adresses Google de ses membres (✕ pour en retirer un). Ensuite, dans une séance ou un cycle, choisissez « Partager » puis cette équipe."
   );
   if (!AUTH.user) return head + compteInvite("pour gérer vos équipes");
   const mes = EQUIPES.filter(q => q.owner === AUTH.user.email);
   const autres = EQUIPES.filter(q => q.owner !== AUTH.user.email);
   const carte = q =>
-    `<div class="box"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1">👥 ${esc(q.nom)}</b><span style="color:#6B7280;font-size:13px">${q.membres.length} membre${q.membres.length > 1 ? "s" : ""}</span></div>
+    `<div class="box"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1">👥 ${esc(q.nom)}</b><span style="color:#6B7280;font-size:13px">${q.membres.length} membre${q.membres.length > 1 ? "s" : ""} + vous</span></div>
     <label class="sml" style="margin-top:8px">Nom de l'équipe<input data-eqf="nom" data-id="${esc(q.id)}" value="${esc(q.nom)}"></label>
-    <label class="sml" style="margin-top:8px">Membres (adresses Google, une par ligne)<textarea rows="4" data-eqf="membres" data-id="${esc(q.id)}">${esc(q.membres.join("\n"))}</textarea></label>
-    <div class="tools" style="margin-top:8px"><a class="btn" data-eq="save" data-id="${esc(q.id)}" style="background:#2E7D4F;color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;display:inline-block">Enregistrer</a><a class="btn" data-eq="del" data-id="${esc(q.id)}" style="background:#fff;color:#B2263A;border:1px solid #E8B4BC;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;display:inline-block">🗑 Supprimer l'équipe</a></div></div>`;
+    <label class="sml" style="margin-top:8px">Description (facultative)<textarea rows="2" maxlength="500" data-eqf="description" data-id="${esc(q.id)}" placeholder="À quoi sert cette équipe ?">${esc(q.description || "")}</textarea></label>
+    <div style="margin-top:10px"><b style="font-size:14px">Membres</b>
+      ${q.membres.length ? `<div style="display:flex;flex-wrap:wrap;gap:6px;margin:6px 0">${q.membres.map(m => `<span class="chip" style="cursor:default;display:inline-flex;gap:8px;align-items:center">${esc(m)}<a data-eq="rm" data-id="${esc(q.id)}" data-m="${esc(m)}" title="Retirer de l'équipe" style="cursor:pointer;color:#B2263A;font-weight:700">✕</a></span>`).join("")}</div>` : '<p class="hint" style="margin:6px 0">Aucun membre pour le moment.</p>'}
+      <div class="tools" style="margin:6px 0 0"><input data-eqf="ajout" data-id="${esc(q.id)}" placeholder="Ajouter une adresse Google (ou plusieurs, séparées par des espaces)" style="flex:1;min-width:220px;font:inherit;padding:8px 10px;border:1px solid #d5dae5;border-radius:8px"><a class="chip" data-eq="add" data-id="${esc(q.id)}" style="cursor:pointer">＋ Ajouter</a></div></div>
+    <div class="tools" style="margin-top:10px"><a class="btn" data-eq="save" data-id="${esc(q.id)}" style="background:#2E7D4F;color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;display:inline-block">Enregistrer le nom et la description</a>
+      ${q.membres.length ? `<span style="display:inline-flex;gap:6px;align-items:center;font-size:13px">Transférer la responsabilité à <select data-eqf="proprio" data-id="${esc(q.id)}">${q.membres.map(m => `<option>${esc(m)}</option>`).join("")}</select><a class="chip" data-eq="owner" data-id="${esc(q.id)}" style="cursor:pointer" title="Le membre doit s'être déjà connecté au site">OK</a></span>` : ""}
+      <a class="btn" data-eq="del" data-id="${esc(q.id)}" style="background:#fff;color:#B2263A;border:1px solid #B2263A;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;display:inline-block;margin-left:auto">Supprimer l'équipe</a></div></div>`;
   const autre = q =>
-    `<div class="box" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1">👥 ${esc(q.nom)}</b><span style="color:#6B7280;font-size:13px">responsable : ${esc(q.ownerNom || q.owner)} · ${q.membres.length + 1} personnes</span><a class="chip" data-eq="quit" data-id="${esc(q.id)}" style="cursor:pointer">Quitter</a></div>`;
+    `<div class="box" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1">👥 ${esc(q.nom)}${q.description ? `<span style="display:block;font-weight:400;color:#6B7280;font-size:13px">${esc(q.description)}</span>` : ""}</b><span style="color:#6B7280;font-size:13px">responsable : ${esc(q.ownerNom || q.owner)} · ${q.membres.length + 1} personnes</span><a class="chip" data-eq="quit" data-id="${esc(q.id)}" style="cursor:pointer">Quitter</a></div>`;
   return `${head}<div class="box" style="background:#F7F9FD"><b>Créer une équipe</b><label class="sml" style="margin-top:8px">Nom<input id="eqNouveau" placeholder="Ex. Équipe Bloc Party"></label><div class="tools" style="margin-top:8px"><a class="btn" data-eq="new" style="background:#26364D;color:#fff;border-radius:8px;padding:8px 14px;font-weight:700;cursor:pointer;display:inline-block">+ Créer</a><span id="eqMsg" style="font-weight:700;color:#B2263A"></span></div></div>
   ${mes.length ? `<p class="count">Équipes dont vous êtes responsable</p>${mes.map(carte).join("")}` : ""}
   ${autres.length ? `<p class="count">Équipes dont vous êtes membre</p>${autres.map(autre).join("")}` : ""}
@@ -306,14 +311,30 @@ registerClick(e => {
     comptePost("equipe_enregistrer", { equipe: { nom, membres: [] } })
       .then(() => rafraichir("✓ Équipe créée : ajoutez ses membres."))
       .catch(echec);
-  } else if (a === "save") {
-    const nom = document.querySelector(`[data-eqf=nom][data-id="${id}"]`).value;
-    const membres = document
-      .querySelector(`[data-eqf=membres][data-id="${id}"]`)
-      .value.split(/[\s,;]+/)
-      .filter(Boolean);
-    comptePost("equipe_enregistrer", { equipe: { id, nom, membres } })
-      .then(j => rafraichir("✓ Équipe enregistrée." + compteInfoMails(j.emails)))
+  } else if (a === "save" || a === "add" || a === "rm" || a === "owner") {
+    const q = EQUIPES.find(z => z.id === id);
+    if (!q) return true;
+    const val = f => (document.querySelector(`[data-eqf=${f}][data-id="${id}"]`) || {}).value || "";
+    const eq = { id, nom: val("nom") || q.nom, description: val("description"), membres: q.membres.slice() };
+    let msg = "✓ Équipe enregistrée.";
+    if (a === "add") {
+      const nouv = val("ajout").split(/[\s,;]+/).filter(Boolean);
+      if (!nouv.length) return true;
+      eq.membres = eq.membres.concat(nouv);
+      msg = "✓ Membre(s) ajouté(s).";
+    } else if (a === "rm") {
+      if (!confirm("Retirer " + b.dataset.m + " de l'équipe ?")) return true;
+      eq.membres = eq.membres.filter(m => m !== b.dataset.m);
+      msg = "Membre retiré.";
+    } else if (a === "owner") {
+      const m = val("proprio");
+      if (!m) return true;
+      if (!confirm("Transférer la responsabilité de l'équipe à " + m + " ? Vous resterez membre, mais vous ne pourrez plus la modifier.")) return true;
+      eq.proprietaire = m;
+      msg = "✓ Responsabilité transférée à " + m + ".";
+    }
+    comptePost("equipe_enregistrer", { equipe: eq })
+      .then(j => rafraichir(msg + compteInfoMails(j.emails)))
       .catch(echec);
   } else if (a === "del") {
     if (
@@ -401,4 +422,13 @@ registerClick(e => {
   if (!b) return;
   compteVoirComme(b.dataset.comme === "quitter" ? "" : b.dataset.comme);
   return true;
+});
+
+document.addEventListener("keydown", e => {
+  const i = e.target && e.target.matches && e.target.matches("[data-eqf=ajout]") ? e.target : null;
+  if (i && e.key === "Enter") {
+    e.preventDefault();
+    const bt = document.querySelector(`[data-eq=add][data-id="${i.dataset.id}"]`);
+    if (bt) bt.click();
+  }
 });

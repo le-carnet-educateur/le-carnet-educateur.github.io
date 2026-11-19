@@ -43,7 +43,7 @@ const MANUEL = [
   [
     "Équipes et notifications",
     `<p><b>Une équipe</b> est un groupe de personnes (identifiées par leur adresse Google) qui travaillent ensemble sur les mêmes séances et cycles.</p>
-    <ul><li><b>Créer une équipe</b> : menu <i>Mes équipes</i>, donnez un nom et ajoutez les adresses des membres. Vous en êtes le <b>responsable</b> : vous seul pouvez la modifier ou la supprimer. Un membre peut à tout moment <b>quitter</b> l'équipe.</li>
+    <ul><li><b>Créer une équipe</b> : menu <i>Mes équipes</i>, donnez un nom, une description facultative, et ajoutez les adresses des membres (une croix ✕ permet d'en retirer un). Vous en êtes le <b>responsable</b> : vous seul pouvez la modifier ou la supprimer, ou <b>transférer la responsabilité</b> à un membre qui s'est déjà connecté au site (vous restez alors membre). Un membre peut à tout moment <b>quitter</b> l'équipe.</li>
     <li><b>Partager</b> : depuis <i>Séances et cycles</i>, « Partager » une séance ou un cycle avec des personnes ou une équipe. Les membres la voient dans leur liste. Ils doivent se connecter avec <b>l'adresse Google</b> utilisée pour l'invitation.</li></ul>
     <p><b>Qui est prévenu, et comment</b></p>
     <ul><li><b>Une personne ajoutée à une équipe</b> est prévenue par e-mail. Seules les personnes <b>nouvellement ajoutées</b> reçoivent un message, pas celles qui y étaient déjà.</li>

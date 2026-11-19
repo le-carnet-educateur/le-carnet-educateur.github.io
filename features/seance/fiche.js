@@ -242,10 +242,12 @@ function sheetHTML() {
   }
   cols.push("1.4fr");
   cases.push(
-    `<div style="font-size:12px">${M.G.map(g => `<span style="color:${g.c}">■</span> ${esc(g.nom)} – ${M.tot[g.i]} min`).join("<br>")}</div>`
+    `<div style="font-size:12px${S.logo ? "" : ";padding-right:52px"}">${M.G.map(g => `<span style="color:${g.c}">■</span> ${esc(g.nom)} – ${M.tot[g.i]} min`).join("<br>")}</div>`
   );
+  /* logo du site : à droite du bandeau de tête, sans prendre de place (seulement si la salle n'a pas mis le sien) */
+  const logoSite = S.logo ? "" : `<img src="${LOGO_URL}" alt="" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;opacity:.9;pointer-events:none" onerror="this.remove()">`;
   let h = `<div class="sheet" style="font-size:13px;color:#2B2F36;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-  <div style="background:${NAVYC};color:#fff;display:grid;grid-template-columns:${cols.join(" ")};gap:14px;padding:12px 16px;align-items:center">${cases.join("")}</div>`;
+  <div style="background:${NAVYC};color:#fff;display:grid;grid-template-columns:${cols.join(" ")};gap:14px;padding:12px 16px;align-items:center;position:relative">${cases.join("")}${logoSite}</div>`;
   h += band(
     tgs(
       M,
