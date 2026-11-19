@@ -38,7 +38,7 @@ const MANUEL = [
     `<ul><li>Pour <b>enregistrer</b> une séance dans votre bibliothèque, connectez-vous avec Google (menu « Se connecter »), puis cliquez sur « Enregistrer ».</li>
     <li><b>Séances et cycles</b> liste vos séances et celles qui sont partagées avec vous. Une séance peut être ouverte, modifiée, dupliquée (« copie ») ou supprimée.</li>
     <li>Une séance peut être <b>envoyée par e-mail</b> ou partagée avec une <b>équipe</b> (menu Mon compte › Équipes) pour que plusieurs éducateurs travaillent sur les mêmes fiches.</li>
-    <li><b>Créer un cycle</b> assemble plusieurs séances en un programme.</li></ul>`,
+    <li><b>Créer un cycle</b> assemble plusieurs séances en un programme. Son <b>planning</b> indique, semaine après semaine, sur quoi orienter la séance : on choisit la semaine de début dans un calendrier, la durée, les <b>jours de cours</b> (les dates s'affichent sous chaque semaine) et le public (« Tous », ou « Par groupe » avec une case par groupe). Chaque semaine a des <b>items</b> et des <b>sous-points</b> ; on y <b>lie</b> les séances préparées. Si les séances diffèrent selon les jours, on choisit le jour de chaque sous-point, et chaque sous-point reçoit sa séance. Un champ « micro-cycle » regroupe des semaines, et « pause » saute les vacances sans décaler les dates.</li></ul>`,
   ],
   [
     "Équipes et notifications",

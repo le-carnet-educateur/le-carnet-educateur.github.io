@@ -82,7 +82,11 @@ const cyCodeCouleur = c => {
 };
 /* feuille imprimable (aussi utilisée comme aperçu) */
 function cycleSheetHTML(cy) {
-  return cyH(cycleSheetHTML0(cy));
+  let h = cycleSheetHTML0(cy);
+  const plan = typeof cpSheetHTML === "function" ? cpSheetHTML(cy) : "";
+  const marq = '<table style="width:100%;border-collapse:collapse;margin-top:8px"><thead>';
+  if (plan && h.includes(marq)) h = h.replace(marq, plan + marq);
+  return cyH(h);
 }
 function cycleSheetHTML0(cy) {
   const ph = t => `<i style="color:#8A93A3">${t}</i>`;
@@ -159,6 +163,7 @@ function cycleView0() {
   return `${head}<div class="tools noprint">${cyBtn("save", "Enregistrer dans la bibliothèque", "#2E7D4F")}${cyBtn("print", "Imprimer / PDF", "#26364D")}${cyBtn("word", "Télécharger en Word", "#2B5A9E")}${cyBtn("new", "Nouveau cycle", "#EEF1F8", "#26364D")}<span id="cyMsg" style="font-weight:700;color:#2E7D4F"></span></div>
   <div class="box noprint"><div class="smg">${inp("titre", "Titre du cycle", "Ex. Cycle 1 — Découverte")}${inp("periode", "Période", "Ex. sept. – déc. 2026")}${inp("groupe", "Public", "Ex. enfants 8-11 ans")}${inp("lieu", "Lieu", "Ex. Bloc Party, Mougins")}${inp("educ", "Éducateurs")}
   <label class="sml" style="grid-column:1/-1">Objectif général<textarea rows="2" data-cy="objectif">${esc(CY.objectif)}</textarea></label></div></div>
+  ${cpHTML()}
   <div class="box noprint"><b>Séances du cycle</b> <span style="color:#6B7280;font-size:13px">(${nl})</span>
   <div class="tools" style="margin:8px 0">${cyBtn("picker", "+ Ajouter une séance de la bibliothèque", "#3A8FB0")}${cyBtn("blank", "+ Ligne vide", "#EEF1F8", "#26364D")}${cyBtn("bilans", "↧ Reprendre les bilans des séances", "#E8A33D", "#26364D")}</div>
   ${CYPICK ? cyPicker() : ""}${CY.lignes.map(ligne).join("") || '<div class="empty">Aucune séance. Ajoutez-en depuis la bibliothèque, ou créez une ligne vide.</div>'}
