@@ -81,6 +81,15 @@ function envoiPartager() {
   const r = envoiRec(ENVOI.id),
     avant = partageListe(r),
     { ids, pers } = envoiLire();
+  const mal = pers.filter(x => !estGmail(x));
+  if (mal.length) {
+    rougir($("#envP"));
+    if ($("#envMsg")) {
+      $("#envMsg").style.color = "#B2263A";
+      $("#envMsg").textContent = "Adresses Gmail uniquement (@gmail.com) : " + mal.join(", ");
+    }
+    return null;
+  }
   const liste = [...ids.map(i => "team:" + i), ...pers];
   const nouv = liste.filter(x => !avant.includes(x));
   const m = () => $("#envMsg"),
@@ -137,6 +146,7 @@ registerClick(e => {
     } else if (k === "mail") {
       const lu = envoiLire();
       const nouv = droits ? envoiPartager() : [];
+      if (!nouv) return true;
       const dest = droits ? envoiDestinataires(nouv, true) : lu.tous;
       if (!lu.tous.length) {
         toast("Ajoute au moins une équipe ou une adresse.");

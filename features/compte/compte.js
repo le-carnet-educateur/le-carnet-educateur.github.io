@@ -2,6 +2,10 @@
    Actif seulement si GOOGLE_CLIENT_ID et GAME_ADD_URL sont renseignés dans config.js. */
 const AUTH = { session: "", user: null };
 const COMPTE_LS = "compteSession";
+/* adresse Gmail uniquement ; manquant → champ surligné en rouge (.req-err) */
+const estGmail = e => /^[^\s@]+@(gmail|googlemail)\.com$/i.test(String(e).trim());
+const rougir = (el, on) => { if (el) { el.classList.toggle("req-err", on !== false); if (on !== false) el.focus(); } };
+const mauvaisesAdresses = l => l.filter(x => !estGmail(x));
 const compteOn = () => !!(CONFIG.GOOGLE_CLIENT_ID && CONFIG.GAME_ADD_URL);
 try {
   const s = JSON.parse(localStorage.getItem(COMPTE_LS) || "null");
@@ -305,6 +309,7 @@ registerClick(e => {
   if (a === "new") {
     const nom = ($("#eqNouveau").value || "").trim();
     if (!nom) {
+      rougir($("#eqNouveau"));
       $("#eqMsg").textContent = "Donnez un nom à l'équipe.";
       return true;
     }
@@ -320,6 +325,11 @@ registerClick(e => {
     if (a === "add") {
       const nouv = val("ajout").split(/[\s,;]+/).filter(Boolean);
       if (!nouv.length) return true;
+      if (mauvaisesAdresses(nouv).length) {
+        rougir(document.querySelector(`[data-eqf=ajout][data-id="${id}"]`));
+        toast("Adresse Gmail uniquement : " + mauvaisesAdresses(nouv).join(", "));
+        return true;
+      }
       eq.membres = eq.membres.concat(nouv);
       msg = "✓ Membre(s) ajouté(s).";
     } else if (a === "rm") {
@@ -403,6 +413,13 @@ registerClick(e => {
       ...[...document.querySelectorAll("[data-pteam]:checked")].map(c => "team:" + c.dataset.pteam),
       ...($("#partageTxt").value || "").split(/[\s,;]+/).filter(Boolean),
     ];
+    const mal = mauvaisesAdresses(liste.filter(x => !x.startsWith("team:")));
+    if (mal.length) {
+      rougir($("#partageTxt"));
+      m.style.color = "#B2263A";
+      m.textContent = "Adresses Gmail uniquement (@gmail.com) : " + mal.join(", ");
+      return true;
+    }
     m.style.color = "#26364D";
     m.textContent = "Enregistrement…";
     comptePost("seance_partage", { id, partage: liste, prevenir: false })
@@ -432,3 +449,7 @@ document.addEventListener("keydown", e => {
     if (bt) bt.click();
   }
 });
+/* le surlignage rouge disparaît dès qu'on tape dans le champ */
+const reqClear = e => { const c = e.target && e.target.closest && e.target.closest(".req-err"); if (c) c.classList.remove("req-err"); };
+document.addEventListener("input", reqClear);
+document.addEventListener("change", reqClear);

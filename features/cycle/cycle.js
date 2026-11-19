@@ -30,6 +30,8 @@ const cyNew = () => ({
   objectif: "",
   lignes: [],
   bilan: "",
+  macro: "",
+  logo: "",
 });
 function cyLoad() {
   try {
@@ -116,7 +118,7 @@ function cycleSheetHTML0(cy) {
     )
     .join("");
   return `<div id="sheet" style="background:#fff;font-size:12.5px;line-height:1.4;color:#2B2F36">
-  <div style="background:${NAVYC};color:#fff;padding:12px 18px"><div><b style="font-size:20px">${esc(cy.titre) || ph("Titre du cycle")}</b>${cy.periode ? ` <span style="color:#C9D1DE;font-size:14px">&nbsp;${esc(cy.periode)}</span>` : ""}</div>${meta ? `<div style="color:#C9D1DE;margin-top:4px">${meta}</div>` : ""}</div>
+  <div style="background:${NAVYC};color:#fff;padding:12px 64px 12px 18px;position:relative"><img src="${esc(cy.logo || LOGO_URL)}" alt="" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);max-width:110px;max-height:44px;${cy.logo ? "" : "width:44px;height:44px;border-radius:50%;"}opacity:.95"><div><b style="font-size:20px">${esc(cy.titre) || ph("Titre du cycle")}</b>${cy.periode ? ` <span style="color:#C9D1DE;font-size:14px">&nbsp;${esc(cy.periode)}</span>` : ""}</div>${meta ? `<div style="color:#C9D1DE;margin-top:4px">${meta}</div>` : ""}</div>
   ${cy.objectif ? `<div style="background:#E4EEFB;border-left:6px solid ${C1};padding:8px 14px;margin-top:8px"><b>Objectif général :</b> <span style="white-space:pre-wrap">${esc(cy.objectif)}</span></div>` : ""}
   <table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr>${th("N°")}${th("SÉANCE")}${th("DATE(S)")}${th("THÈME")}${th("OBJECTIF")}${th("JEUX (CODES)")}${th("REMARQUES")}</tr></thead><tbody>${rows || `<tr><td colspan="7" style="padding:12px;text-align:center">${ph("Aucune séance pour le moment")}</td></tr>`}</tbody></table>
   <div style="border-top:4px solid ${C2};background:#FDEBE3;padding:8px 14px;margin-top:10px"><b style="color:#B2543A;letter-spacing:1px;font-size:11px">BILAN DU CYCLE</b><div style="white-space:pre-wrap;min-height:40px">${cy.bilan ? esc(cy.bilan) : ph("À compléter à la fin du cycle")}</div></div></div>`;
@@ -161,8 +163,10 @@ function cycleView0() {
     <label class="sml" style="grid-column:1/-1">Remarques / bilan de la séance<textarea rows="2" data-cyl="${l.id}:notes">${esc(l.notes)}</textarea></label></div>
     <div class="cyb">${i > 0 ? `<a class="chip" data-cya="up" data-id="${l.id}" title="Monter">↑</a>` : ""}${i < nl - 1 ? `<a class="chip" data-cya="down" data-id="${l.id}" title="Descendre">↓</a>` : ""}${l.sid ? `<a class="chip" data-cya="sync" data-id="${l.id}" title="Recharger depuis la séance de la bibliothèque">↻</a>` : ""}<a class="chip" data-cya="del" data-id="${l.id}" title="Retirer" style="color:#B2263A">✕</a></div></div>`;
   return `${head}<div class="tools noprint">${cyBtn("save", "Enregistrer dans la bibliothèque", "#2E7D4F")}${cyBtn("print", "Imprimer / PDF", "#26364D")}${cyBtn("word", "Télécharger en Word", "#2B5A9E")}${cyBtn("new", "Nouveau cycle", "#EEF1F8", "#26364D")}<span id="cyMsg" style="font-weight:700;color:#2E7D4F"></span></div>
-  <div class="box noprint"><div class="smg">${inp("titre", "Titre du cycle", "Ex. Cycle 1 — Découverte")}${inp("periode", "Période", "Ex. sept. – déc. 2026")}${inp("groupe", "Public", "Ex. enfants 8-11 ans")}${inp("lieu", "Lieu", "Ex. Bloc Party, Mougins")}${inp("educ", "Éducateurs")}
-  <label class="sml" style="grid-column:1/-1">Objectif général<textarea rows="2" data-cy="objectif">${esc(CY.objectif)}</textarea></label></div></div>
+  <div class="box noprint"><div class="smg">${inp("titre", "Titre du cycle", "Ex. Cycle 1 — Découverte")}${inp("periode", "Période", "Ex. sept. – déc. 2026")}${inp("groupe", "Public", "Ex. enfants 8-11 ans")}${inp("lieu", "Lieu", "Ex. Bloc Party, Mougins")}${inp("educ", "Éducateurs")}<label class="sml">Macro-cycle<input data-cy="macro" list="cyMacros" value="${esc(CY.macro || "")}" placeholder="Ex. Saison 2026-2027"><datalist id="cyMacros">${(typeof anMacros === "function" ? anMacros() : []).map(m => `<option value="${esc(m)}">`).join("")}</datalist></label>
+  <label class="sml" style="grid-column:1/-1">Objectif général<textarea rows="2" data-cy="objectif">${esc(CY.objectif)}</textarea></label>
+  <div class="sml" style="grid-column:1/-1">Logo du cycle <span style="font-weight:400;color:#6B7280">— facultatif (sinon le logo du site)</span><div style="display:flex;gap:10px;align-items:center;margin-top:4px"><img src="${esc(CY.logo || LOGO_URL)}" alt="" style="max-height:40px;max-width:110px;${CY.logo ? "" : "border-radius:50%;opacity:.7"}"><input type="file" accept="image/*" data-cylogo="file" style="max-width:240px">${CY.logo ? '<a class="chip" data-cylogo="rm" style="cursor:pointer;color:#B2263A">✕ Retirer</a>' : ""}</div></div></div></div>
+  ${cyPartageEdition()}
   ${cpHTML()}
   <div class="box noprint"><b>Séances du cycle</b> <span style="color:#6B7280;font-size:13px">(${nl})</span>
   <div class="tools" style="margin:8px 0">${cyBtn("picker", "+ Ajouter une séance de la bibliothèque", "#3A8FB0")}${cyBtn("blank", "+ Ligne vide", "#EEF1F8", "#26364D")}${cyBtn("bilans", "↧ Reprendre les bilans des séances", "#E8A33D", "#26364D")}</div>
@@ -267,7 +271,7 @@ function cyListeHTML0() {
     ({ rec }) =>
       `<tr class="r" data-go="cy/${esc(rec.id)}">${celTitre(rec.titre, rec.theme)}${celChip(rec.theme)}${cel(rec.dates)}${celChip((+rec.nb || 0) + " séance" + (+rec.nb > 1 ? "s" : ""))}${compteOn() ? celPar(compteMien(rec), rec.ownerNom || rec.owner) : ""}<td style="text-align:right"><a class="chip" data-cydup="${esc(rec.id)}" title="Dupliquer : préparer un nouveau cycle à partir de celui-ci" style="cursor:pointer">⧉</a> ${compteMien(rec) ? `<a class="chip" data-cydel="${esc(rec.id)}" title="Supprimer ce cycle" style="cursor:pointer">🗑</a>` : ""}</td></tr>`
   ).join("");
-  return `<p class="count">${L.length} cycle${L.length > 1 ? "s" : ""}</p>${L.length ? `<div style="overflow-x:auto"><table class="lst sbl colo"><thead><tr><th>CYCLE</th><th>PUBLIC</th><th>PÉRIODE</th><th>SÉANCES</th>${compteOn() ? "<th>AUTEUR</th>" : ""}<th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">Aucun cycle enregistré. Créez-en un dans « Mon cycle ».</div>'}`;
+  return `<div class="tools noprint"><a class="chip" data-go="annuel" style="cursor:pointer">📅 Planning annuel (vue d'ensemble des cycles)</a></div><p class="count">${L.length} cycle${L.length > 1 ? "s" : ""}</p>${L.length ? `<div style="overflow-x:auto"><table class="lst sbl colo"><thead><tr><th>CYCLE</th><th>PUBLIC</th><th>PÉRIODE</th><th>SÉANCES</th>${compteOn() ? "<th>AUTEUR</th>" : ""}<th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">Aucun cycle enregistré. Créez-en un dans « Mon cycle ».</div>'}`;
 }
 /* duplique un cycle dans « Créer un cycle » */
 async function cyDupliquer(id) {
@@ -673,5 +677,32 @@ registerClick(e => {
       })
       .catch(() => toast("Séance introuvable dans la bibliothèque."));
   }
+  return true;
+});
+
+/* partage du cycle depuis l'édition : possible une fois le cycle enregistré dans la bibliothèque */
+function cyPartageEdition() {
+  if (typeof compteOn !== "function" || !compteOn()) return "";
+  const r = CY && CY.id ? sbAll().find(x => x.id === CY.id) : null;
+  if (r) return partageBloc(r);
+  return `<div class="box noprint" style="padding:8px 14px;color:#6B7280;font-size:13px">👥 Pour partager ce cycle (avec des personnes ou une équipe), enregistre-le d'abord dans la bibliothèque.</div>`;
+}
+/* logo du cycle */
+document.addEventListener("change", e => {
+  const f = e.target.closest && e.target.closest("[data-cylogo=file]");
+  if (!f || !f.files[0] || !CY) return;
+  logoDepuisFichier(f.files[0], url => {
+    if (url.length > 24000) return toast("Logo trop lourd : choisis une image plus simple ou plus petite.");
+    CY.logo = url;
+    cySave();
+    render();
+  });
+});
+registerClick(e => {
+  const b = e.target.closest("[data-cylogo=rm]");
+  if (!b || !CY) return false;
+  CY.logo = "";
+  cySave();
+  render();
   return true;
 });

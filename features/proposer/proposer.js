@@ -226,6 +226,14 @@ async function propEnvoyer() {
   if (manque.length) {
     PROP.msg = "À compléter : " + manque.join(", ") + ".";
     render();
+    manque.forEach((k, i) => {
+      const el = document.querySelector(`[data-pf="${k.replace(/"/g, '\\"')}"]`) || document.querySelector(`[data-pt="${k.replace(/"/g, '\\"')}"]`);
+      const cible = el && (el.closest(".pfac,.sml,label") || el);
+      if (cible) {
+        cible.classList.add("req-err");
+        if (i === 0) cible.scrollIntoView({ block: "center" });
+      }
+    });
     return;
   }
   if (v["Remplace le jeu"]) v["Remplace le jeu"] = v["Remplace le jeu"].split(" · ")[0];

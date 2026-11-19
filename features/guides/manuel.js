@@ -53,6 +53,24 @@ const MANUEL = [
     <li><b>La création d'un jeu ou d'une séance par quelqu'un d'autre ne déclenche aucune notification</b> : les nouveaux jeux apparaissent simplement dans « Dernières fiches ajoutées » sur l'accueil. Les séances et cycles, eux, ne sont visibles que par leur auteur et les personnes avec qui il les partage.</li></ul>`,
   ],
   [
+    "Qui voit quoi",
+    `<p>Le site distingue ce qui est <b>public</b> de ce qui est <b>privé</b>. Voici, pour chaque type de contenu, qui peut le voir et qui peut le modifier.</p>
+    <table style="border-collapse:collapse;width:100%;font-size:14px"><thead><tr style="background:#EEF1F8"><th style="text-align:left;padding:6px 8px">Contenu</th><th style="text-align:left;padding:6px 8px">Qui le voit</th><th style="text-align:left;padding:6px 8px">Qui le modifie</th></tr></thead><tbody>
+    <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Jeux publiés</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Tout le monde, sans compte</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">L'administrateur</td></tr>
+    <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Jeu que vous proposez</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">L'administrateur seulement, tant qu'il n'est pas publié</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">L'administrateur (relecture avant publication)</td></tr>
+    <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Vos séances et vos cycles</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Vous seul(e), puis les personnes et équipes avec qui vous les partagez, et l'administrateur</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Vous seul(e) (le propriétaire)</td></tr>
+    <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Séance ou cycle partagé avec vous</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Vous, en lecture ; vous pouvez l'imprimer ou en faire votre propre copie</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Son propriétaire</td></tr>
+    <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Une équipe</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Ses membres et son responsable</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Son responsable</td></tr>
+    <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Vos favoris et votre pseudo</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Vos favoris sont liés à votre compte et ne sont pas montrés aux autres</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Vous</td></tr>
+    <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Retours de terrain sur un jeu</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">L'administrateur</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">L'administrateur (traitement)</td></tr>
+    </tbody></table>
+    <ul style="margin-top:10px"><li><b>Partager ne donne jamais le droit de modifier</b> : la personne lit, imprime, ou en fait une copie pour elle.</li>
+    <li><b>Seules les adresses Gmail</b> (@gmail.com) peuvent être ajoutées : c'est avec ce compte Google que la personne se connecte.</li>
+    <li><b>Retirer une adresse du partage</b> (ou la personne d'une équipe) lui fait perdre l'accès (en moins d'une minute).</li>
+    <li>Pour savoir avec qui une séance ou un cycle est partagé, ouvrez-le : la ligne « Partagée avec » la liste, ou « Privée » s'il n'est partagé avec personne.</li>
+    <li>Une question sur vos données ? Écrivez à <b>lecarnet.educ@gmail.com</b> (enveloppe ✉ en haut à droite).</li></ul>`,
+  ],
+  [
     "Mode terrain",
     `<p>Depuis une séance enregistrée, le bouton <b>Terrain</b> ouvre une version pensée pour la salle : écran plein, étapes dans l'ordre (accueil, échauffement, corps de séance, retour au calme, bilan), chronomètre et notes. Le chronomètre tourne bien en arrière-plan, mais <b>il ne sonne que si l'écran est allumé</b> : laissez l'écran actif pendant la séance.</p>`,
   ],

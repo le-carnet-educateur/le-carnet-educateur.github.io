@@ -90,6 +90,8 @@ registerClick(e => {
 async function glossaireEnregistrer() {
   const t = ($("#glT").value || "").trim(),
     d = ($("#glD").value || "").trim();
+  if (!t) rougir($("#glT"));
+  else if (!d) rougir($("#glD"));
   if (!t || !d) return toast("Le mot et sa définition sont obligatoires.");
   try {
     await admPost("admin_glossaire", { op: "enregistrer", disc: glDisc(), terme: t, def: d, avant: GLOSS_EDIT || t });
