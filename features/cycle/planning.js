@@ -12,6 +12,7 @@ const cpAdd = (iso, n) => cpISO(new Date(cpD(iso).getTime() + n * 864e5));
 const cpLundi = iso => cpAdd(iso, -((cpD(iso).getUTCDay() + 6) % 7));
 const cpFmt = iso => cpD(iso).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 const cpFmtLong = iso => cpD(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+let CPMICRO = new Set(); /* semaines dont le champ micro-cycle est ouvert */
 let CPCAL = null; /* mois affiché dans le calendrier : { y, m } */
 
 function cpNew() {
@@ -52,18 +53,20 @@ function cpChips(list, at, sansAjout) {
 function cpItemHTML(p, w, k, it, ii) {
   const at = `data-w="${w}" data-k="${k}" data-i="${ii}"`;
   const diff = p.mode === "diff";
+  const nsub = (it.subs || []).length;
   const subs = (it.subs || [])
     .map((s, si) => {
       const as = at + ` data-s="${si}"`;
-      return `<div class="cpsub"><div class="cprow"><input data-cpt="t" ${as} value="${esc(s.t)}" placeholder="Point à travailler">${
+      return `<div class="cpr2 cpsub"><div class="cprow"><input data-cpt="t" ${as} value="${esc(s.t)}" placeholder="Point à travailler">${
         diff
           ? `<select data-cpt="jour" ${as}><option value="0">Jour…</option>${p.jours.map(j => `<option value="${j}"${+s.jour === j ? " selected" : ""}>${esc(cpFmt(cpDateJour(p, w, j)))}</option>`).join("")}</select>`
           : ""
-      }<a class="cpx" data-cyp="delsub" ${as} title="Retirer">✕</a></div>${diff ? `<div class="cplk">${cpChips(s.sid, as)}</div>` : ""}</div>`;
+      }<a class="cpx" data-cyp="delsub" ${as} title="Retirer">✕</a></div><div class="cplk">${diff ? cpChips(s.sid, as) : ""}</div></div>`;
     })
     .join("");
-  return `<div class="cpit"><div class="cprow"><input class="cpitt" data-cpt="t" ${at} value="${esc(it.t)}" placeholder="Sur quoi on travaille (ex. Chuter et descendre)"><a class="cpx" data-cyp="delitem" ${at} title="Retirer cet item">✕</a></div>
-    ${subs}<div><a class="cpmini" data-cyp="addsub" ${at}>＋ sous-point</a></div>${diff && (it.subs || []).length && !it.sid.length ? "" : `<div class="cplk">${cpChips(it.sid, at, diff && (it.subs || []).length)}</div>`}</div>`;
+  const lienItem = !(diff && nsub) || it.sid.length ? cpChips(it.sid, at, diff && nsub) : "";
+  return `<div class="cpit"><div class="cpr2"><div class="cprow"><input class="cpitt" data-cpt="t" ${at} value="${esc(it.t)}" placeholder="Sur quoi on travaille (ex. Chuter et descendre)"><a class="cpx" data-cyp="delitem" ${at} title="Retirer cet item">✕</a></div><div class="cplk">${lienItem}</div></div>
+    ${subs}<div><a class="cpmini" data-cyp="addsub" ${at}>＋ sous-point</a></div></div>`;
 }
 function cpCaseHTML(p, w, k) {
   const items = p.sem[w].cases[k] || [];
@@ -73,13 +76,13 @@ function cpCaseHTML(p, w, k) {
 function cpWeekHTML(p, w) {
   const s = p.sem[w];
   const lundi = cpAdd(p.debut, w * 7);
-  const dates = p.jours.map(j => cpFmt(cpDateJour(p, w, j))).join(" · ");
+  const dates = p.jours.map(j => cpFmt(cpDateJour(p, w, j))).join("<br>");
   const aj = new Date();
   const now = cpISO(aj) >= lundi && cpISO(aj) <= cpAdd(lundi, 6);
   return `<div class="cpw${now ? " now" : ""}${s.pause ? " pause" : ""}">
-    <div class="cpwh"><b>S${w + 1}</b>${now ? ' <span class="cpnow">cette semaine</span>' : ""}<div class="cpd">${esc(dates)}</div>
+    <div class="cpwh"><b>S${w + 1}</b>${now ? ' <span class="cpnow">cette semaine</span>' : ""}<div class="cpd">${dates}</div>
     <label class="cppz"><input type="checkbox" data-cpt="pause" data-w="${w}"${s.pause ? " checked" : ""}> pause</label></div>
-    <div class="cpwb"><input class="cpmicro" data-cpt="micro" data-w="${w}" value="${esc(s.micro || "")}" placeholder="Micro-cycle (facultatif) : titre qui regroupe des semaines">
+    <div class="cpwb">${s.micro || CPMICRO.has(w) ? `<input class="cpmicro" data-cpt="micro" data-w="${w}" value="${esc(s.micro || "")}" placeholder="Titre du micro-cycle (regroupe plusieurs semaines)">` : `<a class="cpmini" data-cyp="micro" data-w="${w}" style="display:block;margin-bottom:6px;font-weight:400;color:#8a93a3">＋ micro-cycle</a>`}
     ${s.pause ? '<div class="cpvac">Pause (vacances, pas de séance)</div>' : cpCases(p).map(k => cpCaseHTML(p, w, k)).join("")}</div></div>`;
 }
 function cpCalHTML(p) {
@@ -116,17 +119,19 @@ function cpHTML() {
   cpEnsure(p);
   const fin = cpAdd(p.debut, p.nb * 7 - 1);
   const modeles = typeof CYCLE1 !== "undefined";
-  return `<div class="box noprint cpbox"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><b style="flex:1;font-size:16px">Planning du cycle</b><a class="chip" data-cyp="suppr" style="cursor:pointer;color:#B2263A">Supprimer le planning</a></div>
-  <div class="cpset">
-    <div><div class="cpl">Début du cycle</div><details class="cpdet"><summary class="f">Semaine du ${esc(cpFmtLong(p.debut))}</summary>${cpCalHTML(p)}</details><div class="hint">jusqu'au ${esc(cpFmtLong(fin))}</div></div>
-    <div><div class="cpl">Durée</div><input type="number" min="1" max="40" data-cpt="nb" value="${p.nb}" style="width:70px"> semaines</div>
-    <div><div class="cpl">Jours de cours</div>${CP_J.map((n, i) => `<label class="cpjr"><input type="checkbox" data-cpt="jours" value="${i + 1}"${p.jours.includes(i + 1) ? " checked" : ""}> ${n}</label>`).join("")}</div>
-    <div><div class="cpl">Séances</div><select data-cpt="mode"><option value="meme"${p.mode === "meme" ? " selected" : ""}>La même séance tous les jours de cours</option><option value="diff"${p.mode === "diff" ? " selected" : ""}>Une séance différente selon les jours</option></select></div>
-    <div><div class="cpl">Public</div><select data-cpt="public"><option value="tous"${p.public === "tous" ? " selected" : ""}>Tous (pas de groupes)</option><option value="groupes"${p.public === "groupes" ? " selected" : ""}>Par groupe</option></select>
-      ${p.public === "groupes" ? `<input data-cpt="groupes" value="${esc(p.groupes.join(", "))}" placeholder="G1, G2" style="margin-top:4px">` : ""}</div>
-    ${modeles ? `<div><div class="cpl">Partir d'un modèle</div><a class="chip" data-cyp="modele" style="cursor:pointer">Progression du 1er cycle (8 séances)</a></div>` : ""}
+  return `<div class="noprint cplay">
+  <div class="box cpbox cpside">
+    <b style="font-size:16px;display:block;margin-bottom:8px">Planning du cycle</b>
+    <div class="cpl">Début du cycle</div><div class="hint" style="margin:0 0 4px"><b>Semaine du ${esc(cpFmtLong(p.debut))}</b><br>jusqu'au ${esc(cpFmtLong(fin))}</div>${cpCalHTML(p)}
+    <div class="cpl" style="margin-top:12px">Durée</div><div><input type="number" min="1" max="40" data-cpt="nb" value="${p.nb}" style="width:70px"> semaines</div>
+    <div class="cpl" style="margin-top:12px">Jours de cours</div><div>${CP_J.map((n, i) => `<label class="cpjr"><input type="checkbox" data-cpt="jours" value="${i + 1}"${p.jours.includes(i + 1) ? " checked" : ""}> ${n}</label>`).join("")}</div>
+    <div class="cpl" style="margin-top:12px">Séances</div><select data-cpt="mode" style="width:100%"><option value="meme"${p.mode === "meme" ? " selected" : ""}>La même séance tous les jours de cours</option><option value="diff"${p.mode === "diff" ? " selected" : ""}>Une séance différente selon les jours</option></select>
+    <div class="cpl" style="margin-top:12px">Public</div><select data-cpt="public" style="width:100%"><option value="tous"${p.public === "tous" ? " selected" : ""}>Tous (pas de groupes)</option><option value="groupes"${p.public === "groupes" ? " selected" : ""}>Par groupe</option></select>
+    ${p.public === "groupes" ? `<input data-cpt="groupes" value="${esc(p.groupes.join(", "))}" placeholder="G1, G2" style="margin-top:4px;width:100%">` : ""}
+    ${modeles ? `<div class="cpl" style="margin-top:12px">Partir d'un modèle</div><a class="chip" data-cyp="modele" style="cursor:pointer">Progression du 1er cycle (8 séances)</a>` : ""}
+    <div style="margin-top:14px"><a class="chip" data-cyp="suppr" style="cursor:pointer;color:#B2263A">Supprimer le planning</a></div>
   </div>
-  <div class="cpweeks">${p.sem.map((_, w) => cpWeekHTML(p, w)).join("")}</div></div>`;
+  <div class="box cpmain"><div class="cpweeks">${p.sem.map((_, w) => cpWeekHTML(p, w)).join("")}</div></div></div>`;
 }
 
 /* ---------- feuille imprimable / aperçu ---------- */
@@ -194,6 +199,10 @@ registerClick(e => {
     CY.plan = null;
   } else if (a === "semaine") {
     CY.plan.debut = b.dataset.d;
+  } else if (a === "micro") {
+    CPMICRO.add(+b.dataset.w);
+    render();
+    return true;
   } else if (a === "mois") {
     const n = +b.dataset.n;
     CPCAL = { y: CPCAL.y + Math.floor((CPCAL.m + n) / 12), m: (CPCAL.m + n + 12) % 12 };
@@ -277,14 +286,14 @@ document.head.insertAdjacentHTML(
 .cpl{font-size:12px;font-weight:700;color:#7a8497;letter-spacing:.5px;margin-bottom:4px;text-transform:uppercase}
 .cpjr{display:inline-block;margin-right:8px;font-size:14px}
 .cpset select,.cpset input[type=number],.cpset input:not([type]),.cpbox .cprow input,.cpmicro{font:inherit;font-size:14px;padding:6px 9px;border:1px solid #d5dae5;border-radius:8px;background:#fff;max-width:100%}
-.cpcal{margin-top:6px;background:#fff;border:1px solid #e3e8f2;border-radius:10px;padding:8px;width:290px;max-width:100%}
+.cpcal{margin-top:6px;background:#fff;border:1px solid #e3e8f2;border-radius:10px;padding:8px;width:100%}
 .cpcn{display:flex;gap:8px;align-items:center;margin-bottom:6px}
 .cpcr{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;font-size:13px;padding:3px 0;border-radius:6px}
 .cpcr.cph{font-size:11px;color:#8a93a3;font-weight:700}
 .cpcr:not(.cph){cursor:pointer}.cpcr:not(.cph):hover{background:#eef1f8}
 .cpcr.dans{background:#e4eefb}.cpcr.sel{background:#26364d;color:#fff}.cpcr.sel span{color:#fff!important}
-.cpweeks{margin-top:6px}
-.cpw{display:grid;grid-template-columns:130px 1fr;gap:12px;padding:12px 8px;border-top:1px solid #e3e8f2;border-radius:6px}
+.cplay{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start;margin-bottom:14px}.cpside{position:sticky;top:12px;margin:0;max-height:calc(100vh - 24px);overflow:auto}.cpmain{margin:0}.cpr2{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:10px;align-items:start}.cpweeks{margin-top:0}
+.cpw{display:grid;grid-template-columns:100px 1fr;gap:12px;padding:12px 8px;border-top:1px solid #e3e8f2;border-radius:6px}
 .cpw.now{background:#fff8e1}.cpw.pause{opacity:.7}
 .cpwh b{font-size:16px;color:#26364d}.cpd{font-size:12.5px;color:#4a5873;margin-top:2px}
 .cpnow{background:#f3b94a;color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:1px 8px}
@@ -293,12 +302,12 @@ document.head.insertAdjacentHTML(
 .cpcase{margin-bottom:10px}.cplab{font-weight:700;font-size:13px;color:#2B5A9E;margin:4px 0}
 .cpit{background:#f7f9fd;border-radius:8px;padding:8px 10px;margin-bottom:6px}
 .cprow{display:flex;gap:6px;align-items:center;margin:3px 0}.cprow input{flex:1;min-width:0}.cpitt{font-weight:700}
-.cpsub{margin:4px 0 4px 16px;border-left:3px solid #d5dae5;padding-left:8px}
-.cplk{margin:4px 0 2px}.cpch{display:inline-flex;gap:6px;align-items:center;margin:0 6px 4px 0}.cpch a{cursor:pointer}
+.cpsub{margin:4px 0 4px 16px;border-left:3px solid #d5dae5;padding-left:8px}.cpsel{max-width:100%}
+.cplab2{font-size:13px;color:#6b7280;margin-right:4px}.cplk{margin:4px 0 2px}.cpch{display:inline-flex;gap:6px;align-items:center;margin:0 6px 4px 0}.cpch a{cursor:pointer}
 .cpsel{font:inherit;font-size:13px;padding:3px 6px;border:1px dashed #b5bccb;border-radius:20px;background:#fff;color:#6b7280;max-width:230px}
 .cpx{cursor:pointer;color:#B2263A;font-weight:700;padding:0 4px}
 .cpmini{cursor:pointer;font-size:13px;color:#2B5A9E;font-weight:700}
 .cpvac{color:#8a93a3;font-style:italic}
-@media(max-width:700px){.cpw{grid-template-columns:1fr}}
+@media(max-width:1100px){.cplay{grid-template-columns:1fr}.cpside{position:static;max-height:none}}@media(max-width:700px){.cpw{grid-template-columns:1fr}.cpr2{grid-template-columns:1fr}}
 </style>`
 );
