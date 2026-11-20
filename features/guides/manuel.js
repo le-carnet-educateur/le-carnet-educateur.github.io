@@ -65,7 +65,7 @@ const MANUEL = [
     <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Retours de terrain sur un jeu</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">L'administrateur</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">L'administrateur (traitement)</td></tr>
     </tbody></table>
     <ul style="margin-top:10px"><li><b>Partager ne donne jamais le droit de modifier</b> : la personne lit, imprime, ou en fait une copie pour elle.</li>
-    <li><b>Seules les adresses Gmail</b> (@gmail.com) peuvent être ajoutées : c'est avec ce compte Google que la personne se connecte.</li>
+    <li><b>Adresse Gmail conseillée</b> : la personne se connecte avec un compte Google. Une adresse non Gmail est acceptée (avertissement affiché), à condition qu'elle corresponde à un compte Google.</li>
     <li><b>Retirer une adresse du partage</b> (ou la personne d'une équipe) lui fait perdre l'accès (en moins d'une minute).</li>
     <li>Pour savoir avec qui une séance ou un cycle est partagé, ouvrez-le : la ligne « Partagée avec » la liste, ou « Privée » s'il n'est partagé avec personne.</li>
     <li>Une question sur vos données ? Écrivez à <b>lecarnet.educ@gmail.com</b> (enveloppe ✉ en haut à droite).</li></ul>`,

@@ -1,6 +1,7 @@
 /* Administration des comptes : utilisateurs, équipes, séances, cycles, réglages (e-mails).
    Onglets ajoutés à la page Administration quand les comptes Google sont activés. */
 const ADM_TABS_COMPTES = [
+  "bord",
   "users",
   "invit",
   "equipes",
@@ -31,6 +32,7 @@ const ADM_COULEURS = {
   cycles: ["#B03A7A", "#F8E2EE"],
   reglages: ["#9A7400", "#F8EFCF"],
   retours: ["#C0392B", "#FBE3E0"],
+  bord: ["#26364D", "#E4E8EF"],
   activite: ["#4F6BC2", "#E4E9F8"],
 };
 function admOnglet(t, l) {
@@ -44,7 +46,7 @@ function admGroupes() {
   const G = [
     ["Contenu", [["jeux", "Jeux"], ["schemas", "Schémas"], pr && ["illustrer", "À illustrer (prépa)"], c && ["seances", "Séances"], c && ["cycles", "Cycles"]]],
     ["Personnes", c ? [["users", "Utilisateurs"], ["equipes", "Équipes"], ["invit", "Invitations"]] : []],
-    ["Suivi", [["retours", "Retours"], c && ["activite", "Activité"]]],
+    ["Suivi", [c && ["bord", "Tableau de bord"], ["retours", "Retours"], c && ["activite", "Activité"]]],
     ["Réglages", [c && ["reglages", "Réglages"], ["doc", "Documentation"]]],
   ];
   return G.map(([n, l]) => [n, l.filter(Boolean)]).filter(([, l]) => l.length);
@@ -90,7 +92,17 @@ async function admcCharger() {
   const t = ADM.tab;
   ADC.msg = "Chargement…";
   try {
-    if (t === "users") ADC.users = (await admPost("admin_utilisateurs")).utilisateurs;
+    if (t === "bord") {
+      const essai = async (a, d) => {
+        try {
+          return await admPost(a, d);
+        } catch (e) {
+          return null;
+        }
+      };
+      const [a, r, u] = await Promise.all([essai("admin_liste", { tous: false }), essai("admin_retours"), essai("admin_utilisateurs")]);
+      ADC.bord = { att: a ? a.jeux : null, ret: r ? r.retours : null, users: u ? u.utilisateurs : null };
+    } else if (t === "users") ADC.users = (await admPost("admin_utilisateurs")).utilisateurs;
     else if (t === "invit") ADC.invit = await admPost("admin_invitations");
     else if (t === "equipes") ADC.equipes = (await comptePost("equipes_liste")).equipes;
     else if (t === "seances" || t === "cycles")
@@ -161,6 +173,7 @@ function admComptesHTML() {
   const q = norm(ADC.q);
   const search = ph =>
     `<div class="tools"><input class="search" id="admcq" type="search" placeholder="${ph}" value="${esc(ADC.q)}" style="max-width:380px"><a class="abtn sm" data-admc="reload">↻ Actualiser</a></div>`;
+  if (t === "bord") return msg + (ADC.bord ? admBordHTML() : "");
   if (t === "users") {
     if (!ADC.users) return msg;
     const L = admTri(
@@ -517,3 +530,49 @@ registerClick(e => {
     fait(() => admPost("admin_reglages", { modeleDefaut: true }), "✓ Texte d'origine rétabli.");
   return true;
 });
+
+/* Tableau de bord : ce qui attend l'administrateur (jeux proposés, retours à traiter, nouveaux comptes) */
+function admBordHTML() {
+  const B = ADC.bord;
+  const carte = (ico, titre, n, vide, lignes, tab, lien, couleur) =>
+    `<div class="box" style="border-top:5px solid ${couleur};margin:0"><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:24px">${ico}</span><b style="flex:1;font-size:15px">${titre}</b><b style="font-size:30px;color:${n ? couleur : "#2E7D4F"}">${n === null ? "?" : n}</b></div>
+    ${n === null ? '<p style="color:#6B7280;margin:8px 0">Données indisponibles (serveur à mettre à jour ?).</p>' : n === 0 ? `<p style="color:#2E7D4F;margin:8px 0">✓ ${vide}</p>` : `<ul style="margin:8px 0;padding-left:18px;font-size:14px">${lignes}</ul>`}
+    <a class="abtn sm" data-adm="tab" data-t="${tab}">${lien} →</a></div>`;
+  const att = B.att,
+    ret = B.ret ? B.ret.filter(x => !x.publie) : null;
+  const il = Date.now() - 14 * 864e5;
+  const nouv = B.users ? B.users.filter(x => x.premiere && new Date(x.premiere).getTime() >= il).sort((a, b) => String(b.premiere).localeCompare(String(a.premiere))) : null;
+  const plus = (L, k) => (L.length > k ? `<li style="list-style:none;color:#6B7280">… et ${L.length - k} autre${L.length - k > 1 ? "s" : ""}</li>` : "");
+  const c1 = carte(
+    "🎲",
+    "Jeux proposés à relire",
+    att ? att.length : null,
+    "Aucun jeu en attente.",
+    att ? att.slice(0, 6).map(g => `<li>${esc((g.valeurs.Code ? g.valeurs.Code + " · " : "") + (g.valeurs.Titre || "(sans titre)"))}</li>`).join("") + plus(att, 6) : "",
+    "jeux",
+    "Relire les jeux",
+    "#C2571A"
+  );
+  const c2 = carte(
+    "💬",
+    "Retours de terrain non traités",
+    ret ? ret.length : null,
+    "Aucun retour en attente.",
+    ret ? ret.slice(-6).reverse().map(x => `<li><b>${esc(x.code)}</b> ${x.note ? "· note " + esc(x.note) : ""} <span style="color:#6B7280">${esc(x.auteur)}</span></li>`).join("") + plus(ret, 6) : "",
+    "retours",
+    "Traiter les retours",
+    "#C0392B"
+  );
+  const c3 = carte(
+    "👤",
+    "Nouveaux comptes (14 jours)",
+    nouv ? nouv.length : null,
+    "Aucun nouveau compte récemment.",
+    nouv ? nouv.slice(0, 6).map(x => `<li>${esc(x.nom || x.email)} <span style="color:#6B7280">${esc(admcDate(x.premiere))}</span></li>`).join("") + plus(nouv, 6) : "",
+    "users",
+    "Voir les utilisateurs",
+    "#2B5A9E"
+  );
+  const tot = B.users ? `<p style="color:#6B7280;font-size:13px;margin:12px 0 0">${B.users.length} compte${B.users.length > 1 ? "s" : ""} au total.</p>` : "";
+  return `<div class="tools"><a class="abtn sm" data-admc="reload">↻ Actualiser</a></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">${c1}${c2}${c3}</div>${tot}`;
+}

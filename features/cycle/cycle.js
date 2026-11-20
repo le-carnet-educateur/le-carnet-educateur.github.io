@@ -49,7 +49,39 @@ const cySave = () => {
   try {
     localStorage.setItem(CY_LS, JSON.stringify(CY));
   } catch (e) {}
+  if (typeof cyEtat === "function") cyEtat();
 };
+/* état d'enregistrement (comme pour les séances) : bouton grisé s'il n'y a rien à enregistrer + message d'état */
+let CYBUSY = false,
+  CYERR = "";
+const cySig = () => {
+  const c = { ...CY };
+  delete c.saveSig;
+  return JSON.stringify(c);
+};
+const cySale = () => (CY.saveSig ? CY.saveSig !== cySig() : CY.lignes.length > 0 || !!(CY.titre || "").trim());
+function cyEtat() {
+  const b = document.getElementById("cySaveBtn"),
+    m = document.getElementById("cyMsg");
+  if (!b || !m || !CY) return;
+  const sale = cySale();
+  b.style.opacity = sale || CYBUSY ? "" : ".45";
+  b.style.cursor = sale && !CYBUSY ? "pointer" : "default";
+  b.title = sale ? "" : "Rien à enregistrer : aucune modification depuis le dernier enregistrement";
+  if (CYBUSY) {
+    m.style.color = "#26364D";
+    m.textContent = "⏳ Enregistrement en cours…";
+  } else if (CYERR) {
+    m.style.color = "#B2263A";
+    m.textContent = CYERR;
+  } else if (sale) {
+    m.style.color = "#B26A00";
+    m.textContent = CY.saveSig ? "● Modifications non enregistrées" : "● Pas encore enregistré";
+  } else if (CY.saveSig) {
+    m.style.color = "#2E7D4F";
+    m.textContent = "✓ Cycle enregistré dans la bibliothèque";
+  } else m.textContent = "";
+}
 cyLoad();
 /* codes des jeux de la bibliothèque utilisés dans une séance enregistrée */
 function cyJeuxDe(d) {
@@ -124,7 +156,7 @@ function cycleSheetHTML0(cy) {
   <div style="border-top:4px solid ${C2};background:#FDEBE3;padding:8px 14px;margin-top:10px"><b style="color:#B2543A;letter-spacing:1px;font-size:11px">BILAN DU CYCLE</b><div style="white-space:pre-wrap;min-height:40px">${cy.bilan ? esc(cy.bilan) : ph("À compléter à la fin du cycle")}</div></div></div>`;
 }
 function cyBtn(a, t, bg, col = "#fff", extra = "") {
-  return `<a class="btn" data-cya="${a}" style="background:${bg};color:${col};border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block;${extra}">${t}</a>`;
+  return `<a class="btn" data-cya="${a}"${a === "save" ? ' id="cySaveBtn"' : ""} style="background:${bg};color:${col};border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block;${extra}">${t}</a>`;
 }
 function cyPicker() {
   const q = norm(CYQ);
@@ -199,14 +231,27 @@ const cyMsg = t => {
 };
 async function cyEnregistrer() {
   if (compteRequis()) return;
-  if (!CY.titre.trim()) {
-    cyMsg("Donnez un titre au cycle.");
+  if (CYBUSY) return;
+  if (!cySale()) {
+    toast("Rien à enregistrer : aucune modification depuis le dernier enregistrement.");
     return;
   }
+  if (!CY.titre.trim()) {
+    CYERR = "Donne un titre au cycle.";
+    cyEtat();
+    const t = document.querySelector('[data-cy="titre"]');
+    if (typeof rougir === "function") rougir(t);
+    return;
+  }
+  CYERR = "";
   if (!CY.id) CY.id = (DISC === "prepa" ? "cy-p" : "cy") + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-  const data = JSON.stringify({ cycle: CY });
+  const sig = cySig();
+  const cc = { ...CY };
+  delete cc.saveSig;
+  const data = JSON.stringify({ cycle: cc });
   if (data.length > 45000) {
-    cyMsg("Cycle trop volumineux pour être enregistré.");
+    CYERR = "Cycle trop volumineux pour être enregistré (retire le logo ou allège le contenu).";
+    cyEtat();
     return;
   }
   const rec = {
@@ -232,16 +277,23 @@ async function cyEnregistrer() {
     localStorage.setItem(LS_SB, JSON.stringify(garde));
   } catch (e) {}
   if (!CONFIG.GAME_ADD_URL) {
-    cyMsg("Gardé dans ce navigateur seulement (GAME_ADD_URL non configuré).");
+    CYERR = "Gardé dans ce navigateur seulement (GAME_ADD_URL non configuré).";
+    cyEtat();
     return;
   }
-  cyMsg("Enregistrement en cours…");
+  CYBUSY = true;
+  cyEtat();
   try {
     await serveurSeance("seance", { seance: rec });
     if (compteOn()) await loadSeances();
-    cyMsg("✓ Cycle enregistré dans la bibliothèque.");
+    CYBUSY = false;
+    CY.saveSig = sig;
+    cySave();
+    toast("✓ Cycle enregistré dans la bibliothèque.");
   } catch (e) {
-    cyMsg("Échec (" + e.message + "). Le cycle reste dans ce navigateur.");
+    CYBUSY = false;
+    CYERR = "Échec de l'enregistrement (" + e.message + "). Le cycle reste dans ce navigateur : réessaie.";
+    cyEtat();
   }
 }
 /* cycles enregistrés (mêmes enregistrements que les séances, identifiant « cy… ») */
@@ -521,6 +573,7 @@ registerView({
         cyPreview();
       })
     );
+    cyEtat();
     const q = $("#cyq");
     if (q)
       q.addEventListener("input", () => {
@@ -588,8 +641,12 @@ registerClick(e => {
     )
       return true;
     CY = JSON.parse(JSON.stringify(CYVU.cy));
-    if (compteMien((cyAll().find(c => c.rec.id === CYVU.id) || {}).rec || {})) CY.id = CYVU.id;
-    else delete CY.id;
+    delete CY.saveSig;
+    CYERR = "";
+    if (compteMien((cyAll().find(c => c.rec.id === CYVU.id) || {}).rec || {})) {
+      CY.id = CYVU.id;
+      CY.saveSig = cySig();
+    } else delete CY.id;
     CYUID = CY.lignes.reduce((m, l) => Math.max(m, l.id || 0), 0) + 1;
     cySave();
     go("cycle");
@@ -597,6 +654,7 @@ registerClick(e => {
   else if (a === "word") cycleWord(CY, cyMsg);
   else if (a === "save") cyEnregistrer();
   else if (a === "new") {
+    CYERR = "";
     if (CY.lignes.length || CY.titre) {
       if (!confirm("Effacer le cycle en cours et recommencer ?")) return true;
     }

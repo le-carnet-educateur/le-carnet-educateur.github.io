@@ -5,7 +5,10 @@ const COMPTE_LS = "compteSession";
 /* adresse Gmail uniquement ; manquant → champ surligné en rouge (.req-err) */
 const estGmail = e => /^[^\s@]+@(gmail|googlemail)\.com$/i.test(String(e).trim());
 const rougir = (el, on) => { if (el) { el.classList.toggle("req-err", on !== false); if (on !== false) el.focus(); } };
-const mauvaisesAdresses = l => l.filter(x => !estGmail(x));
+const estAdresse = e => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(e).trim());
+const mauvaisesAdresses = l => l.filter(x => !estAdresse(x)); /* format invalide : bloquant */
+const horsGmail = l => l.filter(x => estAdresse(x) && !estGmail(x)); /* valide mais pas Gmail : simple avertissement */
+const avertGmail = l => { const h = horsGmail(l); return h.length ? " ⚠ " + h.join(", ") + " : pas une adresse Gmail, la personne doit avoir un compte Google avec cette adresse." : ""; };
 const compteOn = () => !!(CONFIG.GOOGLE_CLIENT_ID && CONFIG.GAME_ADD_URL);
 try {
   const s = JSON.parse(localStorage.getItem(COMPTE_LS) || "null");
@@ -327,11 +330,11 @@ registerClick(e => {
       if (!nouv.length) return true;
       if (mauvaisesAdresses(nouv).length) {
         rougir(document.querySelector(`[data-eqf=ajout][data-id="${id}"]`));
-        toast("Adresse Gmail uniquement : " + mauvaisesAdresses(nouv).join(", "));
+        toast("Adresse invalide : " + mauvaisesAdresses(nouv).join(", "));
         return true;
       }
       eq.membres = eq.membres.concat(nouv);
-      msg = "✓ Membre(s) ajouté(s).";
+      msg = "✓ Membre(s) ajouté(s)." + avertGmail(nouv);
     } else if (a === "rm") {
       if (!confirm("Retirer " + b.dataset.m + " de l'équipe ?")) return true;
       eq.membres = eq.membres.filter(m => m !== b.dataset.m);
@@ -417,14 +420,14 @@ registerClick(e => {
     if (mal.length) {
       rougir($("#partageTxt"));
       m.style.color = "#B2263A";
-      m.textContent = "Adresses Gmail uniquement (@gmail.com) : " + mal.join(", ");
+      m.textContent = "Adresse invalide : " + mal.join(", ");
       return true;
     }
     m.style.color = "#26364D";
     m.textContent = "Enregistrement…";
     comptePost("seance_partage", { id, partage: liste, prevenir: false })
       .then(j => {
-        toast("✓ Partage enregistré." + compteInfoMails(j && j.mail));
+        toast("✓ Partage enregistré." + compteInfoMails(j && j.mail) + avertGmail(liste.filter(x => !x.startsWith("team:"))));
         return loadSeances().then(render);
       })
       .catch(err => {

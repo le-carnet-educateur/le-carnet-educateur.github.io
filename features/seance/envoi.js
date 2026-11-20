@@ -81,12 +81,12 @@ function envoiPartager() {
   const r = envoiRec(ENVOI.id),
     avant = partageListe(r),
     { ids, pers } = envoiLire();
-  const mal = pers.filter(x => !estGmail(x));
+  const mal = mauvaisesAdresses(pers);
   if (mal.length) {
     rougir($("#envP"));
     if ($("#envMsg")) {
       $("#envMsg").style.color = "#B2263A";
-      $("#envMsg").textContent = "Adresses Gmail uniquement (@gmail.com) : " + mal.join(", ");
+      $("#envMsg").textContent = "Adresse invalide : " + mal.join(", ");
     }
     return null;
   }
@@ -106,7 +106,7 @@ function envoiPartager() {
       fin();
       if (m()) {
         m().style.color = "#2E7D4F";
-        m().textContent = "✓ Partage enregistré.";
+        m().textContent = "✓ Partage enregistré." + avertGmail(pers);
       }
       return loadSeances().then(render);
     })

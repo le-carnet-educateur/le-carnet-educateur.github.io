@@ -131,8 +131,8 @@ function cpHTML() {
   <div class="box cpbox cpside">
     <b style="font-size:16px;display:block;margin-bottom:8px">Planning du cycle</b>
     <div class="cpl">Début du cycle</div><div class="hint" style="margin:0 0 4px"><b>Semaine du ${esc(cpFmtLong(p.debut))}</b><br>jusqu'au ${esc(cpFmtLong(fin))}</div>${cpCalHTML(p)}
-    <div class="cpl" style="margin-top:12px">Durée</div><div><input type="number" min="1" max="40" data-cpt="nb" value="${p.nb}" style="width:70px"> semaines</div>
-    <div class="cpl" style="margin-top:12px">Jours de cours</div><div class="cppills">${CP_J.map((n, i) => cpPill(p.jours.includes(i + 1), `data-cyp="set" data-f="jours" data-v="${i + 1}"`, n)).join("")}</div>
+    <div class="cpl" style="margin-top:12px">Durée</div><div class="cpnb"><a class="cpnbb" data-cyp="nbstep" data-d="-1" title="Une semaine de moins">−</a><input type="number" min="1" max="40" data-cpt="nb" value="${p.nb}"><a class="cpnbb" data-cyp="nbstep" data-d="1" title="Une semaine de plus">+</a><span class="cpnbt">semaine${p.nb > 1 ? "s" : ""}</span></div>
+    <div class="cpl" style="margin-top:12px">Jours de cours</div><div class="cppills cpj1">${CP_J.map((n, i) => cpPill(p.jours.includes(i + 1), `data-cyp="set" data-f="jours" data-v="${i + 1}"`, n)).join("")}</div>
     <div class="cpl" style="margin-top:12px">Séances <span class="aide" tabindex="0">?<span class="tip"><b>Séance unique</b> : une seule fiche de séance par semaine, déroulée les jours de cours (ex. la même séance le mercredi et le samedi). On la lie à la semaine.<br><br><b>Séances distinctes</b> : une séance différente pour chaque jour de cours. On choisit le jour de chaque item et on lui lie sa séance.</span></span></div><div class="cppills">${cpPill(p.mode !== "diff", 'data-cyp="set" data-f="mode" data-v="meme"', "Séance unique")}${cpPill(p.mode === "diff", 'data-cyp="set" data-f="mode" data-v="diff"', "Séances distinctes")}</div>
     <div class="cpl" style="margin-top:12px">Public</div><div class="cppills">${cpPill(p.public !== "groupes", 'data-cyp="set" data-f="public" data-v="tous"', "Tous")}${cpPill(p.public === "groupes", 'data-cyp="set" data-f="public" data-v="groupes"', "Par groupe")}</div>
     ${p.public === "groupes" ? `<input data-cpt="groupes" value="${esc(p.groupes.join(", "))}" placeholder="Noms des groupes : G1, G2" style="margin-top:6px;width:100%">` : ""}
@@ -225,6 +225,13 @@ registerClick(e => {
   } else if (a === "micro") {
     CPMICRO.add(+b.dataset.w);
     render();
+    return true;
+  } else if (a === "nbstep") {
+    const i = document.querySelector('[data-cpt="nb"]');
+    if (i) {
+      i.value = Math.max(1, Math.min(40, (+i.value || 1) + +b.dataset.d));
+      i.dispatchEvent(new Event("change", { bubbles: true }));
+    }
     return true;
   } else if (a === "mois") {
     const n = +b.dataset.n;
@@ -324,7 +331,7 @@ document.head.insertAdjacentHTML(
 .cpcr.cph{font-size:11px;color:#8a93a3;font-weight:700}
 .cpcr:not(.cph){cursor:pointer}.cpcr:not(.cph):hover{background:#eef1f8}
 .cpcr.dans{background:#e4eefb}.cpcr.sel{background:#26364d;color:#fff}.cpcr.sel span{color:#fff!important}
-.cplay{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start;margin-bottom:14px}.cpside{position:sticky;top:12px;margin:0;max-height:calc(100vh - 24px);overflow:auto}.cpmain{margin:0}.cpr2{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:10px;align-items:start}.cpweeks{margin-top:0}
+.cplay{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start;margin-bottom:14px}.cpside{position:sticky;top:12px;margin:0}.cpmain{margin:0}.cpr2{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:10px;align-items:start}.cpweeks{margin-top:0}
 .cpw{display:grid;grid-template-columns:150px 1fr;gap:12px;padding:12px 8px;border-top:1px solid #e3e8f2;border-radius:6px}
 .cpw.now{background:#fff8e1}.cpw.pause{opacity:.7}
 .cpwh b{font-size:16px;color:#26364d}.cpd{font-size:12.5px;color:#4a5873;margin-top:2px}
@@ -341,5 +348,9 @@ document.head.insertAdjacentHTML(
 .cpmini{cursor:pointer;font-size:13px;color:#2B5A9E;font-weight:700}
 .cpvac{color:#8a93a3;font-style:italic}
 .cppills{display:flex;flex-wrap:wrap;gap:6px}.cppill{cursor:pointer;user-select:none;border:1px solid #d5dae5;background:#fff;border-radius:20px;padding:5px 12px;font-size:13.5px;color:#4a5873}.cppill:hover{border-color:#26364d}.cppill.on{background:#26364d;border-color:#26364d;color:#fff;font-weight:700}.cpjp{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.cpjp .cppill{padding:3px 10px;font-size:12.5px}.cpjp .cppill.on{background:#3A8FB0;border-color:#3A8FB0}.cpwl{margin-top:8px}.cpwh .cpch{max-width:100%}.cpwh .cpch a:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:105px;display:inline-block;vertical-align:bottom}.cpbox .aide{vertical-align:middle}@media(max-width:1100px){.cplay{grid-template-columns:1fr}.cpside{position:static;max-height:none}}@media(max-width:700px){.cpw{grid-template-columns:1fr}.cpr2{grid-template-columns:1fr}}
+.cpj1{flex-wrap:nowrap;gap:3px}.cpj1 .cppill{flex:1 1 0;min-width:0;text-align:center;padding:4px 0;font-size:12px;border-radius:14px}
+.cpnb{display:inline-flex;align-items:center;border:1px solid #d5dae5;border-radius:22px;background:#fff;overflow:hidden}.cpnb input[type=number]{width:46px;border:0;text-align:center;font-weight:700;font-size:16px;color:#26364d;background:transparent;padding:4px 0;-moz-appearance:textfield;appearance:textfield}.cpnb input::-webkit-outer-spin-button,.cpnb input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.cpnb input:focus{outline:none}
+.cpnbb{cursor:pointer;user-select:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#26364d;background:#eef1f8}.cpnbb:hover{background:#26364d;color:#fff}
+.cpnbt{padding:0 12px 0 8px;color:#4a5873;font-size:13.5px}
 </style>`
 );
