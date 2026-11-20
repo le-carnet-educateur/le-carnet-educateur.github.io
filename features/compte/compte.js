@@ -374,6 +374,9 @@ const partageListe = r =>
     .split(/[,;\s]+/)
     .filter(Boolean);
 function partageBlocPanneau(r) {
+  return partageBlocPanneau0(r) + (typeof commentairesBloc === "function" ? commentairesBloc(r) : "");
+}
+function partageBlocPanneau0(r) {
   if (!compteOn() || !r) return "";
   if (!compteMien(r))
     return `<div class="box noprint" style="border-left:6px solid #8A55B5;padding:8px 14px">Partagé avec vous par <b>${esc(r.ownerNom || r.owner)}</b> ${r.owner && r.ownerNom ? `<span style="color:#6B7280">(${esc(r.owner)})</span>` : ""} · lecture seule : « Utiliser comme modèle » crée votre propre copie.</div>`;
