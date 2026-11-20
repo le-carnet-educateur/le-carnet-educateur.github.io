@@ -463,6 +463,42 @@ function buildCycleDoc(cy) {
       ])
     );
   out.push(P(R(""), 60));
+  /* planning du cycle (semaine par semaine) */
+  const PL = typeof cpWordRows === "function" ? cpWordRows(cy) : [];
+  if (PL.length) {
+    const W2 = [800, 2300, tot - 3100];
+    const tbl2 = rows => new Table({ rows, width: { size: tot, type: WidthType.DXA }, columnWidths: W2, layout: TableLayoutType.FIXED });
+    const rows2 = [
+      new TableRow({ tableHeader: true, children: ["SEM.", "DATES", "SUR QUOI ON TRAVAILLE"].map((h, i) => cell([P(R(h, { b: true, c: "FFFFFF", size: 17 }))], W2[i], BLUE)) }),
+    ];
+    let micro = "";
+    PL.forEach((r, w) => {
+      if (r.micro && r.micro !== micro) rows2.push(new TableRow({ cantSplit: true, children: [cell([P(R(r.micro, { b: true, c: "FFFFFF" }))], tot, NAVY, { span: 3 })] }));
+      micro = r.micro || micro;
+      const f = w % 2 ? "F4F7FB" : undefined;
+      const contenu = [];
+      if (r.pause) contenu.push(P(R("Pause", { i: true, c: "8A93A3" })));
+      else if (!r.blocs.length) contenu.push(P(R("—", { c: "8A93A3" })));
+      r.blocs.forEach(b => {
+        if (b.lab || b.liens.length) contenu.push(P([...(b.lab ? [R(b.lab + " ", { b: true, c: "5B6577" })] : []), ...b.liens.map(t => R("[" + t + "] ", { c: "2B5A9E", b: true }))]));
+        b.items.forEach(it => {
+          contenu.push(P([R(it.t, { b: true }), ...(it.jour ? [R(" (" + it.jour + ")", { i: true, c: "6B7280" })] : []), ...it.liens.map(t => R(" [" + t + "]", { c: "2B5A9E", b: true }))]));
+          it.subs.forEach(x => contenu.push(P(R("   • " + x))));
+        });
+      });
+      rows2.push(
+        new TableRow({
+          cantSplit: true,
+          children: [
+            cell([P(R("S" + r.sem, { b: true }))], W2[0], f),
+            cell(r.pause ? [P(R("—"))] : lines(r.dates.join("\n")), W2[1], f),
+            cell(contenu, W2[2], f),
+          ],
+        })
+      );
+    });
+    out.push(P(R("PLANNING DU CYCLE", { b: true, c: BLUE, size: 20 }), 40), tbl2(rows2), P(R(""), 60));
+  }
   const H = ["N°", "SÉANCE", "DATE(S)", "THÈME", "OBJECTIF", "JEUX (CODES)", "REMARQUES"];
   const rows = [
     new TableRow({
@@ -611,7 +647,7 @@ registerView({
     x.cy = cy;
     CYVU = { id, cy };
     const mien = compteMien(x.rec);
-    return cyH(`${back}<div class="tools noprint">${cyBtn("vprint", "Imprimer / PDF", "#26364D")}${cyBtn("vword", "Télécharger en Word", "#2B5A9E")}${cyBtn("vedit", mien ? "✎ Modifier ce cycle" : "Utiliser comme modèle (copie)", "#2E7D4F")}${mien ? cyBtn("vdel", "🗑 Supprimer", "#fff", "#B2263A", "border:1px solid #E8B4BC;") : ""}<span id="cyMsg" style="font-weight:700;color:#2E7D4F"></span></div>${partageBloc(x.rec)}${cycleSheetHTML(x.cy)}`);
+    return cyH(`${back}<div class="tools noprint">${cyBtn("vprint", "Imprimer / PDF", "#26364D")}${cyBtn("vword", "Télécharger en Word", "#2B5A9E")}${cyBtn("vedit", mien ? "✎ Modifier ce cycle" : "Utiliser comme modèle (copie)", "#2E7D4F")}${mien ? cyBtn("vdel", "🗑 Supprimer", "#fff", "#B2263A", "border:1px solid #E8B4BC;") : ""}${mien && typeof versionsChip === "function" ? versionsChip(id) : ""}<span id="cyMsg" style="font-weight:700;color:#2E7D4F"></span></div>${partageBloc(x.rec)}${cycleSheetHTML(x.cy)}`);
   },
 });
 registerClick(e => {

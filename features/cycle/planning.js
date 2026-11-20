@@ -178,6 +178,29 @@ function cpSheetHTML(cy) {
   return `<div style="margin-top:10px"><b style="color:#3A8FB0;letter-spacing:1px;font-size:11px">PLANNING DU CYCLE</b><table style="width:100%;border-collapse:collapse;margin-top:4px"><thead><tr>${th("SEM.")}${th("DATES")}${th("SUR QUOI ON TRAVAILLE")}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
+/* le planning sous forme de données simples (pour l'export Word) */
+function cpWordRows(cy) {
+  const p = cy.plan;
+  if (!p || !p.sem || !p.sem.length) return [];
+  const diff = p.mode === "diff";
+  const tit = l => (l || []).map(cpTitreSeance);
+  return p.sem.map((s, w) => {
+    const blocs = [];
+    (p.public === "groupes" ? ["all"].concat((p.groupes || []).map((_, i) => "g" + i)) : ["all"]).forEach(k => {
+      const items = (s.cases && s.cases[k]) || [];
+      const sw = !diff ? tit((s.sid || {})[k]) : [];
+      if (!items.length && !sw.length) return;
+      const lab = k === "all" ? (p.public === "groupes" ? "Tous les groupes" : "") : (p.groupes || [])[+k.slice(1)] || k;
+      blocs.push({
+        lab,
+        liens: sw,
+        items: items.map(it => ({ t: it.t || "", jour: diff && it.jour ? cpFmt(cpDateJour(p, w, +it.jour)) : "", liens: diff ? tit(it.sid) : [], subs: (it.subs || []).map(x => x.t) })),
+      });
+    });
+    return { sem: w + 1, micro: s.micro || "", pause: !!s.pause, dates: (p.jours || []).map(j => cpFmt(cpDateJour(p, w, j))), blocs };
+  });
+}
+
 /* ---------- actions ---------- */
 /* période du cycle (champ « Période » en haut) : se remplit toute seule, sauf si on l'a modifiée à la main */
 function cpPeriode(p) {

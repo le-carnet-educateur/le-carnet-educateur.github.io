@@ -66,7 +66,10 @@ const MANUEL = [
     <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Vos favoris et votre pseudo</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Vos favoris sont liés à votre compte et ne sont pas montrés aux autres</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">Vous</td></tr>
     <tr><td style="padding:6px 8px;border-top:1px solid #D5DAE5"><b>Retours de terrain sur un jeu</b></td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">L'administrateur</td><td style="padding:6px 8px;border-top:1px solid #D5DAE5">L'administrateur (traitement)</td></tr>
     </tbody></table>
-    <ul style="margin-top:10px"><li><b>Partager ne donne jamais le droit de modifier</b> : la personne lit, imprime, ou en fait une copie pour elle.</li>
+    <ul style="margin-top:10px"><li><b>Historique des versions</b> : pour tes séances et tes cycles, le bouton discret « 🕘 Versions » (en haut de la séance ou du cycle ouvert) liste les 5 dernières versions, conservées automatiquement à chaque enregistrement. « Restaurer » remet l'ancienne version ; le contenu remplacé reste lui-même dans l'historique. Seul le propriétaire (et l'administrateur) y a accès.</li>
+    <li><b>Séance liée à un cycle</b> : quand une séance est liée à une semaine du planning d'un cycle, sa fiche affiche un rappel (cycle, semaine, objectif de la semaine) avec un lien vers le cycle.</li>
+    <li><b>Planning annuel</b> : la liste des cycles propose une vue d'ensemble des cycles d'un même macro-cycle.</li>
+    <li><b>Partager ne donne jamais le droit de modifier</b> : la personne lit, imprime, ou en fait une copie pour elle.</li>
     <li><b>Adresse Gmail conseillée</b> : la personne se connecte avec un compte Google. Une adresse non Gmail est acceptée (avertissement affiché), à condition qu'elle corresponde à un compte Google.</li>
     <li><b>Retirer une adresse du partage</b> (ou la personne d'une équipe) lui fait perdre l'accès (en moins d'une minute).</li>
     <li>Pour savoir avec qui une séance ou un cycle est partagé, ouvrez-le : la ligne « Partagée avec » la liste, ou « Privée » s'il n'est partagé avec personne.</li>
