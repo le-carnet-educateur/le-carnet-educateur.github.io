@@ -99,6 +99,7 @@ const crepsImgRow = r => {
   return on ? (r.src.sch && edSvgUrl(r.src.sch)) || crepsImg(r.g) : "";
 };
 function crepsHTML() {
+  palApply(SMETA.palette);
   const M = seModel(),
     S = SMETA,
     L = crepsLignes(M);
@@ -110,7 +111,7 @@ function crepsHTML() {
           `<div style="margin-bottom:2px">${sg ? `<b style="color:${c}">${sg}</b> ` : ""}${esc(l)}</div>`
       )
       .join("") || ph("—");
-  const cl = "color:#C9D1DE";
+  const cl = "color:" + PAL.sub;
   const info = [
     S.periode ? `<span style="${cl}">[${esc(S.periode)}]</span>` : "",
     S.dates ? `<b>Dates :</b> <span style="${cl}">${esc(S.dates)}</span>` : "",
@@ -118,7 +119,7 @@ function crepsHTML() {
     S.objectif ? `<b>Objectif général :</b> <span style="${cl}">${esc(S.objectif)}</span>` : "",
   ].filter(Boolean);
   let h = `<div class="sheet creps" style="font-size:12px;color:#2B2F36;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-  <div style="background:${NAVYC};color:#fff;padding:12px 52px 12px 16px;display:flex;gap:14px;align-items:center;position:relative">${S.logo ? "" : `<img src="${LOGO_URL}" alt="" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;opacity:.9" onerror="this.remove()">`}${S.logo ? `<img src="${esc(S.logo)}" alt="Logo" style="max-height:54px;max-width:150px">` : ""}<div style="flex:1"><div style="font-size:11px;letter-spacing:1px;color:#C9D1DE">FICHE DE PRÉPARATION D'UNE SÉANCE</div><div><b style="font-size:19px">${S.titre ? esc(S.titre) : ph("Titre de la séance")}</b></div><div><b>Thème général :</b> <span style="${cl}">${S.theme ? esc(S.theme) : "—"}</span></div></div><div style="flex:1;font-size:12px">${info.join("<br>")}</div><div style="font-size:12px">${M.G.map(g => `<span style="color:${g.c}">■</span> ${esc(g.nom)} – ${M.tot[g.i]} min`).join("<br>")}</div></div>
+  <div style="background:${NAVYC};color:${PAL.ink};${PAL.hb ? "border-bottom:4px solid " + PAL.hb + ";" : ""}padding:12px 52px 12px 16px;display:flex;gap:14px;align-items:center;position:relative">${S.logo ? "" : `<img src="${LOGO_URL}" alt="" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;opacity:.9" onerror="this.remove()">`}${S.logo ? `<img src="${esc(S.logo)}" alt="Logo" style="max-height:54px;max-width:150px">` : ""}<div style="flex:1"><div style="font-size:11px;letter-spacing:1px;color:#C9D1DE">FICHE DE PRÉPARATION D'UNE SÉANCE</div><div><b style="font-size:19px">${S.titre ? esc(S.titre) : ph("Titre de la séance")}</b></div><div><b>Thème général :</b> <span style="${cl}">${S.theme ? esc(S.theme) : "—"}</span></div></div><div style="flex:1;font-size:12px">${info.join("<br>")}</div><div style="font-size:12px">${M.G.map(g => `<span style="color:${g.c}">■</span> ${esc(g.nom)} – ${M.tot[g.i]} min`).join("<br>")}</div></div>
   <table style="width:100%;border-collapse:collapse;table-layout:fixed"><thead><tr>${CREPS_COLS.map(c => `<th style="width:${c[4]}%;background:${c[2]};color:#fff;padding:6px 6px;font-size:11px;text-align:center;border:1px solid #fff;vertical-align:middle">${c[0]}${c[1] ? `<div style="font-weight:400;font-size:9px;margin-top:2px;line-height:1.2">${esc(c[1])}</div>` : ""}</th>`).join("")}</tr></thead><tbody>`;
   L.forEach(r => {
     const td = (i, body) =>
@@ -142,7 +143,7 @@ function crepsHTML() {
   /* page des schémas : seulement les situations qui ont une image (sauf si les schémas sont sous chaque situation) */
   const avecImg = L.filter(r => crepsImgRow(r));
   if (!schemaSous() && avecImg.length)
-    h += `<div style="page-break-before:always;break-before:page;margin-top:14px"><div style="background:${NAVYC};color:#fff;text-align:center;font-weight:700;padding:6px">Schémas</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid #D5DAE5">${avecImg
+    h += `<div style="page-break-before:always;break-before:page;margin-top:14px"><div style="background:${NAVYC};color:${PAL.ink};text-align:center;font-weight:700;padding:6px">Schémas</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid #D5DAE5">${avecImg
       .map(
         r =>
           `<div class="sch" style="border:1px solid #D5DAE5"><div style="background:#F4F6FA;font-size:11px;padding:3px 8px">${esc(r.nom)}${r.titre ? " — " + esc(r.titre) : ""}</div><div style="min-height:190px;display:flex;align-items:center;justify-content:center"><img src="${esc(crepsImgRow(r))}" alt="Schéma" onerror="this.closest('.sch').remove()" style="max-width:100%;max-height:230px;object-fit:contain"></div></div>`

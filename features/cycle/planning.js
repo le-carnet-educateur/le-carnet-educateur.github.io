@@ -205,10 +205,16 @@ function cpWordRows(cy) {
 /* période du cycle (champ « Période » en haut) : se remplit toute seule, sauf si on l'a modifiée à la main */
 function cpPeriode(p) {
   if (!p.jours || !p.jours.length) return "";
-  const f = iso => cpD(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
-  const deb = cpDateJour(p, 0, Math.min(...p.jours)),
-    fin = cpDateJour(p, p.nb - 1, Math.max(...p.jours));
-  return f(deb) + " – " + f(fin) + " (" + p.nb + " semaine" + (p.nb > 1 ? "s" : "") + ")";
+  const M = ["Janv", "Févr", "Mars", "Avr", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc"];
+  const deb = cpD(cpDateJour(p, 0, Math.min(...p.jours))),
+    fin = cpD(cpDateJour(p, p.nb - 1, Math.max(...p.jours)));
+  const m1 = deb.getUTCMonth(),
+    m2 = fin.getUTCMonth(),
+    a1 = deb.getUTCFullYear(),
+    a2 = fin.getUTCFullYear();
+  if (a1 === a2 && m1 === m2) return M[m1] + " " + a1;
+  if (a1 === a2) return M[m1] + " – " + M[m2] + " " + a1;
+  return M[m1] + " " + a1 + " – " + M[m2] + " " + a2;
 }
 function cpSync() {
   const p = CY.plan;

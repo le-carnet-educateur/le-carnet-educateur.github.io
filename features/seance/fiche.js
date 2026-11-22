@@ -42,7 +42,10 @@ function unitLabel(s, k) {
 /* intitulé d'une étape de l'échauffement : le nom de l'exercice (exercice seul) ou le titre / les jeux du bloc */
 const echLabel = (s, k) => (s.solo ? unitLabel(s, k) : subLabel(s, k, ""));
 /* couleurs du bandeau : exercice seul = bleu-vert, bloc = violet */
-const uniteCol = s => (s.solo ? { bg: "#D5ECF5", fg: "#1B6A8A", w: "D5ECF5", wf: "1B6A8A" } : { bg: "#ECE7F8", fg: "#5B4BA8", w: "ECE7F8", wf: "5B4BA8" });
+const uniteCol = s => {
+  const [bg, fg] = PAL.u[s.solo ? "solo" : "bloc"];
+  return { bg, fg, w: palHex(bg), wf: palHex(fg) };
+};
 /* schéma de cet exercice dans la fiche : choix propre à l'exercice (it.schOn), sinon réglage général de la séance */
 /* où vont les schémas dans la fiche : "non" (aucun) · "sous" (sous chaque exercice) · "page" (page à part).
    Les anciennes séances n'ont pas ce réglage : on le déduit de l'ancien (schemaMode / schemaStd). */
@@ -196,6 +199,7 @@ const nomsGroupes = (M, idx) => {
 const schemaStd = () => !!(SMETA && SMETA.schemaStd);
 const tgs = (M, d, idx) => idx.map(i => ({ t: (+d[i] || 0) + "'", c: M.G[i].c }));
 function sheetHTML() {
+  palApply(SMETA.palette);
   if (typeof isCreps === "function" && isCreps()) return crepsHTML();
   const M = seModel(),
     S = SMETA;
@@ -203,9 +207,11 @@ function sheetHTML() {
   const v = (x, p) => (x ? esc(x) : ph(p));
   const tagbox = a =>
     `<span style="display:inline-flex;gap:3px">${a.map(x => `<span style="background:${x.c};color:#fff;font-weight:700;padding:2px 9px;min-width:30px;text-align:center">${x.t}</span>`).join("")}</span>`;
-  const band = (a, title, bg, col, body) =>
-    `<div style="display:flex;align-items:center;gap:10px;background:${bg};padding:3px 8px 3px 0;margin-top:8px;font-size:12px;font-weight:700;color:${col}">${tagbox(a)}<span>${title}</span></div>${body || ""}`;
-  const cl = "color:#C9D1DE";
+  const band = (a, title, bg, col, body) => {
+    const f = PAL.st === "filet";
+    return `<div style="display:flex;align-items:center;gap:10px;background:${f ? "#fff" : bg};padding:3px 8px 3px 0;margin-top:8px;font-size:12px;font-weight:700;color:${col}${f ? ";border-left:5px solid " + col + ";border-bottom:1px solid " + bg : ""}">${tagbox(a)}<span>${title}</span></div>${body || ""}`;
+  };
+  const cl = "color:" + PAL.sub;
   const lignes = [];
   const l1 = [
     S.titre ? `<b style="font-size:18px">${esc(S.titre)}</b>` : "",
@@ -247,7 +253,7 @@ function sheetHTML() {
   /* logo du site : à droite du bandeau de tête, sans prendre de place (seulement si la salle n'a pas mis le sien) */
   const logoSite = S.logo ? "" : `<img src="${LOGO_URL}" alt="" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;opacity:.9;pointer-events:none" onerror="this.remove()">`;
   let h = `<div class="sheet" style="font-size:13px;color:#2B2F36;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">
-  <div style="background:${NAVYC};color:#fff;display:grid;grid-template-columns:${cols.join(" ")};gap:14px;padding:12px 16px;align-items:center;position:relative">${cases.join("")}${logoSite}</div>`;
+  <div style="background:${NAVYC};color:${PAL.ink};${PAL.hb ? "border-bottom:4px solid " + PAL.hb + ";" : ""}display:grid;grid-template-columns:${cols.join(" ")};gap:14px;padding:12px 16px;align-items:center;position:relative">${cases.join("")}${logoSite}</div>`;
   h += band(
     tgs(
       M,
@@ -255,8 +261,8 @@ function sheetHTML() {
       M.all
     ),
     "ACCUEIL",
-    "#FDF3D3",
-    "#8A6D12"
+    PAL.b.acc[0],
+    PAL.b.acc[1]
   );
   /* lien vers la fiche : s'ouvre en fenêtre (on reste sur la page) */
   const lk = (v, inner) =>
@@ -278,7 +284,7 @@ function sheetHTML() {
     return `<div style="margin:3px 0">${tete}${corps}${v.meta ? `<div style="margin-left:12px;color:#6B7280;font-size:11px;font-style:italic">${esc(v.meta)}</div>` : ""}${img}</div>`;
   };
   if (M.ech.on) {
-    h += band(tgs(M, M.ce, M.all), "ÉCHAUFFEMENT", "#E6F2E6", "#2E6F3E");
+    h += band(tgs(M, M.ce, M.all), "ÉCHAUFFEMENT", PAL.b.ech[0], PAL.b.ech[1]);
     M.echSubs.forEach((s, k) => {
       const who =
         s.idx.length < M.G.length
@@ -293,7 +299,7 @@ function sheetHTML() {
         .join("")} &nbsp;${esc(echLabel(s, k) || "Échauffement")}${who}</div><div style="padding:4px 10px;font-size:12px;background:#fff">${s.views.map(echItem).join("") || `<div>${ph("▸ [Ajouter un jeu ou un exercice]")}</div>`}</div>`;
     });
   }
-  h += band(tgs(M, M.c, M.all), "CORPS DE SÉANCE", "#E3EEF8", "#2B5A9E");
+  h += band(tgs(M, M.c, M.all), "CORPS DE SÉANCE", PAL.b.corps[0], PAL.b.corps[1]);
   const th = (t, c, f) =>
     `<div style="background:${f};color:${c};font-weight:700;font-size:11px;padding:5px 10px;border-bottom:1px solid #D5DAE5">${t}</div>`;
   const schema = (SMETA.disc || DISC) === "prepa";
@@ -325,7 +331,7 @@ function sheetHTML() {
   };
   if (M.subs.length) {
     let n = 0;
-    h += `<div style="display:grid;grid-template-columns:${schema ? "1.6fr 1.4fr" : "3.2fr 1.2fr 1.2fr 1.3fr"};margin-top:8px"><div style="background:#2B5A9E;color:#E3EEF8;font-weight:700;font-size:11px;padding:5px 10px">EXERCICE / DÉFI / JEU</div>${schema ? "" : th("PLUS DIFFICILE (+)", "#B2543A", "#FBE6E4")}${schema ? "" : th("PLUS FACILE (–)", "#2E6F3E", "#E6F2E8")}${schema ? th("SCHÉMA", "#2B5A9E", "#E3EEF8") : th("CRITÈRES DE RÉUSSITE", "#5B4B9A", "#ECE8F6")}`;
+    h += `<div style="display:grid;grid-template-columns:${schema ? "1.6fr 1.4fr" : "3.2fr 1.2fr 1.2fr 1.3fr"};margin-top:8px"><div style="background:${PAL.th};color:#fff;font-weight:700;font-size:11px;padding:5px 10px">EXERCICE / DÉFI / JEU</div>${schema ? "" : th("PLUS DIFFICILE (+)", "#B2543A", "#FBE6E4")}${schema ? "" : th("PLUS FACILE (–)", "#2E6F3E", "#E6F2E8")}${schema ? th("SCHÉMA", "#2B5A9E", "#E3EEF8") : th("CRITÈRES DE RÉUSSITE", "#5B4B9A", "#ECE8F6")}`;
     M.subs.forEach((s, k) => {
       const who =
         s.idx.length < M.G.length
@@ -359,7 +365,7 @@ function sheetHTML() {
       .flatMap(s2 => s2.views)
       .filter(x => x.v && x.v.schOn && (x.v.img || x.v.imgJeu));
     if (LS.length)
-      h += `<div style="page-break-before:always;break-before:page;margin-top:14px"><div style="background:#2B5A9E;color:#fff;text-align:center;font-weight:700;padding:6px">Schémas</div><div style="display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #D5DAE5">${LS.map(
+      h += `<div style="page-break-before:always;break-before:page;margin-top:14px"><div style="background:${PAL.th};color:#fff;text-align:center;font-weight:700;padding:6px">Schémas</div><div style="display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #D5DAE5">${LS.map(
         x =>
           `<div class="sch" style="border:1px solid #D5DAE5"><div style="background:#F4F6FA;font-size:11px;padding:3px 8px">${esc(x.name)}</div><div style="min-height:150px;display:flex;align-items:center;justify-content:center"><img src="${esc(x.v.img || x.v.imgJeu)}" alt="Schéma : ${esc(x.name)}" onerror="this.closest('.sch').remove()" style="max-width:100%;max-height:230px;object-fit:contain"></div></div>`
       ).join("")}</div></div>`;

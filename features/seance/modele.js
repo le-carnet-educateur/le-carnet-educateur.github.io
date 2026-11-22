@@ -1,10 +1,31 @@
 /* Ma séance — données enregistrées, durées, modèle de calcul */
-const C1 = "#3A8FB0",
-  C2 = "#E8662F",
-  NAVYC = "#1E2630";
-/* couleurs des groupes (2 par défaut, 4 au maximum) */
-const GCOL = [C1, C2, "#4E9A5B", "#8A55B5"],
+/* ---------- palettes de couleurs des fiches (séance, cycle, exports) ----------
+   head/ink/sub : bandeau de tête (fond, texte, texte secondaire) ; hb : filet sous le bandeau ; c1/c2 : accents (flèches, en-têtes de tableaux) ;
+   g : couleurs des 4 groupes ; b : bandes de section [fond, texte] ; st : style des bandes (pastel | filet | plein) */
+const PALS = {
+  classique: { n: "Classique", head: "#1E2630", ink: "#FFFFFF", sub: "#C9D1DE", hb: "", c1: "#3A8FB0", c2: "#E8662F", st: "pastel", th: "#2B5A9E", u: { solo: ["#D5ECF5", "#1B6A8A"], bloc: ["#ECE7F8", "#5B4BA8"] }, g: ["#3A8FB0", "#E8662F", "#4E9A5B", "#8A55B5"], b: { acc: ["#FDF3D3", "#8A6D12"], ech: ["#E6F2E6", "#2E6F3E"], corps: ["#E3EEF8", "#2B5A9E"] } },
+  foret: { n: "Forêt", head: "#1F3326", ink: "#FFFFFF", sub: "#CFE0D2", hb: "#C9831F", c1: "#3E7D4F", c2: "#C9831F", st: "filet", th: "#2A5A46", u: { solo: ["#E1EEE3", "#2B6339"], bloc: ["#F1EAD8", "#6E4F32"] }, g: ["#3E7D4F", "#C9831F", "#8C5A3C", "#4F8A9E"], b: { acc: ["#F6EFD9", "#74560F"], ech: ["#E4F0E4", "#2B6339"], corps: ["#E3EDE6", "#2A5A46"] } },
+  bloc: { n: "Bloc", head: "#F2B705", ink: "#22252B", sub: "#4A3F00", hb: "", c1: "#3A4350", c2: "#D9482B", st: "plein", th: "#2A3747", u: { solo: ["#E6EBF0", "#2A3747"], bloc: ["#FFF0B3", "#5A4600"] }, g: ["#2F6FB0", "#D9482B", "#23857F", "#7A5AA6"], b: { acc: ["#F2B705", "#22252B"], ech: ["#3A4350", "#FFFFFF"], corps: ["#2A3747", "#FFFFFF"] } },
+  prune: { n: "Prune", head: "#EBDDF5", ink: "#2E1A3A", sub: "#5B4670", hb: "", c1: "#8E44AD", c2: "#D6457F", st: "pastel", th: "#473A94", u: { solo: ["#E3F3F0", "#1B726A"], bloc: ["#F3E8F8", "#762E91"] }, g: ["#8E44AD", "#D6457F", "#2E9C8F", "#D98E1E"], b: { acc: ["#FBE9F1", "#9E2A5A"], ech: ["#F3E8F8", "#762E91"], corps: ["#E9E5F6", "#473A94"] } },
+  sobre: { n: "Sobre (gris)", head: "#E9E9E9", ink: "#1E1E1E", sub: "#555555", hb: "#2B2B2B", c1: "#4A4A4A", c2: "#6B6B6B", st: "pastel", th: "#4A4A4A", u: { solo: ["#EFEFEF", "#333333"], bloc: ["#E0E0E0", "#262626"] }, g: ["#2B2B2B", "#6B6B6B", "#999999", "#C4C4C4"], b: { acc: ["#F7F7F7", "#333333"], ech: ["#EFEFEF", "#333333"], corps: ["#E7E7E7", "#262626"] } },
+};
+let PAL = PALS.classique,
+  PAL_FORCE = "";
+let C1 = PAL.c1,
+  C2 = PAL.c2,
+  NAVYC = PAL.head;
+const GCOL = PAL.g.slice(),
   GMAX = 4;
+/* applique la palette d'une fiche (ou la palette forcée : impression en gris) aux couleurs globales */
+function palApply(id) {
+  PAL = PALS[PAL_FORCE || id] || PALS.classique;
+  C1 = PAL.c1;
+  C2 = PAL.c2;
+  NAVYC = PAL.head;
+  PAL.g.forEach((c, i) => (GCOL[i] = c));
+  return PAL;
+}
+const palHex = c => String(c).replace("#", "");
 const SECU_DEFAUT =
   "On ne court pas sur les tapis, tapis dégagés quand on grimpe, pas de saut depuis le haut, on se déplace loin des murs.";
 let SE = null;
@@ -199,6 +220,7 @@ const fit = (a, n, def) => {
 };
 function seDefaults() {
   const S = SMETA;
+  palApply(S.palette);
   if (S.logo === undefined) S.logo = defaultLogo();
   const d = {
     titre: "",

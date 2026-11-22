@@ -33,11 +33,15 @@ function buildSeanceDoc(logo) {
     PageOrientation,
     TableLayoutType,
   } = D;
+  palApply(SMETA.palette);
   const FONT = "Calibri",
     CW = 15838,
-    BLUE = "3A8FB0",
-    ORG = "E8662F",
-    NAVY = "1E2630",
+    BLUE = palHex(PAL.c1),
+    ORG = palHex(PAL.c2),
+    NAVY = palHex(PAL.head),
+    HI = palHex(PAL.ink),
+    HS = palHex(PAL.sub),
+    PB = k => PAL.b[k].map(palHex),
     V = VerticalAlign.CENTER;
   const NONE = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" },
     NOB = { top: NONE, bottom: NONE, left: NONE, right: NONE };
@@ -93,8 +97,8 @@ function buildSeanceDoc(logo) {
   const M = seModel(),
     S = SMETA;
   const out = [];
-  const txt = (t, p) => (t ? R(t, { c: "FFFFFF" }) : R(p, { i: true, c: "C9D1DE" }));
-  const gris = t => R(t, { c: "C9D1DE" });
+  const txt = (t, p) => (t ? R(t, { c: HI }) : R(p, { i: true, c: HS }));
+  const gris = t => R(t, { c: HS });
   const colonnes = [];
   if (logo)
     colonnes.push({
@@ -112,30 +116,30 @@ function buildSeanceDoc(logo) {
       ],
     });
   const l1 = [];
-  if (S.titre) l1.push(R(S.titre, { b: true, c: "FFFFFF", size: 26 }));
-  if (S.periode) l1.push(R((S.titre ? "  " : "") + "[" + S.periode + "]", { c: "C9D1DE", size: 22 }));
+  if (S.titre) l1.push(R(S.titre, { b: true, c: HI, size: 26 }));
+  if (S.periode) l1.push(R((S.titre ? "  " : "") + "[" + S.periode + "]", { c: HS, size: 22 }));
   const lignesMain = [];
   if (l1.length) lignesMain.push(P(l1));
-  if (S.theme) lignesMain.push(P([R("Thème : ", { b: true, c: "FFFFFF" }), gris(S.theme)]));
-  if (S.educ) lignesMain.push(P([R("Éducateurs : ", { b: true, c: "FFFFFF" }), gris(S.educ)]));
+  if (S.theme) lignesMain.push(P([R("Thème : ", { b: true, c: HI }), gris(S.theme)]));
+  if (S.educ) lignesMain.push(P([R("Éducateurs : ", { b: true, c: HI }), gris(S.educ)]));
   const reste = CW - (logo ? 2000 : 0) - 2500 - (S.objectif ? 4000 : 0) - (S.dates ? 1900 : 0);
   if (lignesMain.length) colonnes.push({ w: reste, body: lignesMain, main: true });
   if (S.objectif)
     colonnes.push({
       w: 4000,
-      body: [P([R("Objectif général : ", { b: true, c: "FFFFFF" }), gris(S.objectif)])],
+      body: [P([R("Objectif général : ", { b: true, c: HI }), gris(S.objectif)])],
     });
   if (S.dates)
     colonnes.push({
       w: 1900,
-      body: [P([R("Dates : ", { c: "FFFFFF" }), gris(S.dates)], { al: AlignmentType.CENTER })],
+      body: [P([R("Dates : ", { c: HI }), gris(S.dates)], { al: AlignmentType.CENTER })],
     });
   colonnes.push({
     w: 2500,
     body: M.G.map(g =>
       P([
         R("■ ", { c: g.c.slice(1), b: true }),
-        R(g.nom + " – " + M.tot[g.i] + " min", { c: "FFFFFF", size: 17 }),
+        R(g.nom + " – " + M.tot[g.i] + " min", { c: HI, size: 17 }),
       ])
     ),
   });
@@ -175,7 +179,7 @@ function buildSeanceDoc(logo) {
     cs.push(
       cell([P([R(title, { b: true, c: tcol, size: 17 })])], {
         w: ws[ws.length - 1],
-        f: fill,
+        f: PAL.st === "filet" ? "FFFFFF" : fill,
         va: V,
         m: { top: 30, bottom: 30, left: 140, right: 100 },
       })
@@ -189,8 +193,8 @@ function buildSeanceDoc(logo) {
         M.all
       ),
       "ACCUEIL",
-      "FDF3D3",
-      "8A6D12"
+      PB("acc")[0],
+      PB("acc")[1]
     )
   );
   const lines = t =>
@@ -199,7 +203,7 @@ function buildSeanceDoc(logo) {
       .map(l => l.replace(/^\s*[•\-–]\s*/, "").trim())
       .filter(Boolean);
   if (M.ech.on) {
-    out.push(...band(tg(M.ce, M.all), "ÉCHAUFFEMENT", "E6F2E6", "2E6F3E"));
+    out.push(...band(tg(M.ce, M.all), "ÉCHAUFFEMENT", PB("ech")[0], PB("ech")[1]));
     M.echSubs.forEach((s, k) => {
       const runs = [];
       tg(s.d, s.idx).forEach(x =>
@@ -258,7 +262,7 @@ function buildSeanceDoc(logo) {
     });
     out.push(sp());
   }
-  out.push(...band(tg(M.c, M.all), "CORPS DE SÉANCE", "E3EEF8", "2B5A9E"));
+  out.push(...band(tg(M.c, M.all), "CORPS DE SÉANCE", PB("corps")[0], PB("corps")[1]));
   const T = [7600, 2700, 2700, CW - 13000];
   const hd = (t, c, f, w) =>
     cell([P([R(t, { b: true, c, size: 16 })])], {
@@ -271,7 +275,7 @@ function buildSeanceDoc(logo) {
     const rows = [
       row(
         [
-          hd("EXERCICE / DÉFI / JEU", "E3EEF8", "2B5A9E", T[0]),
+          hd("EXERCICE / DÉFI / JEU", "FFFFFF", palHex(PAL.th), T[0]),
           hd("PLUS DIFFICILE (+)", "B2543A", "FBE6E4", T[1]),
           hd("PLUS FACILE (–)", "2E6F3E", "E6F2E8", T[2]),
           hd("CRITÈRES DE RÉUSSITE", "5B4B9A", "ECE8F6", T[3]),
@@ -342,7 +346,7 @@ function buildSeanceDoc(logo) {
                     ? [
                         new D.ExternalHyperlink({
                           link: v.url,
-                          children: [R((x.n ? x.n + " " : "") + x.name, { b: true, c: "2B5A9E" })],
+                          children: [R((x.n ? x.n + " " : "") + x.name, { b: true, c: palHex(PAL.th) })],
                         }),
                       ]
                     : [R((x.n ? x.n + " " : "") + x.name, { b: true })]),
@@ -363,7 +367,7 @@ function buildSeanceDoc(logo) {
                 ? [
                     new D.ExternalHyperlink({
                       link: v.url,
-                      children: [R("Fiche " + v.code + " ↗", { c: "2B5A9E", size: 16 })],
+                      children: [R("Fiche " + v.code + " ↗", { c: palHex(PAL.th), size: 16 })],
                     }),
                     R(" · ", { i: true, c: "6B7280", size: 16 }),
                   ]

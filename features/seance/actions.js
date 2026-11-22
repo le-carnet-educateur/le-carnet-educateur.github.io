@@ -654,6 +654,14 @@ document.addEventListener("change", e => {
 
 /* imprime uniquement la fiche de séance (A4 paysage) */
 function imprimerSeance() {
+  /* option « impression en gris » : la fiche est redessinée avec la palette Sobre pendant l'impression */
+  if (typeof palGris === "function" && palGris()) {
+    PAL_FORCE = "sobre";
+    render();
+    setTimeout(() => imprimerSeance0(true), 80);
+  } else imprimerSeance0(false);
+}
+function imprimerSeance0(retablir) {
   document.body.classList.add("ps");
   const st = document.createElement("style");
   st.textContent = "@page{size:A4 landscape;margin:8mm}";
@@ -663,6 +671,10 @@ function imprimerSeance() {
     if (fini) return;
     fini = true;
     document.body.classList.remove("ps");
+    if (retablir) {
+      PAL_FORCE = "";
+      render();
+    }
     st.remove();
     window.removeEventListener("afterprint", nettoyer);
   };
