@@ -44,6 +44,10 @@ function cyLoad() {
   CY.lignes.forEach(l => {
     if (!l.id) l.id = CYUID++;
   });
+  if (CY.plan && typeof cpEnsure === "function") {
+    cpEnsure(CY.plan);
+    cpDerive();
+  }
 }
 const cySave = () => {
   try {
@@ -186,6 +190,7 @@ function cycleView0() {
   const inp = (k, lab, ph = "") =>
     `<label class="sml">${lab}<input data-cy="${k}" value="${esc(CY[k])}" placeholder="${esc(ph)}"></label>`;
   const nl = CY.lignes.length;
+  const plan = !!(CY.plan && CY.plan.v === 2);
   const ligne = (l, i) =>
     `<div class="cyl"><div class="cyn">${i + 1}</div><div class="cyg">
     <label class="sml">Séance<input data-cyl="${l.id}:titre" value="${esc(l.titre)}"></label>
@@ -195,6 +200,10 @@ function cycleView0() {
     <label class="sml" style="grid-column:1/-1">Objectif<textarea rows="2" data-cyl="${l.id}:objectif">${esc(l.objectif)}</textarea></label>
     <label class="sml" style="grid-column:1/-1">Remarques / bilan de la séance<textarea rows="2" data-cyl="${l.id}:notes">${esc(l.notes)}</textarea></label></div>
     <div class="cyb">${i > 0 ? `<a class="chip" data-cya="up" data-id="${l.id}" title="Monter">↑</a>` : ""}${i < nl - 1 ? `<a class="chip" data-cya="down" data-id="${l.id}" title="Descendre">↓</a>` : ""}${l.sid ? `<a class="chip" data-cya="sync" data-id="${l.id}" title="Recharger depuis la séance de la bibliothèque">↻</a>` : ""}<a class="chip" data-cya="del" data-id="${l.id}" title="Retirer" style="color:#B2263A">✕</a></div></div>`;
+  const resume = l =>
+    `<div class="cyl"><div class="cyn">${esc(l.sem ? "S" + l.sem : "")}</div><div class="cyg">
+    <div style="grid-column:1/-1"><b>${l.sid ? `<a data-sbpop="${esc(l.sid)}" style="cursor:pointer;border-bottom:1px dotted #8A93A3">${esc(l.titre)}</a>` : esc(l.titre)}</b> <span style="color:#6B7280;font-size:13px">${esc(l.dates)}</span><div style="font-size:13.5px;color:#4A5873">${[l.theme, l.objectif].filter(Boolean).map(esc).join(" · ")}${l.jeux ? " · jeux : " + esc(l.jeux) : ""}</div></div>
+    <label class="sml" style="grid-column:1/-1">Remarques / bilan de la séance<textarea rows="2" data-cyl="${l.id}:notes">${esc(l.notes)}</textarea></label></div></div>`;
   return `${head}<div class="tools noprint">${cyBtn("save", "☁ Enregistrer", "#26364D")}${cyBtn("print", "Imprimer / PDF", "#26364D")}${palGrisChip()}${cyBtn("word", "Télécharger en Word", "#2B5A9E")}${cyBtn("new", "Nouveau cycle", "#EEF1F8", "#26364D")}<span id="cyMsg" style="font-weight:700;color:#2E7D4F"></span></div>
   <div class="box noprint"><div class="smg">${inp("titre", "Titre du cycle", "Ex. Cycle 1 — Découverte")}${inp("periode", "Période", "Ex. sept. – déc. 2026")}${inp("groupe", "Public", "Ex. enfants 8-11 ans")}${inp("lieu", "Lieu", "Ex. Bloc Party, Mougins")}${inp("educ", "Éducateurs")}<label class="sml">Macro-cycle<input data-cy="macro" list="cyMacros" value="${esc(CY.macro || "")}" placeholder="Ex. Saison 2026-2027"><datalist id="cyMacros">${(typeof anMacros === "function" ? anMacros() : []).map(m => `<option value="${esc(m)}">`).join("")}</datalist></label>
   <label class="sml" style="grid-column:1/-1">Objectif général<textarea rows="2" data-cy="objectif">${esc(CY.objectif)}</textarea></label>
@@ -202,8 +211,17 @@ function cycleView0() {
   ${cyPartageEdition()}
   ${cpHTML()}
   <div class="box noprint"><b>Séances du cycle</b> <span style="color:#6B7280;font-size:13px">(${nl})</span>
-  <div class="tools" style="margin:8px 0">${cyBtn("picker", "+ Ajouter une séance de la bibliothèque", "#3A8FB0")}${cyBtn("blank", "+ Ligne vide", "#EEF1F8", "#26364D")}${cyBtn("bilans", "↧ Reprendre les bilans des séances", "#E8A33D", "#26364D")}</div>
-  ${CYPICK ? cyPicker() : ""}${CY.lignes.map(ligne).join("") || '<div class="empty">Aucune séance. Ajoutez-en depuis la bibliothèque, ou créez une ligne vide.</div>'}
+  ${plan ? '<p class="hint" style="margin:6px 0">Résumé calculé à partir du planning : il se remplit quand tu lies une séance à un jour de cours. Tu complètes ici le bilan de chaque séance.</p>' : ""}
+  <div class="tools" style="margin:8px 0">${plan ? "" : cyBtn("picker", "+ Ajouter une séance de la bibliothèque", "#3A8FB0") + cyBtn("blank", "+ Ligne vide", "#EEF1F8", "#26364D")}${cyBtn("bilans", "↧ Reprendre les bilans des séances", "#E8A33D", "#26364D")}</div>
+  ${CYPICK && !plan ? cyPicker() : ""}${
+    plan
+      ? CY.lignes.filter(l => l.auto).map(resume).join("") +
+        (CY.lignes.some(l => !l.auto)
+          ? '<div class="cpl" style="margin-top:12px">Séances non rattachées à une semaine</div><p class="hint" style="margin:0 0 6px">Ces séances viennent de l\'ancienne liste. Lie-les à un jour de cours dans le planning, ou retire-les.</p>' + CY.lignes.filter(l => !l.auto).map(ligne).join("")
+          : "") ||
+        '<div class="empty">Aucune séance liée pour le moment. Dans le planning, utilise « ＋ Lier une séance » ou « ＋ Créer la fiche » sur un jour de cours.</div>'
+      : CY.lignes.map(ligne).join("") || '<div class="empty">Aucune séance. Ajoutez-en depuis la bibliothèque, ou créez une ligne vide.</div>'
+  }
   <div id="cyComp" style="margin-top:10px;font-size:14px;background:#F7F9FD;border-radius:8px;padding:8px 12px"><b>Compétences du cycle</b><div style="margin-top:4px">${cyCompHTML()}</div></div>
   <label class="sml" style="margin-top:10px">Bilan du cycle<textarea rows="3" data-cy="bilan">${esc(CY.bilan)}</textarea></label></div>
   <p class="noprint" style="color:#6B7280;font-size:13px;margin:12px 0 4px">APERÇU (c'est ce qui sera imprimé ou exporté)</p>
@@ -470,36 +488,32 @@ function buildCycleDoc(cy) {
   /* planning du cycle (semaine par semaine) */
   const PL = typeof cpWordRows === "function" ? cpWordRows(cy) : [];
   if (PL.length) {
-    const W2 = [800, 2300, tot - 3100];
+    const W2 = [700, 2900, 3600, tot - 7200];
     const tbl2 = rows => new Table({ rows, width: { size: tot, type: WidthType.DXA }, columnWidths: W2, layout: TableLayoutType.FIXED });
     const rows2 = [
-      new TableRow({ tableHeader: true, children: ["SEM.", "DATES", "SUR QUOI ON TRAVAILLE"].map((h, i) => cell([P(R(h, { b: true, c: "FFFFFF", size: 17 }))], W2[i], BLUE)) }),
+      new TableRow({ tableHeader: true, children: ["SEM.", "THÈME ET OBJECTIF", "JOURS ET SÉANCES", "POINTS À TRAVAILLER"].map((h, i) => cell([P(R(h, { b: true, c: "FFFFFF", size: 17 }))], W2[i], BLUE)) }),
     ];
-    let micro = "";
     PL.forEach((r, w) => {
-      if (r.micro && r.micro !== micro) rows2.push(new TableRow({ cantSplit: true, children: [cell([P(R(r.micro, { b: true, c: "FFFFFF" }))], tot, NAVY, { span: 3 })] }));
-      micro = r.micro || micro;
       const f = w % 2 ? "F4F7FB" : undefined;
-      const contenu = [];
-      if (r.pause) contenu.push(P(R("Pause", { i: true, c: "8A93A3" })));
-      else if (!r.blocs.length) contenu.push(P(R("—", { c: "8A93A3" })));
+      if (r.pause) {
+        rows2.push(new TableRow({ cantSplit: true, children: [cell([P(R("S" + r.sem, { b: true }))], W2[0], f), cell([P(R("Pause", { i: true, c: "8A93A3" }))], tot - W2[0], f, { span: 3 })] }));
+        return;
+      }
+      const th = [];
+      if (r.micro) th.push(P(R(r.micro, { b: true })));
+      if (r.obj) th.push(...lines(r.obj));
+      if (!th.length) th.push(P(R("—", { c: "8A93A3" })));
+      const jours = r.jours.map(j => P([R(j.d + " ", { c: "4A5873" }), ...(j.liens.length ? j.liens.map(t => R("[" + t + "] ", { c: "2B5A9E", b: true })) : [R("à préparer", { i: true, c: "8A93A3" })])]));
+      const pts = [];
       r.blocs.forEach(b => {
-        if (b.lab || b.liens.length) contenu.push(P([...(b.lab ? [R(b.lab + " ", { b: true, c: "5B6577" })] : []), ...b.liens.map(t => R("[" + t + "] ", { c: "2B5A9E", b: true }))]));
+        if (b.lab) pts.push(P(R(b.lab, { b: true, c: "5B6577" })));
         b.items.forEach(it => {
-          contenu.push(P([R(it.t, { b: true }), ...(it.jour ? [R(" (" + it.jour + ")", { i: true, c: "6B7280" })] : []), ...it.liens.map(t => R(" [" + t + "]", { c: "2B5A9E", b: true }))]));
-          it.subs.forEach(x => contenu.push(P(R("   • " + x))));
+          pts.push(P(R(it.t, { b: true })));
+          it.subs.forEach(x => pts.push(P(R("   • " + x))));
         });
       });
-      rows2.push(
-        new TableRow({
-          cantSplit: true,
-          children: [
-            cell([P(R("S" + r.sem, { b: true }))], W2[0], f),
-            cell(r.pause ? [P(R("—"))] : lines(r.dates.join("\n")), W2[1], f),
-            cell(contenu, W2[2], f),
-          ],
-        })
-      );
+      if (!pts.length) pts.push(P(R("—", { c: "8A93A3" })));
+      rows2.push(new TableRow({ cantSplit: true, children: [cell([P(R("S" + r.sem, { b: true }))], W2[0], f), cell(th, W2[1], f), cell(jours, W2[2], f), cell(pts, W2[3], f)] }));
     });
     out.push(P(R("PLANNING DU CYCLE", { b: true, c: BLUE, size: 20 }), 40), tbl2(rows2), P(R(""), 60));
   }

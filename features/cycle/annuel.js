@@ -111,24 +111,15 @@ function cpRappelSeance(sid) {
     const c = cyData(x.rec);
     if (!c) return;
     const titre = x.rec.titre || c.titre || "Cycle";
-    const p = c.plan;
+    const p = cpNorm(c.plan);
     if (p && p.debut && Array.isArray(p.sem)) {
       p.sem.forEach((s, w) => {
         if (!s) return;
-        const lies = [];
-        let direct = false;
-        Object.keys(s.sid || {}).forEach(k => {
-          if ((s.sid[k] || []).includes(sid)) direct = true;
-        });
-        Object.keys(s.cases || {}).forEach(k =>
-          (s.cases[k] || []).forEach(it => {
-            if ((it.sid || []).includes(sid)) lies.push(it.t);
-            else if (direct) lies.push(it.t);
-          })
-        );
-        if (!direct && !lies.length) return;
+        const direct = Object.values(s.jl || {}).some(l => (l || []).includes(sid));
+        if (!direct) return;
+        const lies = Object.keys(s.cases || {}).flatMap(k => (s.cases[k] || []).map(it => it.t));
         const d0 = cpAdd(cpLundi(p.debut), w * 7);
-        out.push({ id, titre, sem: w + 1, dates: cpFmt(d0) + " → " + cpFmt(cpAdd(d0, 6)), micro: s.micro || "", obj: [...new Set(lies.filter(Boolean))], general: c.objectif || "" });
+        out.push({ id, titre, sem: w + 1, dates: cpFmt(d0) + " → " + cpFmt(cpAdd(d0, 6)), micro: s.micro || "", obj: [...new Set([s.obj, ...lies].filter(Boolean))], general: c.objectif || "" });
       });
     } else if ((c.lignes || []).some(l => l.sid === sid)) {
       const i = c.lignes.findIndex(l => l.sid === sid);

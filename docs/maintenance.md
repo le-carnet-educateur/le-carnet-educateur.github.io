@@ -91,14 +91,20 @@ Fichier à la racine, **le vôtre** : il n'est jamais écrasé par une mise à j
 
 Ne mettez **jamais** dans `config.js` : le mot de passe administrateur, le jeton GitHub.
 
-## 5. Le script Apps Script : `scripts-google/serveur_site.gs`
+## 5. Le script Apps Script : `scripts-google/serveur_site.gs` + `config_serveur.gs`
 
 Un seul projet Apps Script, lié au Google Sheet (Extensions > Apps Script). Il est déployé en **application web** : Exécuter en tant que **Moi**, accès **Tout le monde**. Son adresse `/exec` est `GAME_ADD_URL`.
 
-### 5.1 Constantes à renseigner (en haut du fichier)
+### 5.1 Deux fichiers : `config_serveur.gs` (tes réglages) et `serveur_site.gs` (le code)
 
-`CLE_SITE`, `MOT_DE_PASSE_ADMIN`, `GITHUB_JETON`, `GITHUB_DEPOT` (« compte/depot »), `GITHUB_BRANCHE`, `URL_DU_SITE` (avec `/` final), `NOM_FEUILLE` (vide en général).
-Ce fichier est **privé** : ne le copiez pas dans le dépôt avec vos vraies valeurs.
+Dans le projet Apps Script, il y a **deux fichiers** :
+
+- **`config_serveur`** : tes valeurs, à ne jamais écraser : `CLE_SITE`, `MOT_DE_PASSE_ADMIN`, `GITHUB_JETON`, `GITHUB_DEPOT` (« compte/depot »), `GITHUB_BRANCHE`, `URL_DU_SITE` (avec `/` final), `GOOGLE_CLIENT_ID`, `ADMIN_EMAILS`, `SECRET_SESSION`, `DUREE_SESSION_JOURS`, `ENVOYER_EMAILS`, `NOM_EXPEDITEUR`, `NOM_FEUILLE` (vide en général). Un modèle vide est fourni avec chaque version du serveur (`config_serveur.gs`).
+- **`serveur_site`** : tout le reste. On le **remplace en entier** à chaque mise à jour (Ctrl+A, coller), puis Déployer > Gérer les déploiements > ✎ > Nouvelle version.
+
+Les deux fichiers sont **privés** : ne les copiez pas dans le dépôt avec vos vraies valeurs. Une variable ne doit être déclarée que dans `config_serveur` (sinon Apps Script signale « déjà déclarée »).
+
+**Contrôle des variables** : si une variable manque dans `config_serveur` (par exemple après l'ajout d'un réglage dans une nouvelle version), le serveur répond « config_serveur.gs incomplet : variable(s) manquante(s) : … » (visible dans le site). On peut aussi lancer `verifierConfiguration` dans l'éditeur (▶) : la liste des manques et des valeurs « changez-moi » non modifiées s'affiche dans le journal d'exécution. Quand une nouvelle version du serveur ajoute une variable, la mention est dans `docs/maintenance.md` (journal) et dans le modèle `config_serveur.gs`.
 
 ### 5.2 Protocole
 
@@ -648,3 +654,5 @@ Tout est dans `features/seance/terrain.js` (chargé avant `controle.js`).
 - **v168** : administration : le tableau de bord devient l'accueil (comptes activés) avec une tuile par section (jeux, schémas, séances, cycles, utilisateurs, équipes, invitations, retours, activité, réglages, doc) et un bouton « ← Tableau de bord » à la place des menus ; commentaires aussi visibles dans la fiche d'une séance (variante simple du panneau de partage) ; cycle : bouton « ☁ Enregistrer » ; sélecteur de durée plus petit ; « micro-cycle » renommé « thème » dans le planning.
 - **v169** : « voir comme » : plus aucun outil admin (ex. « ⭐ Définir comme séance type ») quand l'admin observe un autre compte ; `glAdmin()` suit l'utilisateur connecté.
 - **v170** : cycle : « ✎ Modifier ce cycle » placé en premier dans la vue lecture (comme pour les séances) ; sélecteur de palette sur une seule ligne (`palSelect` : nowrap, select sans marges).
+- **v171** : cycle centré sur les semaines : chaque semaine a thème + objectif + une ligne par jour de cours (séance liée via « ＋ Lier une séance » avec cases des jours, ou « ＋ Créer la fiche » préremplie et liée au premier enregistrement, hook `cpApresEnregistrement` dans `enregistrerSeance0`) ; « ＋ Jour supplémentaire » (clés `x…`) ; plus de mode séance unique/distinctes. Données : `plan.v = 2`, `sem[].jl[clé] = [id séance]`, `sem[].obj`, `sem[].ex` ; `cpMig` convertit les anciens plannings (lecture comme édition). `cpDerive` recalcule `CY.lignes` (champ `auto`) = résumé en lecture ; les lignes sans semaine restent « non rattachées ». Feuille et Word : colonnes Sem. / Thème et objectif / Jours et séances / Points à travailler.
+- **v172** : serveur Apps Script scindé en `config_serveur.gs` (les 13 variables de l'utilisateur) et `serveur_site.gs` (code, remplaçable) ; `configManquante()` testée au début de `doPost`, `verifierConfiguration()` à lancer à la main. Docs §5.1 mises à jour.

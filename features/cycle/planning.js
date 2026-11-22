@@ -1,6 +1,8 @@
 /* Planning du cycle : semaine après semaine, sur quoi orienter la séance.
    Données : CY.plan = { debut (lundi, AAAA-MM-JJ), nb, jours [1..7], mode "meme"|"diff", public "tous"|"groupes", groupes [noms],
-   sem: [{ pause, micro, cases: { all: [item], g0: [item] } }] }   item = { t, sid: [id séance], subs: [{ t, jour, sid: [id séance] }] }
+   sem: [{ pause, micro (thème), obj (objectif), jl: { "3": [id séance], "x1": [...] }, ex: [{ k: "x1", d: date, t: intitulé }], cases: { all: [item], g0: [item] } }] }
+   item = { t, subs: [{ t }] } (points à travailler). jl = séances liées, par jour de cours (clé = n° du jour) ou par jour supplémentaire (clé « x… »).
+   v : 2 = structure ci-dessus ; les anciens plannings (séance unique / distinctes) sont convertis par cpMig.
    Enregistré avec le cycle (même enregistrement). Les détails restent dans les séances liées. */
 const CP_J = ["lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."];
 const cpD = iso => {
@@ -12,20 +14,70 @@ const cpAdd = (iso, n) => cpISO(new Date(cpD(iso).getTime() + n * 864e5));
 const cpLundi = iso => cpAdd(iso, -((cpD(iso).getUTCDay() + 6) % 7));
 const cpFmt = iso => cpD(iso).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 const cpFmtLong = iso => cpD(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-let CPMICRO = new Set(); /* semaines dont le champ thème est ouvert */
+let CPLINK = null; /* sélecteur « lier une séance » ouvert : { w, j } */
 let CPCAL = null; /* mois affiché dans le calendrier : { y, m } */
 
 function cpNew() {
   const auj = cpISO(new Date());
-  return { debut: cpAdd(cpLundi(auj), 7), nb: 8, jours: [3], mode: "meme", public: "tous", groupes: ["G1", "G2"], sem: [] };
+  return { v: 2, debut: cpAdd(cpLundi(auj), 7), nb: 8, jours: [3], public: "tous", groupes: ["G1", "G2"], sem: [] };
 }
+const cpSemVide = () => ({ pause: false, micro: "", obj: "", jl: {}, ex: [], cases: { all: [] } });
+/* ancien planning (séance unique ou distinctes) -> une séance liée par jour de cours */
+function cpMig(p) {
+  if (!p || p.v === 2) return p;
+  const J = (Array.isArray(p.jours) && p.jours.length ? p.jours : [3]).slice().sort((a, b) => a - b);
+  let m = "";
+  (p.sem || []).forEach(s => {
+    if (!s) return;
+    if (s.micro) m = s.micro;
+    else if (m && !s.pause) s.micro = m;
+    s.jl = s.jl || {};
+    const add = (k, id) => {
+      const l = (s.jl[k] = s.jl[k] || []);
+      if (!l.includes(id)) l.push(id);
+    };
+    Object.keys(s.sid || {}).forEach(k => (s.sid[k] || []).forEach(id => J.forEach(j => add(String(j), id))));
+    Object.keys(s.cases || {}).forEach(k =>
+      (s.cases[k] || []).forEach(it => {
+        (it.sid || []).forEach(id => add(String(+it.jour || J[0]), id));
+        delete it.sid;
+        delete it.jour;
+        (it.subs || []).forEach(x => {
+          delete x.sid;
+          delete x.jour;
+        });
+      })
+    );
+    delete s.sid;
+    s.obj = s.obj || "";
+    s.ex = s.ex || [];
+  });
+  delete p.mode;
+  p.v = 2;
+  return p;
+}
+const cpNorm = p => (p ? cpMig(JSON.parse(JSON.stringify(p))) : p);
 function cpEnsure(p) {
+  cpMig(p);
   p.nb = Math.max(1, Math.min(40, +p.nb || 1));
-  while (p.sem.length < p.nb) p.sem.push({ pause: false, micro: "", cases: { all: [] } });
+  while (p.sem.length < p.nb) p.sem.push(cpSemVide());
   p.sem.length = p.nb;
+  p.sem.forEach(s => {
+    s.jl = s.jl || {};
+    s.ex = s.ex || [];
+    s.obj = s.obj || "";
+    s.cases = s.cases || { all: [] };
+  });
   if (!Array.isArray(p.jours) || !p.jours.length) p.jours = [3];
   p.jours.sort((a, b) => a - b);
 }
+/* clés des jours d'une semaine (jours de cours, puis jours supplémentaires) et leur libellé */
+const cpCles = (p, s) => p.jours.map(String).concat((s.ex || []).map(e => e.k));
+const cpCleLabel = (p, w, k) => {
+  if (k[0] !== "x") return cpFmt(cpDateJour(p, w, +k));
+  const e = (p.sem[w].ex || []).find(x => x.k === k) || {};
+  return [e.d ? cpFmt(e.d) : "", e.t || ""].filter(Boolean).join(" · ") || "Jour supplémentaire";
+};
 const cpCases = p => (p.public === "groupes" ? ["all"].concat(p.groupes.map((_, i) => "g" + i)) : ["all"]);
 const cpLabel = (p, k) => (k === "all" ? (p.public === "groupes" ? "Tous les groupes" : "") : p.groupes[+k.slice(1)] || k);
 const cpDateJour = (p, w, j) => cpAdd(p.debut, w * 7 + (j - 1));
@@ -38,60 +90,60 @@ const cpSeances = () =>
 
 /* ---------- édition ---------- */
 const cpPill = (on, attrs, txt, title = "") => `<a class="cppill${on ? " on" : ""}" ${attrs}${title ? ` title="${esc(title)}"` : ""}>${txt}</a>`;
-/* pastilles des séances liées + menu pour en lier une (lvl « w » = semaine, « i » = item) */
-function cpChips(list, at, lvl) {
-  return (
-    (list || [])
-      .map(
-        id =>
-          `<span class="chip cpch"><a data-cyp="open" data-sid="${esc(id)}" title="Ouvrir la séance">📄 ${esc(cpTitreSeance(id))}</a> <a data-cyp="unlink" data-sid="${esc(id)}" data-lvl="${lvl}" ${at} title="Délier" style="color:#B2263A;font-weight:700">✕</a></span>`
-      )
-      .join("") +
-    `<select class="cpsel" data-cpt="link" data-lvl="${lvl}" ${at}><option value="">＋ Lier une séance…</option>${cpSeances()
-      .map(r => `<option value="${esc(r.id)}">${esc(r.titre || "Séance")}</option>`)
-      .join("")}</select>`
-  );
-}
+const cpLien = (id, at) =>
+  `<span class="chip cpch"><a data-cyp="open" data-sid="${esc(id)}" title="Ouvrir la séance">📄 ${esc(cpTitreSeance(id))}</a> <a data-cyp="unlink" data-sid="${esc(id)}" ${at} title="Délier" style="color:#B2263A;font-weight:700">✕</a></span>`;
 function cpItemHTML(p, w, k, it, ii) {
   const at = `data-w="${w}" data-k="${k}" data-i="${ii}"`;
-  const diff = p.mode === "diff";
   const subs = (it.subs || [])
     .map((s, si) => {
       const as = at + ` data-s="${si}"`;
       return `<div class="cpsub"><div class="cprow"><input data-cpt="t" ${as} value="${esc(s.t)}" placeholder="Étape ou point à travailler"><a class="cpx" data-cyp="delsub" ${as} title="Retirer">✕</a></div></div>`;
     })
     .join("");
-  /* séances distinctes : le jour et la séance sont au niveau de l'item */
-  const droite = diff
-    ? `<div class="cplk"><div class="cpjp">${p.jours.map(j => cpPill(+it.jour === j, `data-cyp="set" data-f="ijour" data-v="${j}" ${at}`, esc(cpFmt(cpDateJour(p, w, j))))).join("")}</div>${cpChips(it.sid, at, "i")}</div>`
-    : "";
-  return `<div class="cpit"><div class="${diff ? "cpr2" : ""}"><div class="cprow"><input class="cpitt" data-cpt="t" ${at} value="${esc(it.t)}" placeholder="Sur quoi on travaille (ex. Chuter et descendre)"><a class="cpx" data-cyp="delitem" ${at} title="Retirer cet item">✕</a></div>${droite}</div>
+  return `<div class="cpit"><div><div class="cprow"><input class="cpitt" data-cpt="t" ${at} value="${esc(it.t)}" placeholder="Sur quoi on travaille (ex. Chuter et descendre)"><a class="cpx" data-cyp="delitem" ${at} title="Retirer cet item">✕</a></div></div>
     ${subs}<div><a class="cpmini" data-cyp="addsub" ${at}>＋ étape</a></div></div>`;
 }
 function cpCaseHTML(p, w, k) {
   const items = p.sem[w].cases[k] || [];
   const lab = cpLabel(p, k);
-  return `<div class="cpcase">${lab ? `<div class="cplab">${esc(lab)}</div>` : ""}${items.map((it, ii) => cpItemHTML(p, w, k, it, ii)).join("")}<a class="cpmini" data-cyp="additem" data-w="${w}" data-k="${k}">＋ item</a></div>`;
+  return `<div class="cpcase">${lab ? `<div class="cplab">${esc(lab)}</div>` : ""}${items.map((it, ii) => cpItemHTML(p, w, k, it, ii)).join("")}<a class="cpmini" data-cyp="additem" data-w="${w}" data-k="${k}">＋ point à travailler</a></div>`;
+}
+/* une ligne par jour de cours : séance(s) liée(s) ou « à préparer » */
+function cpJourHTML(p, w, k) {
+  const s = p.sem[w];
+  const ex = k[0] === "x" ? s.ex.find(e => e.k === k) : null;
+  const at = `data-w="${w}" data-j="${k}"`;
+  const L = s.jl[k] || [];
+  const lab = ex
+    ? `<input type="date" data-cpt="exd" ${at} value="${esc(ex.d || "")}" title="Date"><input data-cpt="ext" ${at} value="${esc(ex.t || "")}" placeholder="Intitulé (ex. Stage, sortie)">`
+    : `<span class="cpdn">${esc(cpFmt(cpDateJour(p, w, +k)))}</span>`;
+  return `<div class="cpday"><div class="cpdl">${lab}</div><div class="cpdr">${L.map(id => cpLien(id, at)).join("")}${L.length ? "" : '<span class="cptodo">À préparer</span>'}<a class="cpmini cpbtn" data-cyp="lier" ${at}>＋ Lier une séance</a><a class="cpmini cpbtn" data-cyp="fiche" ${at}>＋ Créer la fiche</a>${ex ? `<a class="cpx" data-cyp="delex" ${at} title="Retirer ce jour">✕</a>` : ""}</div></div>`;
+}
+function cpPickerHTML(p, w) {
+  const s = p.sem[w];
+  const cles = cpCles(p, s);
+  return `<div class="cppick"><b>Lier une séance de la bibliothèque</b>
+  <select id="cpPickSel"><option value="">Choisir une séance…</option>${cpSeances()
+    .map(r => `<option value="${esc(r.id)}">${esc(r.titre || "Séance")}${r.dates ? " · " + esc(r.dates) : ""}</option>`)
+    .join("")}</select>
+  <div class="cpchk"><b>Pour quel(s) jour(s) ?</b>${cles.map(k => `<label><input type="checkbox" data-cplj="${k}"${k === CPLINK.j ? " checked" : ""}> ${esc(cpCleLabel(p, w, k))}</label>`).join("")}</div>
+  <div class="cprow"><a class="btn" data-cyp="lierok" data-w="${w}" style="background:#26364D;color:#fff;border-radius:8px;padding:6px 14px;font-weight:700;cursor:pointer;display:inline-block">Lier</a><a class="btn" data-cyp="lierno" style="background:#EEF1F8;color:#26364D;border-radius:8px;padding:6px 14px;font-weight:700;cursor:pointer;display:inline-block">Annuler</a></div></div>`;
 }
 function cpWeekHTML(p, w) {
   const s = p.sem[w];
   const lundi = cpAdd(p.debut, w * 7);
-  const dates = p.jours.map(j => cpFmt(cpDateJour(p, w, j))).join("<br>");
   const aj = new Date();
   const now = cpISO(aj) >= lundi && cpISO(aj) <= cpAdd(lundi, 6);
-  /* séance unique : « Lier une séance » sous « Pause » (une par groupe si le public est par groupe) */
-  s.sid = s.sid || {};
-  const liens =
-    p.mode === "diff" || s.pause
-      ? ""
-      : cpCases(p)
-          .map(k => `<div class="cpwl">${p.public === "groupes" ? `<div class="cplab">${esc(cpLabel(p, k))}</div>` : ""}${cpChips(s.sid[k], `data-w="${w}" data-k="${k}"`, "w")}</div>`)
-          .join("");
+  const corps = s.pause
+    ? '<div class="cpvac">Pause (vacances, pas de séance)</div>'
+    : `<div class="cptf"><label class="sml">Thème<input data-cpt="micro" data-w="${w}" value="${esc(s.micro || "")}" placeholder="Ex. Pose de pieds"></label><label class="sml">Objectif<input data-cpt="obj" data-w="${w}" value="${esc(s.obj || "")}" placeholder="Ce qu'on veut obtenir cette semaine"></label></div>
+    <div class="cpdays">${cpCles(p, s).map(k => cpJourHTML(p, w, k)).join("")}<a class="cpmini" data-cyp="addex" data-w="${w}">＋ Jour supplémentaire</a></div>
+    ${CPLINK && CPLINK.w === w ? cpPickerHTML(p, w) : ""}
+    <div class="cpl" style="margin-top:10px">Points à travailler <span style="font-weight:400;text-transform:none">(facultatif)</span></div>${cpCases(p).map(k => cpCaseHTML(p, w, k)).join("")}`;
   return `<div class="cpw${now ? " now" : ""}${s.pause ? " pause" : ""}">
-    <div class="cpwh"><b>S${w + 1}</b>${now ? ' <span class="cpnow">cette semaine</span>' : ""}<div class="cpd">${dates}</div>
-    <div style="margin:6px 0">${cpPill(s.pause, `data-cyp="set" data-f="pause" data-w="${w}"`, "Pause")}</div>${liens}</div>
-    <div class="cpwb">${s.micro || CPMICRO.has(w) ? `<input class="cpmicro" data-cpt="micro" data-w="${w}" value="${esc(s.micro || "")}" placeholder="Thème de cette période (ex. Pose de pieds) : il s'applique aux semaines suivantes jusqu'au prochain thème">` : `<a class="cpmini" data-cyp="micro" data-w="${w}" style="display:block;margin-bottom:6px;font-weight:400;color:#8a93a3">＋ thème</a>`}
-    ${s.pause ? '<div class="cpvac">Pause (vacances, pas de séance)</div>' : cpCases(p).map(k => cpCaseHTML(p, w, k)).join("")}</div></div>`;
+    <div class="cpwh"><b>S${w + 1}</b>${now ? ' <span class="cpnow">cette semaine</span>' : ""}<div class="cpd">${esc(cpFmt(lundi))} →<br>${esc(cpFmt(cpAdd(lundi, 6)))}</div>
+    <div style="margin:6px 0">${cpPill(s.pause, `data-cyp="set" data-f="pause" data-w="${w}"`, "Pause")}</div></div>
+    <div class="cpwb">${corps}</div></div>`;
 }
 function cpCalHTML(p) {
   if (!CPCAL) {
@@ -123,8 +175,9 @@ function cpCalHTML(p) {
 function cpHTML() {
   const p = CY.plan;
   if (!p)
-    return `<div class="box noprint"><b>Planning du cycle</b><p class="hint" style="margin:6px 0 10px">Semaine après semaine, sur quoi orienter la séance : on définit la durée, les jours de cours et les groupes, puis on lie les séances préparées à chaque semaine.</p><a class="btn" data-cyp="creer" style="background:#26364D;color:#fff;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block">＋ Créer le planning</a></div>`;
+    return `<div class="box noprint"><b>Planning du cycle</b><p class="hint" style="margin:6px 0 10px">Le cycle, c'est ce qu'on fait chaque semaine : on définit la durée et les jours de cours, puis pour chaque semaine le thème, l'objectif et la séance de chaque jour, qu'on prépare au fil de l'année.</p><a class="btn" data-cyp="creer" style="background:#26364D;color:#fff;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block">＋ Créer le planning</a></div>`;
   cpEnsure(p);
+  if (typeof cpDerive === "function") cpDerive();
   const fin = cpAdd(p.debut, p.nb * 7 - 1);
   const modeles = typeof CYCLE1 !== "undefined";
   return `<div class="noprint cplay">
@@ -133,7 +186,6 @@ function cpHTML() {
     <div class="cpl">Début du cycle</div><div class="hint" style="margin:0 0 4px"><b>Semaine du ${esc(cpFmtLong(p.debut))}</b><br>jusqu'au ${esc(cpFmtLong(fin))}</div>${cpCalHTML(p)}
     <div class="cpl" style="margin-top:12px">Durée</div><div class="cpnb"><a class="cpnbb" data-cyp="nbstep" data-d="-1" title="Une semaine de moins">−</a><input type="number" min="1" max="40" data-cpt="nb" value="${p.nb}"><a class="cpnbb" data-cyp="nbstep" data-d="1" title="Une semaine de plus">+</a><span class="cpnbt">semaine${p.nb > 1 ? "s" : ""}</span></div>
     <div class="cpl" style="margin-top:12px">Jours de cours</div><div class="cppills cpj1">${CP_J.map((n, i) => cpPill(p.jours.includes(i + 1), `data-cyp="set" data-f="jours" data-v="${i + 1}"`, n)).join("")}</div>
-    <div class="cpl" style="margin-top:12px">Séances <span class="aide" tabindex="0">?<span class="tip"><b>Séance unique</b> : une seule fiche de séance par semaine, déroulée les jours de cours (ex. la même séance le mercredi et le samedi). On la lie à la semaine.<br><br><b>Séances distinctes</b> : une séance différente pour chaque jour de cours. On choisit le jour de chaque item et on lui lie sa séance.</span></span></div><div class="cppills">${cpPill(p.mode !== "diff", 'data-cyp="set" data-f="mode" data-v="meme"', "Séance unique")}${cpPill(p.mode === "diff", 'data-cyp="set" data-f="mode" data-v="diff"', "Séances distinctes")}</div>
     <div class="cpl" style="margin-top:12px">Public</div><div class="cppills">${cpPill(p.public !== "groupes", 'data-cyp="set" data-f="public" data-v="tous"', "Tous")}${cpPill(p.public === "groupes", 'data-cyp="set" data-f="public" data-v="groupes"', "Par groupe")}</div>
     ${p.public === "groupes" ? `<input data-cpt="groupes" value="${esc(p.groupes.join(", "))}" placeholder="Noms des groupes : G1, G2" style="margin-top:6px;width:100%">` : ""}
     ${modeles ? `<div class="cpl" style="margin-top:12px">Partir d'un modèle</div><a class="chip" data-cyp="modele" style="cursor:pointer">Progression du 1er cycle (8 séances)</a>` : ""}
@@ -144,61 +196,125 @@ function cpHTML() {
 
 /* ---------- feuille imprimable / aperçu ---------- */
 function cpSheetHTML(cy) {
-  const p = cy.plan;
+  const p = cpNorm(cy.plan);
   if (!p || !p.sem || !p.sem.length) return "";
+  cpEnsure(p);
   const th = t => `<th style="background:#3A8FB0;color:#fff;text-align:left;padding:6px 8px;font-size:11px;letter-spacing:.5px">${t}</th>`;
   const liens = l => (l || []).map(id => `<span style="display:inline-block;background:#E4EEFB;border-radius:9px;padding:1px 8px;margin:1px 3px 1px 0">${esc(cpTitreSeance(id))}</span>`).join("");
-  let micro = "";
   const rows = p.sem
     .map((s, w) => {
-      const dates = (p.jours || []).map(j => cpFmt(cpDateJour(p, w, j))).join("<br>");
-      let m = "";
-      if (s.micro && s.micro !== micro) m = `<tr><td colspan="3" style="background:#26364D;color:#fff;font-weight:700;padding:5px 8px">${esc(s.micro)}</td></tr>`;
-      micro = s.micro || micro;
-      const diff = p.mode === "diff";
-      const cases = (p.public === "groupes" ? ["all"].concat((p.groupes || []).map((_, i) => "g" + i)) : ["all"])
+      const jours = cpCles(p, s)
+        .map(k => `<div><span style="color:#4A5873;white-space:nowrap">${esc(cpCleLabel(p, w, k))}</span> ${(s.jl[k] || []).length ? liens(s.jl[k]) : '<i style="color:#8A93A3">à préparer</i>'}</div>`)
+        .join("");
+      const cases = cpCases(p)
         .map(k => {
           const items = (s.cases && s.cases[k]) || [];
-          const sw = !diff ? liens((s.sid || {})[k]) : "";
-          if (!items.length && !sw) return "";
+          if (!items.length) return "";
           const lab = k === "all" ? (p.public === "groupes" ? "Tous les groupes" : "") : (p.groupes || [])[+k.slice(1)] || k;
-          return `<div style="margin-bottom:4px">${lab ? `<b style="color:#5B6577">${esc(lab)}</b> ` : ""}${sw}${items
-            .map(
-              it =>
-                `<div><b>${esc(it.t)}</b>${diff && it.jour ? ` <i style="color:#6B7280">(${esc(cpFmt(cpDateJour(p, w, +it.jour)))})</i>` : ""} ${diff ? liens(it.sid) : ""}${(it.subs || [])
-                  .map(x => `<div style="margin-left:12px">• ${esc(x.t)}</div>`)
-                  .join("")}</div>`
-            )
+          return `<div style="margin-bottom:4px">${lab ? `<b style="color:#5B6577">${esc(lab)}</b> ` : ""}${items
+            .map(it => `<div><b>${esc(it.t)}</b>${(it.subs || []).map(x => `<div style="margin-left:12px">• ${esc(x.t)}</div>`).join("")}</div>`)
             .join("")}</div>`;
         })
         .join("");
-      return `${m}<tr style="background:${w % 2 ? "#F4F7FB" : "#fff"}"><td style="padding:6px 8px;font-weight:700;vertical-align:top;white-space:nowrap">S${w + 1}</td><td style="padding:6px 8px;vertical-align:top;white-space:nowrap;color:#4A5873">${s.pause ? "—" : dates}</td><td style="padding:6px 8px;vertical-align:top">${s.pause ? '<i style="color:#8A93A3">Pause</i>' : cases || '<i style="color:#8A93A3">—</i>'}</td></tr>`;
+      const bg = `background:${w % 2 ? "#F4F7FB" : "#fff"}`;
+      if (s.pause) return `<tr style="${bg}"><td style="padding:6px 8px;font-weight:700;vertical-align:top;white-space:nowrap">S${w + 1}</td><td colspan="3" style="padding:6px 8px"><i style="color:#8A93A3">Pause</i></td></tr>`;
+      return `<tr style="${bg}"><td style="padding:6px 8px;font-weight:700;vertical-align:top;white-space:nowrap">S${w + 1}</td><td style="padding:6px 8px;vertical-align:top">${s.micro ? `<b>${esc(s.micro)}</b>` : ""}${s.obj ? `<div style="white-space:pre-wrap">${esc(s.obj)}</div>` : ""}</td><td style="padding:6px 8px;vertical-align:top">${jours}</td><td style="padding:6px 8px;vertical-align:top">${cases || '<i style="color:#8A93A3">—</i>'}</td></tr>`;
     })
     .join("");
-  return `<div style="margin-top:10px"><b style="color:#3A8FB0;letter-spacing:1px;font-size:11px">PLANNING DU CYCLE</b><table style="width:100%;border-collapse:collapse;margin-top:4px"><thead><tr>${th("SEM.")}${th("DATES")}${th("SUR QUOI ON TRAVAILLE")}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  return `<div style="margin-top:10px"><b style="color:#3A8FB0;letter-spacing:1px;font-size:11px">PLANNING DU CYCLE</b><table style="width:100%;border-collapse:collapse;margin-top:4px"><thead><tr>${th("SEM.")}${th("THÈME ET OBJECTIF")}${th("JOURS ET SÉANCES")}${th("POINTS À TRAVAILLER")}</tr></thead><tbody>${rows}</tbody></table></div>`;
 }
 
 /* le planning sous forme de données simples (pour l'export Word) */
 function cpWordRows(cy) {
-  const p = cy.plan;
+  const p = cpNorm(cy.plan);
   if (!p || !p.sem || !p.sem.length) return [];
-  const diff = p.mode === "diff";
-  const tit = l => (l || []).map(cpTitreSeance);
-  return p.sem.map((s, w) => {
-    const blocs = [];
-    (p.public === "groupes" ? ["all"].concat((p.groupes || []).map((_, i) => "g" + i)) : ["all"]).forEach(k => {
-      const items = (s.cases && s.cases[k]) || [];
-      const sw = !diff ? tit((s.sid || {})[k]) : [];
-      if (!items.length && !sw.length) return;
-      const lab = k === "all" ? (p.public === "groupes" ? "Tous les groupes" : "") : (p.groupes || [])[+k.slice(1)] || k;
-      blocs.push({
-        lab,
-        liens: sw,
-        items: items.map(it => ({ t: it.t || "", jour: diff && it.jour ? cpFmt(cpDateJour(p, w, +it.jour)) : "", liens: diff ? tit(it.sid) : [], subs: (it.subs || []).map(x => x.t) })),
-      });
-    });
-    return { sem: w + 1, micro: s.micro || "", pause: !!s.pause, dates: (p.jours || []).map(j => cpFmt(cpDateJour(p, w, j))), blocs };
+  cpEnsure(p);
+  return p.sem.map((s, w) => ({
+    sem: w + 1,
+    micro: s.micro || "",
+    obj: s.obj || "",
+    pause: !!s.pause,
+    jours: cpCles(p, s).map(k => ({ d: cpCleLabel(p, w, k), liens: (s.jl[k] || []).map(cpTitreSeance) })),
+    blocs: cpCases(p)
+      .map(k => ({
+        lab: k === "all" ? (p.public === "groupes" ? "Tous les groupes" : "") : (p.groupes || [])[+k.slice(1)] || k,
+        items: ((s.cases && s.cases[k]) || []).map(it => ({ t: it.t || "", subs: (it.subs || []).map(x => x.t) })),
+      }))
+      .filter(b => b.items.length),
+  }));
+}
+
+/* lignes du résumé « Séances du cycle » : calculées à partir des séances liées dans les semaines.
+   Les lignes ajoutées avant le planning et jamais rattachées à une semaine restent à la fin (« non rattachées »). */
+function cpDerive() {
+  const p = CY && CY.plan;
+  if (!p || p.v !== 2 || !Array.isArray(p.sem)) return;
+  const vieux = new Map();
+  CY.lignes.forEach(l => {
+    if (l.sid && !vieux.has(l.sid)) vieux.set(l.sid, l);
   });
+  const auto = new Map();
+  p.sem.forEach((s, w) => {
+    if (s.pause) return;
+    cpCles(p, s).forEach(k =>
+      ((s.jl || {})[k] || []).forEach(sid => {
+        let l = auto.get(sid);
+        if (!l) {
+          const b = vieux.get(sid);
+          const rec = sbAll().find(x => x.id === sid);
+          l = b ? { ...b } : rec ? cyLigneDe(rec) : { id: CYUID++, sid, titre: cpTitreSeance(sid), dates: "", theme: "", objectif: "", jeux: "", notes: "" };
+          if (l.th0 === undefined) l.th0 = l.theme || "";
+          if (l.ob0 === undefined) l.ob0 = l.objectif || "";
+          l.auto = true;
+          l._d = [];
+          auto.set(sid, l);
+        }
+        l.sem = w + 1;
+        l._d.push(cpCleLabel(p, w, k));
+        l.theme = s.micro || l.th0;
+        l.objectif = s.obj || l.ob0;
+      })
+    );
+  });
+  const auto2 = [...auto.values()];
+  auto2.forEach(l => {
+    l.dates = l._d.join(", ");
+    delete l._d;
+  });
+  CY.lignes = [...auto2, ...CY.lignes.filter(l => !l.auto && !auto.has(l.sid))];
+}
+
+/* « Créer la fiche » depuis un jour de cours : nouvelle séance avec thème, objectif et date déjà remplis ; à son premier enregistrement elle est liée à ce jour */
+function cpCreerFiche(w, k) {
+  const p = CY.plan,
+    s = p.sem[w];
+  const brouillon = SE && SE.subs && SE.subs.some(x => x.items && x.items.length);
+  if ((brouillon || (SMETA.titre || "").trim()) && !confirm("Ta séance en cours (non enregistrée) sera remplacée par une nouvelle fiche. Continuer ?")) return;
+  cySave();
+  try {
+    sessionStorage.setItem("cpCree", JSON.stringify({ w, j: k }));
+  } catch (e) {}
+  SEPOP = null;
+  SE = seNew();
+  seSave();
+  SMETA = { schemaPlace: "non", theme: s.micro || "", objectif: s.obj || "", dates: cpCleLabel(p, w, k), public: CY.groupe || "", educ: CY.educ || "" };
+  saveMeta();
+  buildNav();
+  go("seance");
+}
+/* appelé après l'enregistrement d'une séance (biblio/seances.js) */
+function cpApresEnregistrement(id) {
+  let c = null;
+  try {
+    c = JSON.parse(sessionStorage.getItem("cpCree") || "null");
+    sessionStorage.removeItem("cpCree");
+  } catch (e) {}
+  if (!c || !CY || !CY.plan || !CY.plan.sem[c.w]) return;
+  const sm = CY.plan.sem[c.w],
+    l = (sm.jl[c.j] = sm.jl[c.j] || []);
+  if (!l.includes(id)) l.push(id);
+  cpSauve();
+  toast("Séance liée à la semaine " + (c.w + 1) + " du cycle.");
 }
 
 /* ---------- actions ---------- */
@@ -222,6 +338,7 @@ function cpSync() {
   const auto = cpPeriode(p);
   if (!CY.periode || CY.periode === p.periodeAuto) CY.periode = auto;
   p.periodeAuto = auto;
+  cpDerive();
 }
 const cpSauve = () => {
   cpSync();
@@ -233,7 +350,7 @@ const cpRef = el => {
     k = el.dataset.k,
     i = +el.dataset.i,
     s = el.dataset.s === undefined ? -1 : +el.dataset.s;
-  const items = p && p.sem[w] ? (p.sem[w].cases[k] = p.sem[w].cases[k] || []) : [];
+  const items = p && p.sem[w] && k !== undefined ? (p.sem[w].cases[k] = p.sem[w].cases[k] || []) : [];
   const it = items[i];
   return { p, w, k, i, s, items, it, sub: it && s >= 0 ? (it.subs || [])[s] : null };
 };
@@ -251,9 +368,39 @@ registerClick(e => {
     CY.plan = null;
   } else if (a === "semaine") {
     CY.plan.debut = b.dataset.d;
-  } else if (a === "micro") {
-    CPMICRO.add(+b.dataset.w);
+  } else if (a === "lier") {
+    CPLINK = { w: +b.dataset.w, j: b.dataset.j };
     render();
+    return true;
+  } else if (a === "lierno") {
+    CPLINK = null;
+    render();
+    return true;
+  } else if (a === "lierok") {
+    const w = +b.dataset.w,
+      sel = document.getElementById("cpPickSel"),
+      cles = [...document.querySelectorAll("[data-cplj]:checked")].map(x => x.dataset.cplj);
+    if (!sel || !sel.value || !cles.length) {
+      if (typeof rougir === "function" && sel && !sel.value) rougir(sel);
+      toast(!sel || !sel.value ? "Choisis une séance." : "Coche au moins un jour.");
+      return true;
+    }
+    const sm = CY.plan.sem[w];
+    cles.forEach(k => {
+      const l = (sm.jl[k] = sm.jl[k] || []);
+      if (!l.includes(sel.value)) l.push(sel.value);
+    });
+    CPLINK = null;
+  } else if (a === "addex") {
+    CY.plan.sem[+b.dataset.w].ex.push({ k: "x" + Date.now().toString(36), d: "", t: "" });
+  } else if (a === "delex") {
+    const sm = CY.plan.sem[+b.dataset.w],
+      k = b.dataset.j;
+    if ((sm.jl[k] || []).length && !confirm("Retirer ce jour et délier sa séance ?")) return true;
+    sm.ex = sm.ex.filter(x => x.k !== k);
+    delete sm.jl[k];
+  } else if (a === "fiche") {
+    cpCreerFiche(+b.dataset.w, b.dataset.j);
     return true;
   } else if (a === "nbstep") {
     const i = document.querySelector('[data-cpt="nb"]');
@@ -266,29 +413,28 @@ registerClick(e => {
     const n = +b.dataset.n;
     CPCAL = { y: CPCAL.y + Math.floor((CPCAL.m + n) / 12), m: (CPCAL.m + n + 12) % 12 };
   } else if (a === "additem") {
-    R.items.push({ t: "", sid: [], jour: 0, subs: [] });
+    R.items.push({ t: "", subs: [] });
   } else if (a === "delitem") {
-    if ((R.it.t || R.it.subs.length || R.it.sid.length) && !confirm("Retirer cet item ?")) return true;
+    if ((R.it.t || (R.it.subs || []).length) && !confirm("Retirer cet item ?")) return true;
     R.items.splice(R.i, 1);
   } else if (a === "addsub") {
     (R.it.subs = R.it.subs || []).push({ t: "" });
   } else if (a === "delsub") {
     R.it.subs.splice(R.s, 1);
   } else if (a === "unlink") {
-    const l = b.dataset.lvl === "w" ? (R.p.sem[R.w].sid || {})[R.k] || [] : R.it.sid;
-    l.splice(l.indexOf(b.dataset.sid), 1);
+    const l = CY.plan.sem[+b.dataset.w].jl[b.dataset.j] || [];
+    if (l.indexOf(b.dataset.sid) >= 0) l.splice(l.indexOf(b.dataset.sid), 1);
   } else if (a === "set") {
     const f = b.dataset.f,
       v = b.dataset.v,
       p = CY.plan;
-    if (f === "mode") p.mode = v;
-    else if (f === "public") p.public = v;
+    if (f === "public") p.public = v;
     else if (f === "pause") p.sem[R.w].pause = !p.sem[R.w].pause;
     else if (f === "jours") {
       const j = +v;
       p.jours = p.jours.includes(j) ? p.jours.filter(x => x !== j) : p.jours.concat(j);
       if (!p.jours.length) p.jours = [j];
-    } else if (f === "ijour") R.it.jour = +R.it.jour === +v ? 0 : +v;
+    }
     cpEnsure(p);
   } else if (a === "open") {
     go("sb/" + encodeURIComponent(b.dataset.sid));
@@ -298,7 +444,7 @@ registerClick(e => {
     CY.plan.nb = Math.max(CY.plan.nb, CYCLE1.seances.length);
     cpEnsure(CY.plan);
     CYCLE1.seances.forEach((r, i) => {
-      CY.plan.sem[i].cases.all = [{ t: r[0].replace(/^\d+\.\s*/, ""), sid: [], jour: 0, subs: [{ t: r[1] }] }];
+      CY.plan.sem[i].cases.all = [{ t: r[0].replace(/^\d+\.\s*/, ""), subs: [{ t: r[1] }] }];
     });
     CY.plan.sem[0].micro = "Progression du 1er cycle";
   } else return;
@@ -315,6 +461,11 @@ document.addEventListener("input", e => {
     const R = cpRef(t);
     (R.sub || R.it).t = t.value;
   } else if (f === "micro") CY.plan.sem[+t.dataset.w].micro = t.value;
+  else if (f === "obj") CY.plan.sem[+t.dataset.w].obj = t.value;
+  else if (f === "exd" || f === "ext") {
+    const e = CY.plan.sem[+t.dataset.w].ex.find(x => x.k === t.dataset.j);
+    if (e) e[f === "exd" ? "d" : "t"] = t.value;
+  }
   else if (f === "groupes") CY.plan.groupes = t.value.split(/[,;]+/).map(x => x.trim()).filter(Boolean);
   else return;
   cpSauve();
@@ -325,15 +476,9 @@ document.addEventListener("change", e => {
   if (!t || !t.dataset || !t.dataset.cpt || !CY || !CY.plan) return;
   const p = CY.plan,
     f = t.dataset.cpt;
-  if (f === "link") {
-    if (!t.value) return;
-    const R = cpRef(t);
-    const l = t.dataset.lvl === "w" ? ((p.sem[R.w].sid = p.sem[R.w].sid || {})[R.k] = (p.sem[R.w].sid || {})[R.k] || []) : R.it.sid;
-    if (!l.includes(t.value)) l.push(t.value);
-  }
-  else if (f === "nb") {
+  if (f === "nb") {
     const n = Math.max(1, Math.min(40, +t.value || 1));
-    if (n < p.nb && p.sem.slice(n).some(s => Object.values(s.cases).some(l => l.length)) && !confirm("Les semaines en trop seront retirées avec leur contenu. Continuer ?")) {
+    if (n < p.nb && p.sem.slice(n).some(s => Object.values(s.cases).some(l => l.length) || Object.values(s.jl || {}).some(l => l.length)) && !confirm("Les semaines en trop seront retirées avec leur contenu. Continuer ?")) {
       render();
       return;
     }
@@ -381,5 +526,12 @@ document.head.insertAdjacentHTML(
 .cpnb{display:inline-flex;align-items:center;border:1px solid #d5dae5;border-radius:22px;background:#fff;overflow:hidden}.cpnb input[type=number]{width:36px;border:0;text-align:center;font-weight:700;font-size:14px;color:#26364d;background:transparent;padding:4px 0;-moz-appearance:textfield;appearance:textfield}.cpnb input::-webkit-outer-spin-button,.cpnb input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.cpnb input:focus{outline:none}
 .cpnbb{cursor:pointer;user-select:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#26364d;background:#eef1f8}.cpnbb:hover{background:#26364d;color:#fff}
 .cpnbt{padding:0 10px 0 6px;color:#4a5873;font-size:13px}
+.cptf{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-bottom:8px}.cptf input{width:100%;font:inherit;font-size:14px;padding:6px 9px;border:1px solid #d5dae5;border-radius:8px;background:#fff}
+.cpdays{display:grid;gap:6px}.cpday{display:flex;gap:10px;align-items:center;flex-wrap:wrap;border:1px solid #e3e8f2;border-radius:8px;padding:6px 10px;background:#fff}
+.cpdl{width:130px;flex:none;display:flex;flex-direction:column;gap:4px}.cpdl input{font:inherit;font-size:13px;padding:4px 6px;border:1px solid #d5dae5;border-radius:6px;width:100%}.cpdn{font-weight:700;font-size:13.5px;text-transform:capitalize}
+.cpdr{flex:1;min-width:0;display:flex;gap:6px 10px;align-items:center;flex-wrap:wrap}.cptodo{background:#FDF3D3;color:#8A6D12;border-radius:20px;padding:2px 10px;font-size:13px;font-weight:700}
+.cpbtn{border:1px solid #d5dae5;border-radius:8px;padding:3px 10px;background:#eef1f8}
+.cppick{border:2px solid #2B5A9E;border-radius:10px;padding:10px 12px;margin:8px 0;display:grid;gap:8px;background:#fff}.cppick select{font:inherit;font-size:14px;padding:6px 9px;border:1px solid #d5dae5;border-radius:8px;max-width:100%}.cpchk{display:flex;gap:6px 16px;flex-wrap:wrap;align-items:center;font-size:14px}.cpchk label{display:flex;gap:5px;align-items:center}
+@media(max-width:700px){.cptf{grid-template-columns:1fr}.cpdl{width:100%}}
 </style>`
 );

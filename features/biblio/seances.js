@@ -208,6 +208,7 @@ async function enregistrerSeance0(meta0, se0, nouvelle) {
   try {
     localStorage.setItem(LS_SB, JSON.stringify(garde));
   } catch (e) {}
+  if (typeof cpApresEnregistrement === "function") cpApresEnregistrement(rec.id);
   if (!CONFIG.GAME_ADD_URL) {
     toast(
       "Séance gardée dans ce navigateur seulement : la base partagée n'est pas encore configurée (GAME_ADD_URL)."
