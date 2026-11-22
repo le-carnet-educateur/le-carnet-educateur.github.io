@@ -332,11 +332,13 @@ function cpPeriode(p) {
   if (a1 === a2) return M[m1] + " – " + M[m2] + " " + a1;
   return M[m1] + " " + a1 + " – " + M[m2] + " " + a2;
 }
+/* une période qui a la forme de celles qu'on génère (« Sept – Oct 2026 ») est considérée comme automatique, même si elle vient d'une ancienne version */
+const cpPeriodeAuto = t => /^(Janv|Févr|Mars|Avr|Mai|Juin|Juil|Août|Sept|Oct|Nov|Déc)(?: \d{4})?(?: – (Janv|Févr|Mars|Avr|Mai|Juin|Juil|Août|Sept|Oct|Nov|Déc)(?: \d{4})?)?$/.test(String(t || "").trim()) && /\d{4}/.test(t);
 function cpSync() {
   const p = CY.plan;
   if (!p) return;
   const auto = cpPeriode(p);
-  if (!CY.periode || CY.periode === p.periodeAuto) CY.periode = auto;
+  if (!CY.periode || CY.periode === p.periodeAuto || cpPeriodeAuto(CY.periode)) CY.periode = auto;
   p.periodeAuto = auto;
   cpDerive();
 }

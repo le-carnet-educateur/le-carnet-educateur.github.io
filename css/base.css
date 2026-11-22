@@ -513,3 +513,15 @@ details.man[open] > summary::before {
 .man-b li {
   margin: 5px 0;
 }
+
+/* menus déroulants des barres d'actions (s'ouvrent au survol ou au clic sur ▾) */
+.mnu { position: relative; display: inline-flex; align-items: stretch; }
+.mnu-t { display: inline-flex; align-items: center; padding: 0 8px; margin-left: -4px; border-radius: 0 8px 8px 0; background: #26364d; color: #fff; border-left: 1px solid rgba(255, 255, 255, 0.35); cursor: pointer; font-size: 12px; }
+.mnu-imp .btn { border-radius: 8px 0 0 8px !important; }
+.mnu-d { position: absolute; top: 100%; left: 0; z-index: 40; min-width: 100%; width: max-content; max-width: 280px; max-height: 0; overflow: hidden; opacity: 0; visibility: hidden; background: #fff; border: 0 solid #d5dae5; border-radius: 8px; box-shadow: 0 8px 22px rgba(38, 54, 77, 0.18); transition: max-height 0.2s ease, opacity 0.15s ease, visibility 0.2s; }
+.mnu:hover > .mnu-d, .mnu.open > .mnu-d, .mnu:focus-within > .mnu-d { max-height: 420px; opacity: 1; visibility: visible; border-width: 1px; }
+.mnu-i { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 14px; font: inherit; font-size: 14px; color: #26364d; cursor: pointer; background: none; border: 0; text-align: left; white-space: nowrap; text-decoration: none; border-radius: 0; }
+.mnu-i:hover { background: #eef1f8; }
+.mnu-i.danger { color: #b2263a; }
+.mnu-sep { border-top: 1px solid #e3e8f2; margin: 2px 0; }
+@media print { .mnu { display: none !important; } }

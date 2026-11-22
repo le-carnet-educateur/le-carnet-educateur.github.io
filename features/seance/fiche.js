@@ -304,6 +304,7 @@ function sheetHTML() {
     `<div style="background:${f};color:${c};font-weight:700;font-size:11px;padding:5px 10px;border-bottom:1px solid #D5DAE5">${t}</div>`;
   const schema = (SMETA.disc || DISC) === "prepa";
   const avecSchema = !schema;
+  const PV = palVar();
   const exo = (x, n) => {
     const v = x.v,
       L = lines;
@@ -322,16 +323,16 @@ function sheetHTML() {
       : `<b style="color:${C1}">▸</b> ${lk(v, `<b>${x.n ? x.n + " " : ""}${nm}</b>`)}${v.code ? ` <span style="color:#6B7280;font-size:11px">(${esc(v.code)})</span>` : ""}<div style="margin:2px 0;white-space:pre-line">${esc(v.desc)}</div>`;
     return (
       `<div style="padding:6px 10px;border-bottom:1px solid #D5DAE5;font-size:12px">${first}<div style="color:#6B7280;font-size:11px;font-style:italic">${x.same && v.code ? lk(v, `Fiche ${esc(v.code)} ↗`) + " · " : ""}${esc(v.meta)}</div>${avecSchema && v.schOn && schemaPlace() !== "page" && (v.img || v.imgJeu) ? `<div style="margin-top:6px;text-align:center"><img src="${esc(v.img || v.imgJeu)}" onerror="this.remove()" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:200px;object-fit:contain"></div>` : ""}</div>` +
-      (schema ? "" : col(v.plus, C2, "+", "#FDF3F2")) +
-      (schema ? "" : col(v.moins, "#2E6F3E", "–", "#F1F8F2")) +
+      (schema ? "" : col(v.plus, PV.pT, "+", PV.pB)) +
+      (schema ? "" : col(v.moins, PV.mT, "–", PV.mB)) +
       (schema
         ? `<div style="background:#fff;padding:6px;border-bottom:1px solid #D5DAE5;text-align:center">${v.img ? `<img src="${esc(v.img)}" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:260px;object-fit:contain;cursor:pointer" ${v.code ? `data-jeu="${esc(v.code)}"` : ""} onerror="this.remove()">` : ph("—")}</div>`
-        : `<div style="background:#F6F4FB;padding:6px 10px;border-bottom:1px solid #D5DAE5;font-size:12px">${cr.length ? cr.map(l => `<div><b style="color:#5B4B9A">✓</b> ${esc(l)}</div>`).join("") : ph("✓ [critère observable]") + "<br>" + ph("✓ [critère observable]")}</div>`)
+        : `<div style="background:${PV.cB};padding:6px 10px;border-bottom:1px solid #D5DAE5;font-size:12px">${cr.length ? cr.map(l => `<div><b style="color:${PV.cT}">✓</b> ${esc(l)}</div>`).join("") : ph("✓ [critère observable]") + "<br>" + ph("✓ [critère observable]")}</div>`)
     );
   };
   if (M.subs.length) {
     let n = 0;
-    h += `<div style="display:grid;grid-template-columns:${schema ? "1.6fr 1.4fr" : "3.2fr 1.2fr 1.2fr 1.3fr"};margin-top:8px"><div style="background:${PAL.th};color:#fff;font-weight:700;font-size:11px;padding:5px 10px">EXERCICE / DÉFI / JEU</div>${schema ? "" : th("PLUS DIFFICILE (+)", "#B2543A", "#FBE6E4")}${schema ? "" : th("PLUS FACILE (–)", "#2E6F3E", "#E6F2E8")}${schema ? th("SCHÉMA", "#2B5A9E", "#E3EEF8") : th("CRITÈRES DE RÉUSSITE", "#5B4B9A", "#ECE8F6")}`;
+    h += `<div style="display:grid;grid-template-columns:${schema ? "1.6fr 1.4fr" : "3.2fr 1.2fr 1.2fr 1.3fr"};margin-top:8px"><div style="background:${PAL.th};color:#fff;font-weight:700;font-size:11px;padding:5px 10px">EXERCICE / DÉFI / JEU</div>${schema ? "" : th("PLUS DIFFICILE (+)", PV.pH[0], PV.pH[1])}${schema ? "" : th("PLUS FACILE (–)", PV.mH[0], PV.mH[1])}${schema ? th("SCHÉMA", "#2B5A9E", "#E3EEF8") : th("CRITÈRES DE RÉUSSITE", PV.cH[0], PV.cH[1])}`;
     M.subs.forEach((s, k) => {
       const who =
         s.idx.length < M.G.length
@@ -349,7 +350,7 @@ function sheetHTML() {
         )
         .join(
           ""
-        )} &nbsp;${s.num}. ${esc(unitLabel(s, k))}${who}</div>${schema ? "" : '<div style="background:#FDF3F2"></div><div style="background:#F1F8F2"></div>'}<div style="background:#F6F4FB"></div>`;
+        )} &nbsp;${s.num}. ${esc(unitLabel(s, k))}${who}</div>${schema ? "" : `<div style="background:${PV.pB}"></div><div style="background:${PV.mB}"></div>`}<div style="background:${PV.cB}"></div>`;
       s.views.forEach(x => {
         h += exo(x, n);
       });

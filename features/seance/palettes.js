@@ -12,6 +12,20 @@ const palSelect = (cible, val) =>
     .join("")}</select></label>`;
 const palGrisChip = () =>
   `<label class="chip" style="cursor:pointer" title="À l'impression ou en PDF, la fiche passe en gris (économise l'encre) ; l'écran ne change pas"><input type="checkbox" data-pgris${palGris() ? " checked" : ""}> Impression en gris</label>`;
+/* option du menu « Imprimer / PDF » (s'ouvre sous le bouton) */
+const palGrisItem = () =>
+  `<label class="mnu-i" title="À l'impression ou en PDF, la fiche passe en gris (économise l'encre) ; l'écran ne change pas"><input type="checkbox" data-pgris${palGris() ? " checked" : ""}> Impression en gris</label>`;
+const menuImp = btn =>
+  `<div class="mnu mnu-imp">${btn}<a class="mnu-t" data-mnu tabindex="0" role="button" title="Options d'impression">▾</a><div class="mnu-d">${palGrisItem()}</div></div>`;
+const menuActions = (label, items) =>
+  `<div class="mnu"><a class="btn" data-mnu tabindex="0" role="button" style="background:#EEF1F8;color:#26364D;border-radius:8px;padding:9px 16px;font-weight:700;cursor:pointer;display:inline-block">${label} ▾</a><div class="mnu-d">${items}</div></div>`;
+document.addEventListener("click", e => {
+  const t = e.target.closest && e.target.closest("[data-mnu]");
+  document.querySelectorAll(".mnu.open").forEach(m => {
+    if (!t || !m.contains(t)) m.classList.remove("open");
+  });
+  if (t) t.closest(".mnu").classList.toggle("open");
+});
 document.addEventListener("change", e => {
   const g = e.target.closest && e.target.closest("[data-pgris]");
   if (g) {

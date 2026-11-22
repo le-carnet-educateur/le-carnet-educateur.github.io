@@ -272,13 +272,14 @@ function buildSeanceDoc(logo) {
       b: { bottom: bd("D5DAE5") },
     });
   if (M.subs.length) {
+    const PV = palVar();
     const rows = [
       row(
         [
           hd("EXERCICE / DÉFI / JEU", "FFFFFF", palHex(PAL.th), T[0]),
-          hd("PLUS DIFFICILE (+)", "B2543A", "FBE6E4", T[1]),
-          hd("PLUS FACILE (–)", "2E6F3E", "E6F2E8", T[2]),
-          hd("CRITÈRES DE RÉUSSITE", "5B4B9A", "ECE8F6", T[3]),
+          hd("PLUS DIFFICILE (+)", palHex(PV.pH[0]), palHex(PV.pH[1]), T[1]),
+          hd("PLUS FACILE (–)", palHex(PV.mH[0]), palHex(PV.mH[1]), T[2]),
+          hd("CRITÈRES DE RÉUSSITE", palHex(PV.cH[0]), palHex(PV.cH[1]), T[3]),
         ],
         true
       ),
@@ -325,9 +326,9 @@ function buildSeanceDoc(logo) {
             ],
             { w: T[0], f: uniteCol(s).w, m: { top: 40, bottom: 40, left: 140, right: 100 } }
           ),
-          cell([P([R("")])], { w: T[1], f: "FDF3F2" }),
-          cell([P([R("")])], { w: T[2], f: "F1F8F2" }),
-          cell([P([R("")])], { w: T[3], f: "F6F4FB" }),
+          cell([P([R("")])], { w: T[1], f: palHex(PV.pB) }),
+          cell([P([R("")])], { w: T[2], f: palHex(PV.mB) }),
+          cell([P([R("")])], { w: T[3], f: palHex(PV.cB) }),
         ])
       );
       s.views.forEach(x => {
@@ -379,20 +380,20 @@ function buildSeanceDoc(logo) {
         rows.push(
           row([
             cell(main, { w: T[0], b: { bottom: bd("D5DAE5") } }),
-            cell(bm(v.plus, ORG, "+"), { w: T[1], f: "FDF3F2", b: { bottom: bd("D5DAE5") } }),
-            cell(bm(v.moins, "2E6F3E", "–"), { w: T[2], f: "F1F8F2", b: { bottom: bd("D5DAE5") } }),
+            cell(bm(v.plus, palHex(PV.pT), "+"), { w: T[1], f: palHex(PV.pB), b: { bottom: bd("D5DAE5") } }),
+            cell(bm(v.moins, palHex(PV.mT), "–"), { w: T[2], f: palHex(PV.mB), b: { bottom: bd("D5DAE5") } }),
             cell(
               cr.length
                 ? cr.map(l =>
-                    P([R("✓ ", { c: "5B4B9A", b: true }), R(l, { size: 17 })], { af: 30 })
+                    P([R("✓ ", { c: palHex(PV.cT), b: true }), R(l, { size: 17 })], { af: 30 })
                   )
                 : [
-                    P([R("✓ ", { c: "5B4B9A", b: true }), ph("[critère observable]")], { af: 60 }),
-                    P([R("✓ ", { c: "5B4B9A", b: true }), ph("[critère observable]")]),
+                    P([R("✓ ", { c: palHex(PV.cT), b: true }), ph("[critère observable]")], { af: 60 }),
+                    P([R("✓ ", { c: palHex(PV.cT), b: true }), ph("[critère observable]")]),
                   ],
               {
                 w: T[3],
-                f: "F6F4FB",
+                f: palHex(PV.cB),
                 m: { top: 60, bottom: 60, left: 120, right: 100 },
                 va: VerticalAlign.TOP,
               }
