@@ -12,7 +12,7 @@ const cpAdd = (iso, n) => cpISO(new Date(cpD(iso).getTime() + n * 864e5));
 const cpLundi = iso => cpAdd(iso, -((cpD(iso).getUTCDay() + 6) % 7));
 const cpFmt = iso => cpD(iso).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 const cpFmtLong = iso => cpD(iso).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-let CPMICRO = new Set(); /* semaines dont le champ micro-cycle est ouvert */
+let CPMICRO = new Set(); /* semaines dont le champ thème est ouvert */
 let CPCAL = null; /* mois affiché dans le calendrier : { y, m } */
 
 function cpNew() {
@@ -90,7 +90,7 @@ function cpWeekHTML(p, w) {
   return `<div class="cpw${now ? " now" : ""}${s.pause ? " pause" : ""}">
     <div class="cpwh"><b>S${w + 1}</b>${now ? ' <span class="cpnow">cette semaine</span>' : ""}<div class="cpd">${dates}</div>
     <div style="margin:6px 0">${cpPill(s.pause, `data-cyp="set" data-f="pause" data-w="${w}"`, "Pause")}</div>${liens}</div>
-    <div class="cpwb">${s.micro || CPMICRO.has(w) ? `<input class="cpmicro" data-cpt="micro" data-w="${w}" value="${esc(s.micro || "")}" placeholder="Titre du micro-cycle (regroupe plusieurs semaines)">` : `<a class="cpmini" data-cyp="micro" data-w="${w}" style="display:block;margin-bottom:6px;font-weight:400;color:#8a93a3">＋ micro-cycle</a>`}
+    <div class="cpwb">${s.micro || CPMICRO.has(w) ? `<input class="cpmicro" data-cpt="micro" data-w="${w}" value="${esc(s.micro || "")}" placeholder="Thème de cette période (ex. Pose de pieds) : il s'applique aux semaines suivantes jusqu'au prochain thème">` : `<a class="cpmini" data-cyp="micro" data-w="${w}" style="display:block;margin-bottom:6px;font-weight:400;color:#8a93a3">＋ thème</a>`}
     ${s.pause ? '<div class="cpvac">Pause (vacances, pas de séance)</div>' : cpCases(p).map(k => cpCaseHTML(p, w, k)).join("")}</div></div>`;
 }
 function cpCalHTML(p) {
@@ -378,8 +378,8 @@ document.head.insertAdjacentHTML(
 .cpvac{color:#8a93a3;font-style:italic}
 .cppills{display:flex;flex-wrap:wrap;gap:6px}.cppill{cursor:pointer;user-select:none;border:1px solid #d5dae5;background:#fff;border-radius:20px;padding:5px 12px;font-size:13.5px;color:#4a5873}.cppill:hover{border-color:#26364d}.cppill.on{background:#26364d;border-color:#26364d;color:#fff;font-weight:700}.cpjp{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}.cpjp .cppill{padding:3px 10px;font-size:12.5px}.cpjp .cppill.on{background:#3A8FB0;border-color:#3A8FB0}.cpwl{margin-top:8px}.cpwh .cpch{max-width:100%}.cpwh .cpch a:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:105px;display:inline-block;vertical-align:bottom}.cpbox .aide{vertical-align:middle}@media(max-width:1100px){.cplay{grid-template-columns:1fr}.cpside{position:static;max-height:none}}@media(max-width:700px){.cpw{grid-template-columns:1fr}.cpr2{grid-template-columns:1fr}}
 .cpj1{flex-wrap:nowrap;gap:3px}.cpj1 .cppill{flex:1 1 0;min-width:0;text-align:center;padding:4px 0;font-size:12px;border-radius:14px}
-.cpnb{display:inline-flex;align-items:center;border:1px solid #d5dae5;border-radius:22px;background:#fff;overflow:hidden}.cpnb input[type=number]{width:46px;border:0;text-align:center;font-weight:700;font-size:16px;color:#26364d;background:transparent;padding:4px 0;-moz-appearance:textfield;appearance:textfield}.cpnb input::-webkit-outer-spin-button,.cpnb input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.cpnb input:focus{outline:none}
-.cpnbb{cursor:pointer;user-select:none;width:34px;height:34px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#26364d;background:#eef1f8}.cpnbb:hover{background:#26364d;color:#fff}
-.cpnbt{padding:0 12px 0 8px;color:#4a5873;font-size:13.5px}
+.cpnb{display:inline-flex;align-items:center;border:1px solid #d5dae5;border-radius:22px;background:#fff;overflow:hidden}.cpnb input[type=number]{width:36px;border:0;text-align:center;font-weight:700;font-size:14px;color:#26364d;background:transparent;padding:4px 0;-moz-appearance:textfield;appearance:textfield}.cpnb input::-webkit-outer-spin-button,.cpnb input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}.cpnb input:focus{outline:none}
+.cpnbb{cursor:pointer;user-select:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#26364d;background:#eef1f8}.cpnbb:hover{background:#26364d;color:#fff}
+.cpnbt{padding:0 10px 0 6px;color:#4a5873;font-size:13px}
 </style>`
 );

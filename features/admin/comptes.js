@@ -53,6 +53,11 @@ function admGroupes() {
 }
 function admMenuHTML() {
   const G = admGroupes();
+  /* comptes activés : le tableau de bord est l'accueil de l'administration, on y revient avec un seul bouton */
+  if (compteOn()) {
+    const lab = (G.flatMap(([, l]) => l).find(([t]) => t === ADM.tab) || [])[1];
+    return `<div class="tools atabs">${ADM.tab === "bord" ? '<b style="font-size:16px">🏠 Tableau de bord</b>' : `<button class="abtn coul" style="--c:#26364D;--bg:#E4E8EF" data-adm="tab" data-t="bord">← Tableau de bord</button><span style="color:#6B7280;font-size:14px;margin-left:6px">${lab ? "› " + lab : ""}</span>`}</div>`;
+  }
   const cur = G.find(([, l]) => l.some(([t]) => t === ADM.tab)) || G[0];
   const btns = G.map(([n, l]) => {
     const [c, bg] = ADM_COULEURS[l[0][0]] || ["#3A8FB0", "#E3F1F6"];
@@ -573,6 +578,29 @@ function admBordHTML() {
     "Voir les utilisateurs",
     "#2B5A9E"
   );
-  const tot = B.users ? `<p style="color:#6B7280;font-size:13px;margin:12px 0 0">${B.users.length} compte${B.users.length > 1 ? "s" : ""} au total.</p>` : "";
-  return `<div class="tools"><a class="abtn sm" data-admc="reload">↻ Actualiser</a></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">${c1}${c2}${c3}</div>${tot}`;
+  const DESC = {
+    jeux: ["🎲", "Relire, corriger, publier ou refuser les jeux", att ? att.length + " à relire" : ""],
+    schemas: ["✏️", "Schémas dessinés sur le site", ""],
+    illustrer: ["🖼", "Jeux de préparation physique sans image", ""],
+    seances: ["📋", "Toutes les séances des comptes", ""],
+    cycles: ["⟳", "Tous les cycles des comptes", ""],
+    users: ["👤", "Comptes, pseudos, blocage", B.users ? B.users.length + (B.users.length > 1 ? " comptes" : " compte") : ""],
+    equipes: ["👥", "Équipes, membres, propriétaires", ""],
+    invit: ["✉️", "Invitations envoyées", ""],
+    retours: ["💬", "Retours de terrain à traiter", ret ? ret.length + " en attente" : ""],
+    activite: ["📈", "Journal d'activité du site", ""],
+    reglages: ["⚙️", "E-mails automatiques et réglages", ""],
+    doc: ["📚", "Documentation technique", ""],
+  };
+  const tuile = ([t, lb]) => {
+    const [ico, txt, badge] = DESC[t] || ["•", "", ""];
+    const [col, bg] = ADM_COULEURS[t] || ["#3A8FB0", "#E3F1F6"];
+    return `<a class="box" data-adm="tab" data-t="${t}" style="margin:0;cursor:pointer;border-left:6px solid ${col};background:${bg};display:block;padding:10px 14px"><div style="display:flex;gap:8px;align-items:baseline"><span style="font-size:18px">${ico}</span><b style="flex:1;color:${col}">${lb}</b>${badge ? `<span style="font-size:12px;font-weight:700;color:${col}">${badge}</span>` : ""}</div><div style="color:#4A5568;font-size:13px;margin-top:3px">${txt}</div></a>`;
+  };
+  const rubriques = admGroupes()
+    .map(([n, l]) => [n, l.filter(([t]) => t !== "bord")])
+    .filter(([, l]) => l.length)
+    .map(([n, l]) => `<h3 style="margin:22px 0 8px;color:#26364D;font-size:15px">${n}</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px">${l.map(tuile).join("")}</div>`)
+    .join("");
+  return `<div class="tools"><a class="abtn sm" data-admc="reload">↻ Actualiser</a></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px">${c1}${c2}${c3}</div>${rubriques}`;
 }

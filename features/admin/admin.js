@@ -111,6 +111,12 @@ async function admCharger() {
     });
     ADM.cols = j.colonnes;
     ADM.msg = "";
+    /* avec les comptes, l'administration s'ouvre sur le tableau de bord */
+    if (compteOn() && !ADM.init) {
+      ADM.init = true;
+      ADM.tab = "bord";
+      setTimeout(admComptesCharger, 0);
+    }
     if (!ADM.tous) {
       ADM_ATT = ADM.list.length;
       buildNav();
@@ -203,7 +209,7 @@ function remplaceBandeau(code) {
 function admView() {
   const head = gsec(
     "Administration",
-    "Gestion des jeux et documentation technique. Réservé à l'administrateur."
+    (typeof compteOn === "function" && compteOn() ? "Tableau de bord : jeux, comptes, séances, équipes, réglages et documentation. Réservé à l'administrateur." : "Gestion des jeux et documentation technique. Réservé à l'administrateur.")
   );
   const msg = ADM.msg ? `<p style="font-weight:700;color:#B2263A">${esc(ADM.msg)}</p>` : "";
   if (!CONFIG.GAME_ADD_URL)
@@ -360,6 +366,7 @@ registerClick(e => {
     ADM.pw = "";
     ADM.list = null;
     ADM.tab = "jeux";
+    ADM.init = false;
     DOCMD = null;
     try {
       sessionStorage.removeItem("admPw");

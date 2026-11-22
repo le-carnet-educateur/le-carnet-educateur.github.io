@@ -3,7 +3,12 @@
 let GLOSS_AJOUTS = []; /* [{ d: "escalade"|"prepa", t, def }] reçus du serveur */
 let GLOSS_EDIT = null; /* terme en cours de modification (nom d'origine) */
 let GLOSS_REQ = "";
-const glAdmin = () => (typeof compteAdmin === "function" && compteAdmin()) || !!sessionStorage.getItem("admPw");
+/* « voir comme » : on se comporte exactement comme l'utilisateur observé, donc pas d'outils admin */
+const glAdmin = () => {
+  if (typeof AUTH !== "undefined" && AUTH.reel) return false;
+  if (typeof compteOn === "function" && compteOn() && typeof AUTH !== "undefined" && AUTH.user) return !!AUTH.user.admin;
+  return (typeof compteAdmin === "function" && compteAdmin()) || !!sessionStorage.getItem("admPw");
+};
 const glDisc = () => (DISC === "prepa" ? "prepa" : "escalade");
 const glBase = () => (DISC === "prepa" ? AX.GLOSS_PREPA || [] : AX.GLOSS);
 const glCle = t => norm(String(t).trim());

@@ -379,7 +379,7 @@ function partageBlocPanneau(r) {
 function partageBlocPanneau0(r) {
   if (!compteOn() || !r) return "";
   if (!compteMien(r))
-    return `<div class="box noprint" style="border-left:6px solid #8A55B5;padding:8px 14px">Partagé avec vous par <b>${esc(r.ownerNom || r.owner)}</b> ${r.owner && r.ownerNom ? `<span style="color:#6B7280">(${esc(r.owner)})</span>` : ""} · lecture seule : « Utiliser comme modèle » crée votre propre copie.</div>`;
+    return `<div class="box noprint" style="border-left:6px solid #8A55B5;padding:8px 14px">Partagé avec vous par <b>${esc(r.ownerNom || r.owner)}</b> ${r.owner && r.ownerNom ? `<span style="color:#6B7280">(${esc(r.owner)})</span>` : ""} · lecture seule : « Utiliser comme modèle » crée votre propre copie.</div>` + cm;
   const L = partageListe(r),
     pers = L.filter(x => !x.startsWith("team:")),
     eqs = L.filter(x => x.startsWith("team:")).map(x => x.slice(5));
@@ -398,13 +398,14 @@ function partageBlocPanneau0(r) {
 function partageBloc(r, simple) {
   if (!compteOn() || !r) return "";
   if (!simple) return partageBlocPanneau(r);
+  const cm = typeof commentairesBloc === "function" ? commentairesBloc(r) : "";
   if (!compteMien(r))
-    return `<div class="box noprint" style="border-left:6px solid #8A55B5;padding:8px 14px">Partagé avec vous par <b>${esc(r.ownerNom || r.owner)}</b> ${r.owner && r.ownerNom ? `<span style="color:#6B7280">(${esc(r.owner)})</span>` : ""} · lecture seule : « Utiliser comme modèle » crée votre propre copie.</div>`;
+    return `<div class="box noprint" style="border-left:6px solid #8A55B5;padding:8px 14px">Partagé avec vous par <b>${esc(r.ownerNom || r.owner)}</b> ${r.owner && r.ownerNom ? `<span style="color:#6B7280">(${esc(r.owner)})</span>` : ""} · lecture seule : « Utiliser comme modèle » crée votre propre copie.</div>` + cm;
   const L = partageListe(r),
     pers = L.filter(x => !x.startsWith("team:")),
     eqs = L.filter(x => x.startsWith("team:")).map(x => x.slice(5));
   const resume = [...eqs.map(i => "👥 " + equipeNom(i)), ...pers];
-  return `<div class="box noprint" style="padding:8px 14px;color:#6B7280;font-size:13px">${L.length ? "👥 Partagée avec : <b>" + esc(resume.join(", ")) + "</b>" : "🔒 Privée : toi seul(e) la vois."} <span>· bouton « 🔗 Partager » pour modifier.</span></div>`;
+  return `<div class="box noprint" style="padding:8px 14px;color:#6B7280;font-size:13px">${L.length ? "👥 Partagée avec : <b>" + esc(resume.join(", ")) + "</b>" : "🔒 Privée : toi seul(e) la vois."} <span>· bouton « 🔗 Partager » pour modifier.</span></div>` + cm;
 }
 registerClick(e => {
   const b = e.target.closest("[data-partage]");

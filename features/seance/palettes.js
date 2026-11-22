@@ -7,7 +7,7 @@ const palGris = () => {
   }
 };
 const palSelect = (cible, val) =>
-  `<label class="chip" style="cursor:pointer" title="Couleurs de la fiche (écran, impression et Word)">🎨 Palette <select data-pal="${cible}" style="border:0;background:transparent;font:inherit;cursor:pointer">${Object.keys(PALS)
+  `<label class="chip" style="cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;gap:4px;padding-top:4px;padding-bottom:4px;margin:0" title="Couleurs de la fiche (écran, impression et Word)">🎨 Palette <select data-pal="${cible}" style="padding:0;margin:0;width:auto;min-height:0;border:0;background:transparent;font:inherit;cursor:pointer">${Object.keys(PALS)
     .map(k => `<option value="${k}"${(val || "classique") === k ? " selected" : ""}>${esc(PALS[k].n)}</option>`)
     .join("")}</select></label>`;
 const palGrisChip = () =>
