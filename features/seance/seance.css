@@ -522,3 +522,6 @@ body.trOn > *:not(#terrain):not(#trImg):not(#hors):not(#trStop) {
 .gdragging{opacity:.55}
 .ssub.gover-up,.sit.gover-up{box-shadow:0 -3px 0 #26364D}
 .ssub.gover-down,.sit.gover-down{box-shadow:0 3px 0 #26364D}
+
+/* onglet Contrôle et bilan : les cadres reprennent la couleur de l'onglet */
+[data-stab=ctl] .box{border-left-color:#2E9E6B!important;background:#EAF6F1!important}
