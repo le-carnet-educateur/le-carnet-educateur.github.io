@@ -19,6 +19,7 @@ function sepopOuvrir(d, id, copie) {
   });
   SEUID = mx + 1;
   SEPOP.dirty = !!copie;
+  SEPOP.copie = copie === true;
   document.body.classList.add("pp");
   modal(
     copie
@@ -36,6 +37,14 @@ function sepopOuvrir(d, id, copie) {
     }
   );
   seanceBind();
+  /* copie : le curseur est tout de suite dans le titre, nom sélectionné, pour le renommer */
+  if (copie === true) {
+    const t = document.querySelector('#epop [data-sm="titre"]');
+    if (t) {
+      t.focus();
+      t.select();
+    }
+  }
 }
 function sepopRedraw() {
   const b = $("#epopbody"),

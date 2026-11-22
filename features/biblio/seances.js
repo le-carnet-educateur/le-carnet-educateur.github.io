@@ -209,7 +209,15 @@ async function enregistrerSeance0(meta0, se0, nouvelle) {
     localStorage.setItem(LS_SB, JSON.stringify(garde));
   } catch (e) {}
   if (typeof cpApresEnregistrement === "function") cpApresEnregistrement(rec.id);
+  /* copie enregistrée depuis la fenêtre de modification : on ferme la fenêtre et on ouvre la nouvelle séance */
+  const apresCopie = () => {
+    if (SEPOP && SEPOP.copie && !meta0) {
+      modalFermer("epop", true);
+      go("sb/" + rec.id);
+    }
+  };
   if (!CONFIG.GAME_ADD_URL) {
+    apresCopie();
     toast(
       "Séance gardée dans ce navigateur seulement : la base partagée n'est pas encore configurée (GAME_ADD_URL)."
     );
@@ -229,6 +237,7 @@ async function enregistrerSeance0(meta0, se0, nouvelle) {
       seSave();
     }
     toast(SB_MSG.txt);
+    apresCopie();
   } catch (e) {
     toast("Échec de l'enregistrement (" + e.message + "). La séance reste dans ce navigateur.");
   }
