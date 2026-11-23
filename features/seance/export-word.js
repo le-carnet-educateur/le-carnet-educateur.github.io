@@ -47,19 +47,26 @@ function buildSeanceDoc(logo) {
     NOB = { top: NONE, bottom: NONE, left: NONE, right: NONE };
   const bd = (c, s = 6) => ({ style: BorderStyle.SINGLE, size: s, color: c }),
     sh = f => ({ type: ShadingType.CLEAR, fill: f, color: "auto" });
-  const R = (t, o = {}) =>
+  const R1 = (t, o = {}) =>
     new TextRun({
       text: String(t).replace(/'/g, "’"),
       font: FONT,
       size: o.size || 18,
       bold: o.b,
       italics: o.i,
+      underline: o.u ? {} : undefined,
       color: o.c || "2B2F36",
     });
+  /* Texte riche : **gras**, *italique*, __souligné__ (renvoie un tableau de runs si besoin) */
+  const R = (t, o = {}) => {
+    const s = String(t == null ? "" : t);
+    if (!/\*|__/.test(s)) return R1(s, o);
+    return rtParse(s).map(seg => R1(seg.t, { ...o, b: o.b || seg.b, i: o.i || seg.i, u: seg.u }));
+  };
   const ph = (t, s = 18) => R(t, { i: true, c: "8A93A3", size: s });
   const P = (ch, o = {}) =>
     new Paragraph({
-      children: Array.isArray(ch) ? ch : [ch],
+      children: (Array.isArray(ch) ? ch : [ch]).flat(),
       alignment: o.al,
       spacing: { before: 0, after: o.af || 0, line: 252 },
     });
@@ -68,6 +75,7 @@ function buildSeanceDoc(logo) {
       children: ch,
       width: { size: o.w, type: WidthType.DXA },
       columnSpan: o.span,
+      rowSpan: o.rs,
       shading: o.f ? sh(o.f) : undefined,
       verticalAlign: o.va,
       margins: o.m || { top: 60, bottom: 60, left: 120, right: 120 },
@@ -236,6 +244,7 @@ function buildSeanceDoc(logo) {
         out.push(P([R("▸ ", { c: BLUE, b: true, size: 18 }), ph("[Ajouter un jeu ou un exercice]")], { af: 30 }));
       s.views.forEach(x => {
         const L = lines(x.v.desc);
+        if (x.v.obj) out.push(P([R("Objectif : ", { b: true, size: 18 }), R(x.v.obj, { size: 18 })], { af: 10 }));
         if (!x.same)
           out.push(
             P(
@@ -273,6 +282,32 @@ function buildSeanceDoc(logo) {
     });
   if (M.subs.length) {
     const PV = palVar();
+  /* cellules + / – / critères d'un item ; rs = 2 : elles démarrent à la ligne du titre et couvrent aussi la ligne de description (texte en haut) */
+  const varCells = (x, rs) => {
+    const v = x.v,
+      cr = lines(v.crit);
+    const o = { b: { bottom: bd("D5DAE5") }, va: VerticalAlign.TOP, rs: rs > 1 ? rs : undefined };
+    return [
+            cell(bm(v.plus, palHex(PV.pT), "+"), { ...o, w: T[1], f: palHex(PV.pB) }),
+            cell(bm(v.moins, palHex(PV.mT), "–"), { ...o, w: T[2], f: palHex(PV.mB) }),
+            cell(
+              cr.length
+                ? cr.map(l =>
+                    P([R("✓ ", { c: palHex(PV.cT), b: true }), R(l, { size: 17 })], { af: 30 })
+                  )
+                : [
+                    P([R("✓ ", { c: palHex(PV.cT), b: true }), ph("[critère observable]")], { af: 60 }),
+                    P([R("✓ ", { c: palHex(PV.cT), b: true }), ph("[critère observable]")]),
+                  ],
+              {
+                ...o,
+                w: T[3],
+                f: palHex(PV.cB),
+                m: { top: 60, bottom: 60, left: 120, right: 100 },
+              }
+            ),
+    ];
+  };
     const rows = [
       row(
         [
@@ -326,20 +361,25 @@ function buildSeanceDoc(logo) {
             ],
             { w: T[0], f: uniteCol(s).w, m: { top: 40, bottom: 40, left: 140, right: 100 } }
           ),
-          cell([P([R("")])], { w: T[1], f: palHex(PV.pB) }),
-          cell([P([R("")])], { w: T[2], f: palHex(PV.mB) }),
-          cell([P([R("")])], { w: T[3], f: palHex(PV.cB) }),
+          ...(s.views.length ? varCells(s.views[0], 2) : [
+            cell([P([R("")])], { w: T[1], f: palHex(PV.pB) }),
+            cell([P([R("")])], { w: T[2], f: palHex(PV.mB) }),
+            cell([P([R("")])], { w: T[3], f: palHex(PV.cB) }),
+          ]),
         ])
       );
-      s.views.forEach(x => {
+      s.views.forEach((x, vi) => {
         const v = x.v;
+        const objP = v.obj ? [P([R("Objectif : ", { b: true, size: 17 }), R(v.obj, { size: 17 })], { af: 30 })] : [];
         const main = x.same
           ? [
+              ...objP,
               ...x.steps.map(l =>
                 P([R("▸ ", { c: BLUE, b: true }), R(l, { size: 17 })], { af: 20 })
               ),
             ]
           : [
+              ...objP,
               P(
                 [
                   R("▸ ", { c: BLUE, b: true }),
@@ -376,30 +416,7 @@ function buildSeanceDoc(logo) {
               R(v.meta || "", { i: true, c: "6B7280", size: 16 }),
             ])
           );
-        const cr = lines(v.crit);
-        rows.push(
-          row([
-            cell(main, { w: T[0], b: { bottom: bd("D5DAE5") } }),
-            cell(bm(v.plus, palHex(PV.pT), "+"), { w: T[1], f: palHex(PV.pB), b: { bottom: bd("D5DAE5") } }),
-            cell(bm(v.moins, palHex(PV.mT), "–"), { w: T[2], f: palHex(PV.mB), b: { bottom: bd("D5DAE5") } }),
-            cell(
-              cr.length
-                ? cr.map(l =>
-                    P([R("✓ ", { c: palHex(PV.cT), b: true }), R(l, { size: 17 })], { af: 30 })
-                  )
-                : [
-                    P([R("✓ ", { c: palHex(PV.cT), b: true }), ph("[critère observable]")], { af: 60 }),
-                    P([R("✓ ", { c: palHex(PV.cT), b: true }), ph("[critère observable]")]),
-                  ],
-              {
-                w: T[3],
-                f: palHex(PV.cB),
-                m: { top: 60, bottom: 60, left: 120, right: 100 },
-                va: VerticalAlign.TOP,
-              }
-            ),
-          ])
-        );
+        rows.push(row([cell(main, { w: T[0], b: { bottom: bd("D5DAE5") } }), ...(vi === 0 ? [] : varCells(x, 1))]));
       });
     });
     out.push(tbl(rows, T));

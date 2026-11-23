@@ -34,10 +34,10 @@ function seFriseHTML(M) {
   const mx = (d, idx) => Math.max(0, ...idx.map(i => +d[i] || 0));
   const tag = (d, idx) => idx.map(i => `<i style="background:${M.G[i].c}">${+d[i] || 0}'</i>`).join("");
   const tip = (t, d, idx) => t + " — " + idx.map(i => (M.two ? M.G[i].nom + " : " : "") + (+d[i] || 0) + " min").join(" · ");
-  const B = [{ t: "Accueil", d: M.G.map(g => g.acc), idx: M.all, c: "#8A6D12", bg: "#FDF3D3" }];
+  const B = [{ t: "Accueil", d: M.G.map(g => g.acc), idx: M.all, c: PAL.b.acc[1], bg: PAL.b.acc[0] }];
   if (M.ech.on)
-    M.echSubs.forEach((s, k) => B.push({ t: echLabel(s, k) || "Échauffement", d: s.d, idx: s.idx, c: uniteCol(s).fg, bg: uniteCol(s).bg, id: s.id, tab: "ech" }));
-  M.subs.forEach((s, k) => B.push({ t: s.num + ". " + unitLabel(s, k), d: s.d, idx: s.idx, c: uniteCol(s).fg, bg: uniteCol(s).bg, id: s.id, tab: "corps" }));
+    M.echSubs.forEach((s, k) => B.push({ t: echLabel(s, k) || "Échauffement", d: s.d, idx: s.idx, c: PAL.b.ech[1], bg: PAL.b.ech[0], id: s.id, tab: "ech" }));
+  M.subs.forEach((s, k) => B.push({ t: s.num + ". " + unitLabel(s, k), d: s.d, idx: s.idx, c: PAL.b.corps[1], bg: PAL.b.corps[0], id: s.id, tab: "corps" }));
   B.push({ t: "Retour au calme", d: M.G.map(() => RC_MIN), idx: M.all, c: "#7A4FA0", bg: "#EEE6F6" });
   const tot = M.G.map(g => `<b style="color:${g.c}">${M.tot[g.i]} min</b>`).join(" · ");
   return `<div class="frise noprint" data-stab="ech corps"><div class="frise-bar">${B.map(b => {
@@ -45,6 +45,22 @@ function seFriseHTML(M) {
     const go = b.id ? ` data-sa="sgo" data-sub="${b.id}" data-tab="${b.tab}" role="button" tabindex="0"` : "";
     return `<div class="fr-b${b.id ? " go" : ""}" title="${esc(tip(b.t, b.d, b.idx))}" style="flex:${Math.max(m, 4)} 1 108px;background:${b.bg};color:${b.c}"${go}><span class="fr-t">${esc(b.t)}</span><span class="fr-m">${tag(b.d, b.idx)}</span></div>`;
   }).join("")}</div><div class="frise-pied">Durée totale : ${tot}</div></div>`;
+}
+/* pastilles de durée d'un exercice ou d'un bloc (mises à jour en direct quand on change les minutes) */
+const seChipsHTML = (M, sv) =>
+  `<span class="sitdur">${sv.idx.map(i => `<i class="gtag" style="background:${M.G[i].c}">${M.two ? esc(M.G[i].nom) + " " : ""}${+sv.d[i] || 0}'</i>`).join("")}</span>`;
+function seDursMaj() {
+  const M = seModel(),
+    rac = SEPOP ? document.getElementById("epop") || document : document;
+  [...M.echSubs, ...M.subs].forEach(sv => {
+    const el = rac.querySelector("#ssub-" + sv.id + " .sitdur");
+    if (el) el.outerHTML = seChipsHTML(M, sv);
+  });
+  const f = rac.querySelector(".frise");
+  if (f) {
+    f.outerHTML = seFriseHTML(M);
+    seTabAppliquer();
+  }
 }
 const seDeplierBtns = () => `<span class="frise-act noprint"><a class="chip" data-sa="sdeplier">Tout déplier</a> <a class="chip" data-sa="srepli">Tout replier</a></span>`;
 /* ---------- éditeur ---------- */
@@ -88,7 +104,7 @@ function seanceView() {
       return `<div class="gd${on ? "" : " off"}" style="--gc:${g.c}"><label class="gdn">${two ? `<input type="checkbox" data-gs="1" data-sub="${s.id}" data-gi="${g.i}" ${on ? "checked" : ""}>` : ""}<span>${esc(two ? g.nom : "Durée")}</span></label><span class="gdv"><input type="number" min="0" max="180" data-gd="sub" data-n="1" data-sub="${s.id}" data-gi="${g.i}" value="${s.d[g.i]}" ${on ? "" : "disabled"} title="Durée (min)${two ? " — " + esc(g.nom) : ""}"><small>min</small></span></div>`;
     };
     const dursHTML = `<div class="gdrow">${two ? '<span class="gdl">Pour</span>' : ""}${M.G.map(gcell).join("")}</div>`;
-    const chips = `<span class="sitdur">${sv.idx.map(i => `<i class="gtag" style="background:${M.G[i].c}">${two ? esc(M.G[i].nom) + " " : ""}${+s.d[i] || 0}'</i>`).join("")}</span>`;
+    const chips = seChipsHTML(M, sv);
     const solo = !!s.solo && sv.items.length === 1;
     const sbtn = `<span class="noprint" style="white-space:nowrap"><button class="chip" data-sa="sup" data-sub="${s.id}" title="Monter">↑</button> <button class="chip" data-sa="sdn" data-sub="${s.id}" title="Descendre">↓</button> <button class="chip" data-sa="srm" data-sub="${s.id}" title="Supprimer l'exercice">✕</button></span>`;
     const items = sv.items
@@ -120,6 +136,9 @@ function seanceView() {
           return `<label class="sml" style="margin-top:8px"><b>+ Variantes plus difficiles</b> ${aide("Une variante par ligne. Toujours dans la fiche.")}<textarea rows="3" data-si="vp" data-id="${it2.id}">${esc(v2.plus || "")}</textarea></label><label class="sml" style="margin-top:6px"><b>– Variantes plus faciles</b> ${aide("Une variante par ligne. Toujours dans la fiche.")}<textarea rows="3" data-si="vm" data-id="${it2.id}">${esc(v2.moins || "")}</textarea></label>`;
         };
         const nmf = `<label class="sml">${cl("Nom dans la fiche", "Situation : nom dans la fiche")}<input data-si="nom" data-id="${it.id}" value="${esc(it.nom || "")}" placeholder="${esc(vw ? vw.def : v.titre)}"></label>`;
+        const objf = isCreps() ? "" : `<label class="sml" style="margin-top:8px"><b>Objectif</b> ${aide("Facultatif. S'il est rempli, la fiche l'écrit en gras (« Objectif : … ») en tête de la cellule de l'exercice.")}<input data-si="obj" data-id="${it.id}" value="${esc(it.obj || "")}" placeholder="Ex. Poser les pieds sans bruit"></label>`;
+        const unites = ech ? M.echSubs : M.subs;
+        const mvto = unites.length > 1 || sv.items.length > 1 ? `<label class="sml noprint" style="margin-top:8px"><b>Déplacer vers</b> ${aide("Range cet exercice dans un autre bloc, ou sors-le du bloc pour en faire un exercice seul.")}<select data-imv data-id="${it.id}"><option value="">Choisir une destination…</option>${unites.filter(u => u.id !== sv.id).map((u, q) => { const kk = unites.indexOf(u); return `<option value="${u.id}">${u.items.length > 1 || !u.solo ? "Bloc" : "Exercice"} ${ech ? "" : u.num + ". "}${esc(ech ? echLabel(u, kk) || "Échauffement" : unitLabel(u, kk))}</option>`; }).join("")}${sv.items.length > 1 ? '<option value="new">↗ Sortir du bloc : exercice seul</option>' : ""}</select></label>` : "";
         const schf = v.img || v.imgJeu ? `<label class="fl noprint" style="margin:8px 0 0;display:block"><input type="checkbox" data-isch="1" data-id="${it.id}" ${v.schOn ? "checked" : ""}> 🖼 Afficher le schéma dans la fiche</label>` : "";
         const open = SEOPEN.has("i" + it.id),
           openM = SEOPEN.has("m" + it.id);
@@ -131,8 +150,8 @@ function seanceView() {
           return wrap(
             solo ? "" : `border-left:4px solid ${famOf(v.fam).d}`,
             `<a class="sitlink" data-jv="${esc(it.k)}" data-tip="Voir la fiche du jeu"><b class="sitcode" style="color:${famOf(v.fam).d}">${esc(v.code || "★")}</b><span class="sitname">${esc(vw ? vw.name : v.titre)}</span></a>${mod ? '<span class="sitbadge">modifié</span>' : ""}${ico}`,
-            nmf + consf(it),
-            matf(it) + dosf(it, DATA.find(x => key(x) === it.k)) + (ech ? "" : varf(it) + `<label class="sml" style="margin-top:8px">Critères de réussite (un par ligne)<textarea rows="2" data-si="crit" data-id="${it.id}" placeholder="Ex. Le pied est posé sans bruit">${esc(critEff(it))}</textarea></label>`) + schf + crepsItemHTML(it, CL)
+            nmf + objf + consf(it),
+            mvto + matf(it) + dosf(it, DATA.find(x => key(x) === it.k)) + (ech ? "" : varf(it) + `<label class="sml" style="margin-top:8px">Critères de réussite (un par ligne)<textarea rows="2" data-si="crit" data-id="${it.id}" placeholder="Ex. Le pied est posé sans bruit">${esc(critEff(it))}</textarea></label>`) + schf + crepsItemHTML(it, CL)
           );
         }
         const f = (k2, l, p, rows) =>
@@ -140,8 +159,8 @@ function seanceView() {
         return wrap(
           "",
           `<b class="sitcode" style="color:#B7791F">✎</b><span class="sitname">${esc(it.titre || "Exercice libre")}</span><span class="sitbadge free">libre</span>`,
-          `<div class="smg">${f("titre", cl("Nom de l'exercice", "Situation (nom)"), "Ex. Le pied muet")}${nmf}${f("desc", cl("Consigne / déroulé", "Consignes et règles du jeu"), "Qui joue, ce qu'on fait, comment on gagne…", 3)}</div>`,
-          `<div class="smg">${f("part", "Participants", "Ex. binômes")}${f("mat", "Matériel", "Aucun")}${DISC === "prepa" ? f("dos", "Séries × répétitions", "Ex. 3 × 12, repos 45 s") : ""}${ech ? "" : f("plus", cl("Plus difficile (+) — un par ligne", "Variantes : plus difficile si réussite (une par ligne)"), "• …", 2) + f("moins", cl("Plus facile (–) — un par ligne", "Variantes : plus facile si échec (une par ligne)"), "• …", 2) + f("crit", "Critères de réussite — un par ligne", "Ex. Le pied est posé sans bruit", 2)}</div>${schf}<div style="margin-top:6px"><a class="chip" data-sa="tolib" data-id="${it.id}" style="cursor:pointer">＋ Ajouter cet exercice à la bibliothèque</a></div>${crepsItemHTML(it, CL)}`
+          `<div class="smg">${f("titre", cl("Nom de l'exercice", "Situation (nom)"), "Ex. Le pied muet")}${nmf}${isCreps() ? "" : f("obj", "Objectif", "Ex. Poser les pieds sans bruit")}${f("desc", cl("Consigne / déroulé", "Consignes et règles du jeu"), "Qui joue, ce qu'on fait, comment on gagne…", 3)}</div>`,
+          mvto + `<div class="smg">${f("part", "Participants", "Ex. binômes")}${f("mat", "Matériel", "Aucun")}${DISC === "prepa" ? f("dos", "Séries × répétitions", "Ex. 3 × 12, repos 45 s") : ""}${ech ? "" : f("plus", cl("Plus difficile (+) — un par ligne", "Variantes : plus difficile si réussite (une par ligne)"), "• …", 2) + f("moins", cl("Plus facile (–) — un par ligne", "Variantes : plus facile si échec (une par ligne)"), "• …", 2) + f("crit", "Critères de réussite — un par ligne", "Ex. Le pied est posé sans bruit", 2)}</div>${schf}<div style="margin-top:6px"><a class="chip" data-sa="tolib" data-id="${it.id}" style="cursor:pointer">＋ Ajouter cet exercice à la bibliothèque</a></div>${crepsItemHTML(it, CL)}`
         );
       })
       .join("");
@@ -152,7 +171,7 @@ function seanceView() {
      <div class="sadd"><button class="chip" data-sa="rxopen" data-sub="${s.id}" style="background:#26364D;color:#fff;border-color:#26364D">${ech ? "🔍 Chercher un jeu de la bibliothèque" : "🔍 Chercher un exercice de la bibliothèque"}</button><button class="chip" data-sa="addfree" data-sub="${s.id}">＋ Exercice libre</button></div></div>`;
   };
   const dl = "";
-  const bar = `<div class="tools noprint sbar" style="margin-bottom:14px">${SEPOP ? "" : '<a class="chip" id="sClear" style="cursor:pointer;color:#B2263A;border-color:#E8B4BC">🗑 Effacer le contenu de la page</a>'}<label class="chip" style="cursor:pointer">🖼 ${S.logo ? "Changer le logo" : "Ajouter le logo de la salle"}<input type="file" id="sLogo" accept="image/*" hidden></label>${S.logo ? `<img src="${esc(S.logo)}" alt="Logo" style="height:30px;border-radius:4px;border:1px solid #D5DAE5"><a class="chip" id="sLogoOff" style="cursor:pointer">Retirer le logo</a>` : ""}${palSelect("seance", S.palette)}${palGrisChip()}<span class="grow" style="flex:1"></span><a class="chip" id="sCopy" style="cursor:pointer" title="Copie un résumé de la séance en texte, à coller dans un message">⧉ Copier le texte</a><span id="sMsg" style="color:#2E7D4F;font-weight:700"></span><a class="chip" id="sSave" style="cursor:pointer;background:#26364D;color:#fff;border-color:#26364D">☁ Enregistrer</a><div class="stabs noprint">${SE_ONGLETS.map(([k, t]) => `<button class="stab-b${(typeof SETAB === "undefined" ? "info" : SETAB) === k ? " on" : ""}" data-stabgo="${k}">${t}</button>`).join("")}</div><div id="sCtl" class="noprint" style="flex-basis:100%;font-size:12.5px;line-height:1.2;white-space:nowrap;overflow-x:auto"></div><div id="sSaved" class="noprint" style="flex-basis:100%;text-align:left;color:#2E7D4F;font-weight:700;font-size:13px;line-height:1.1;display:none"></div></div>${SE.id ? `<p class="hint noprint" style="margin:-6px 0 12px">✎ Vous modifiez une séance de la bibliothèque : « Mettre à jour » remplace la version enregistrée.</p>` : ""}`;
+  const bar = `<div class="tools noprint sbar" style="margin-bottom:14px">${SEPOP ? "" : '<a class="chip" id="sClear" style="cursor:pointer;color:#B2263A;border-color:#E8B4BC">🗑 Effacer le contenu de la page</a>'}<label class="chip" style="cursor:pointer">🖼 ${S.logo ? "Changer le logo" : "Ajouter le logo de la salle"}<input type="file" id="sLogo" accept="image/*" hidden></label>${S.logo ? `<img src="${esc(S.logo)}" alt="Logo" style="height:30px;border-radius:4px;border:1px solid #D5DAE5"><a class="chip" id="sLogoOff" style="cursor:pointer">Retirer le logo</a>` : ""}${palSelect("seance", S.palette)}${palGrisChip()}<span class="grow" style="flex:1"></span><a class="chip" id="sCopy" style="cursor:pointer" title="Copie un résumé de la séance en texte, à coller dans un message">⧉ Copier le texte</a><span id="sMsg" style="color:#2E7D4F;font-weight:700"></span><a class="chip" id="sSave" style="cursor:pointer;background:#26364D;color:#fff;border-color:#26364D">☁ Enregistrer</a><div class="stabs noprint">${SE_ONGLETS.map(([k, t]) => `<button class="stab-b${(typeof SETAB === "undefined" ? "info" : SETAB) === k ? " on" : ""}" data-stabgo="${k}">${t}</button>`).join("")}</div><div id="sCtl" class="noprint" style="flex-basis:100%;font-size:12.5px;line-height:1.2;white-space:nowrap;overflow-x:auto"></div><div id="sSaved" class="noprint" style="flex-basis:100%;text-align:left;color:#2E7D4F;font-weight:700;font-size:13px;line-height:1.1;display:none"></div></div>${SE.id ? `<p class="hint noprint" style="margin:-6px 0 12px">✎ Tu modifies une séance déjà enregistrée dans la bibliothèque : « Enregistrer » remplace la version actuelle (la précédente reste dans « Versions »).</p>` : ""}`;
   return (
     head +
     bar +

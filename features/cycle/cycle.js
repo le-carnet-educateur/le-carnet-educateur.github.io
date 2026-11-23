@@ -156,7 +156,7 @@ function cycleSheetHTML0(cy) {
     .join("");
   return `<div id="sheet" style="background:#fff;font-size:12.5px;line-height:1.4;color:#2B2F36">
   <div style="background:${NAVYC};color:${PAL.ink};${PAL.hb ? "border-bottom:4px solid " + PAL.hb + ";" : ""}padding:12px 64px 12px 18px;position:relative"><img src="${esc(cy.logo || LOGO_URL)}" alt="" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);max-width:110px;max-height:44px;${cy.logo ? "" : "width:44px;height:44px;border-radius:50%;"}opacity:.95"><div><b style="font-size:20px">${esc(cy.titre) || ph("Titre du cycle")}</b>${cy.periode ? ` <span style="color:${PAL.sub};font-size:14px">&nbsp;${esc(cy.periode)}</span>` : ""}</div>${meta ? `<div style="color:${PAL.sub};margin-top:4px">${meta}</div>` : ""}</div>
-  ${cy.objectif ? `<div style="background:#E4EEFB;border-left:6px solid ${C1};padding:8px 14px;margin-top:8px"><b>Objectif général :</b> <span style="white-space:pre-wrap">${esc(cy.objectif)}</span></div>` : ""}
+  ${cy.objectif ? `<div style="background:#E4EEFB;border-left:6px solid ${C1};padding:8px 14px;margin-top:8px"><b>Objectif général :</b> <span style="white-space:pre-wrap">${rt(cy.objectif)}</span></div>` : ""}
   <table style="width:100%;border-collapse:collapse;margin-top:8px"><thead><tr>${th("N°")}${th("SÉANCE")}${th("DATE(S)")}${th("THÈME")}${th("OBJECTIF")}${th("JEUX (CODES)")}${th("REMARQUES")}</tr></thead><tbody>${rows || `<tr><td colspan="7" style="padding:12px;text-align:center">${ph("Aucune séance pour le moment")}</td></tr>`}</tbody></table>
   <div style="border-top:4px solid ${C2};background:#FDEBE3;padding:8px 14px;margin-top:10px"><b style="color:#B2543A;letter-spacing:1px;font-size:11px">BILAN DU CYCLE</b><div style="white-space:pre-wrap;min-height:40px">${cy.bilan ? esc(cy.bilan) : ph("À compléter à la fin du cycle")}</div></div></div>`;
 }
@@ -408,17 +408,23 @@ function buildCycleDoc(cy) {
     NAVY = palHex(PAL.head),
     HI = palHex(PAL.ink),
     HS = palHex(PAL.sub);
-  const R = (t, o = {}) =>
+  const R1 = (t, o = {}) =>
     new TextRun({
       text: String(t).replace(/'/g, "’"),
       font: FONT,
       size: o.size || 18,
       bold: o.b,
       italics: o.i,
+      underline: o.u ? {} : undefined,
       color: o.c || "2B2F36",
     });
+  const R = (t, o = {}) => {
+    const s = String(t == null ? "" : t);
+    if (!/\*|__/.test(s)) return R1(s, o);
+    return rtParse(s).map(g => R1(g.t, { ...o, b: o.b || g.b, i: o.i || g.i, u: g.u }));
+  };
   const P = (ch, af = 0) =>
-    new Paragraph({ children: Array.isArray(ch) ? ch : [ch], spacing: { before: 0, after: af } });
+    new Paragraph({ children: (Array.isArray(ch) ? ch : [ch]).flat(), spacing: { before: 0, after: af } });
   const lines = (t, o) => {
     const a = String(t || "").split("\n");
     return a.map(x => P(R(x, o)));

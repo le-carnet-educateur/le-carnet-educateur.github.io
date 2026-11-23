@@ -218,7 +218,7 @@ function cpSheetHTML(cy) {
         .join("");
       const bg = `background:${w % 2 ? "#F4F7FB" : "#fff"}`;
       if (s.pause) return `<tr style="${bg}"><td style="padding:6px 8px;font-weight:700;vertical-align:top;white-space:nowrap">S${w + 1}</td><td colspan="3" style="padding:6px 8px"><i style="color:#8A93A3">Pause</i></td></tr>`;
-      return `<tr style="${bg}"><td style="padding:6px 8px;font-weight:700;vertical-align:top;white-space:nowrap">S${w + 1}</td><td style="padding:6px 8px;vertical-align:top">${s.micro ? `<b>${esc(s.micro)}</b>` : ""}${s.obj ? `<div style="white-space:pre-wrap">${esc(s.obj)}</div>` : ""}</td><td style="padding:6px 8px;vertical-align:top">${jours}</td><td style="padding:6px 8px;vertical-align:top">${cases || '<i style="color:#8A93A3">—</i>'}</td></tr>`;
+      return `<tr style="${bg}"><td style="padding:6px 8px;font-weight:700;vertical-align:top;white-space:nowrap">S${w + 1}</td><td style="padding:6px 8px;vertical-align:top">${s.micro ? `<b>${rt(s.micro)}</b>` : ""}${s.obj ? `<div style="white-space:pre-wrap">${rt(s.obj)}</div>` : ""}</td><td style="padding:6px 8px;vertical-align:top">${jours}</td><td style="padding:6px 8px;vertical-align:top">${cases || '<i style="color:#8A93A3">—</i>'}</td></tr>`;
     })
     .join("");
   return `<div style="margin-top:10px"><b style="color:#3A8FB0;letter-spacing:1px;font-size:11px">PLANNING DU CYCLE</b><table style="width:100%;border-collapse:collapse;margin-top:4px"><thead><tr>${th("SEM.")}${th("THÈME ET OBJECTIF")}${th("JOURS ET SÉANCES")}${th("POINTS À TRAVAILLER")}</tr></thead><tbody>${rows}</tbody></table></div>`;

@@ -279,7 +279,7 @@ function seancesListeHTML() {
   ).join("");
   return `<div class="tools"><input class="search" id="sbq" type="search" placeholder="Rechercher une séance, un thème, un éducateur…" value="${esc(SBQ)}" style="max-width:420px">${DISC === "prepa" && typeof PREPA_SEANCES !== "undefined" ? `<select id="sbmod" style="margin-left:8px"><option value="">Toutes les séances</option><option value="mod"${SBMOD === "mod" ? " selected" : ""}>Séances modèles</option><option value="mes"${SBMOD === "mes" ? " selected" : ""}>Mes séances</option></select>` : ""}</div>
   <p class="count" id="sbcnt">${L.length} séance${L.length > 1 ? "s" : ""}</p>
-  ${L.length ? `<div style="overflow-x:auto"><table class="lst sbl colo"><thead><tr><th>CYCLE ET SÉANCE</th><th>THÈME</th><th>OBJECTIF GÉNÉRAL</th><th>DATE</th><th class="c-mod">MODIFIÉ</th>${compteOn() ? '<th class="c-par">AUTEUR</th>' : ""}<th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">Aucune séance enregistrée pour le moment. Dans « Créer une séance », cliquez sur « Enregistrer dans la bibliothèque de séances ».</div>'}
+  ${L.length ? `<div style="overflow-x:auto"><table class="lst sbl colo sbs"><thead><tr><th>CYCLE ET SÉANCE</th><th>THÈME</th><th>OBJECTIF GÉNÉRAL</th><th>DATE</th><th class="c-mod">MODIFIÉ</th>${compteOn() ? '<th class="c-par">AUTEUR</th>' : ""}<th></th></tr></thead><tbody>${rows}</tbody></table></div>` : '<div class="empty">Aucune séance enregistrée pour le moment. Dans « Créer une séance », cliquez sur « Enregistrer dans la bibliothèque de séances ».</div>'}
   <p style="color:#6B7280;font-size:14px">Cliquez sur une ligne pour ouvrir la séance. Les modifications publiées dans la feuille Google peuvent mettre quelques minutes à apparaître.</p>`;
 }
 let SBQ = "",

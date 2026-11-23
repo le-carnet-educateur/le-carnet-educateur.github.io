@@ -5,6 +5,33 @@ const esc = s =>
     /[&<>"]/g,
     c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]
   );
+/* Texte riche : **gras**, *italique*, __souligné__ */
+function rtParse(s) {
+  const out = [];
+  let b = false, i = false, u = false, buf = "";
+  const flush = () => { if (buf) out.push({ t: buf, b, i, u }); buf = ""; };
+  s = String(s == null ? "" : s);
+  for (let k = 0; k < s.length; k++) {
+    if (s.startsWith("**", k)) { flush(); b = !b; k++; }
+    else if (s.startsWith("__", k)) { flush(); u = !u; k++; }
+    else if (s[k] === "*") { flush(); i = !i; }
+    else buf += s[k];
+  }
+  flush();
+  return out;
+}
+const rt = s =>
+  String(s == null ? "" : s).indexOf("*") < 0 && String(s == null ? "" : s).indexOf("__") < 0
+    ? esc(s)
+    : rtParse(s)
+        .map(g => {
+          let h = esc(g.t);
+          if (g.b) h = `<b>${h}</b>`;
+          if (g.i) h = `<i>${h}</i>`;
+          if (g.u) h = `<u>${h}</u>`;
+          return h;
+        })
+        .join("");
 const norm = s =>
   String(s || "")
     .normalize("NFD")

@@ -192,6 +192,7 @@ function seanceBind() {
     if (c) c.innerHTML = seControleInner();
     seCtlMaj();
     seBoutonSauve();
+    if (typeof seDursMaj === "function") seDursMaj();
   };
   bilanBind(upd);
   const tb = $("#sTerrain");
@@ -228,6 +229,29 @@ function seanceBind() {
         seSave();
         upd();
       }
+    })
+  );
+  /* déplacer un exercice vers un autre bloc (ou le sortir du bloc) */
+  document.querySelectorAll("[data-imv]").forEach(sel =>
+    sel.addEventListener("change", () => {
+      const f = seFind(+sel.dataset.id);
+      if (!f || !sel.value) return;
+      const arr = [SE.subs, seEchSubs()].find(a => a.includes(f.s));
+      if (!arr) return;
+      const it = f.s.items.splice(f.i, 1)[0];
+      if (sel.value === "new") {
+        arr.splice(arr.indexOf(f.s) + 1, 0, { id: SEUID++, solo: true, titre: "", gs: f.s.gs || null, d: f.s.d.slice(), items: [it] });
+      } else {
+        const t = arr.find(x => x.id === +sel.value);
+        if (!t) return f.s.items.splice(f.i, 0, it);
+        t.items.push(it);
+        if (t.items.length > 1) t.solo = false;
+        SEOPEN.add("i" + it.id);
+      }
+      if (!f.s.items.length) arr.splice(arr.indexOf(f.s), 1);
+      seSave();
+      buildNav();
+      render();
     })
   );
   const bascule = (it, cle, v, coche) => {

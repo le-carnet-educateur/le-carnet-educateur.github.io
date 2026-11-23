@@ -180,3 +180,10 @@
     min-width: 150px;
   }
 }
+
+/* liste des séances : colonnes Cycle/séance et Date plus étroites, Thème et Objectif général plus larges */
+.sbl.sbs th:nth-child(1) { width: 23%; }
+.sbl.sbs th:nth-child(2) { width: 17%; }
+.sbl.sbs th:nth-child(3) { width: 27%; }
+.sbl.sbs th:nth-child(4) { width: 9%; }
+.sbl.sbs th.c-mod, .sbl.sbs th.c-par { width: 9%; }

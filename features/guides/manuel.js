@@ -35,6 +35,8 @@ const MANUEL = [
     <li>Le bouton « Ajouter le logo de la salle » place votre logo en haut de la fiche.</li></ul>`,
   ],
   [
+    "Mettre en forme le texte",
+    `<p>Dans les champs de texte des séances et des cycles : sélectionnez des mots puis utilisez la mini-barre <b>B</b> / <i>I</i> / <u>U</u> ou les raccourcis <b>Ctrl+B</b>, <b>Ctrl+I</b>, <b>Ctrl+U</b>. Le texte est entouré de <code>**</code> (gras), <code>*</code> (italique) ou <code>__</code> (souligné) ; la mise en forme apparaît dans l'aperçu, l'impression et le Word.</p>`,
     "Enregistrer, retrouver et partager",
     `<ul><li>Pour <b>enregistrer</b> une séance dans votre bibliothèque, connectez-vous avec Google (menu « Se connecter »), puis cliquez sur « Enregistrer ».</li>
     <li><b>Séances et cycles</b> liste vos séances et celles qui sont partagées avec vous. Une séance peut être ouverte, modifiée, dupliquée (« copie ») ou supprimée.</li>
