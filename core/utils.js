@@ -5,33 +5,40 @@ const esc = s =>
     /[&<>"]/g,
     c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]
   );
-/* Texte riche : **gras**, *italique*, __souligné__ */
+/* Texte riche : **gras**, *italique*, __souligné__, {rouge|texte} (rouge, bleu, vert, orange) */
+const RT_COUL = { rouge: "#C0392B", bleu: "#1F5FBF", vert: "#2E7D4F", orange: "#D9730D" };
 function rtParse(s) {
   const out = [];
   let b = false, i = false, u = false, buf = "";
-  const flush = () => { if (buf) out.push({ t: buf, b, i, u }); buf = ""; };
+  const cs = [];
+  const flush = () => { if (buf) out.push({ t: buf, b, i, u, c: cs.length ? cs[cs.length - 1] : "" }); buf = ""; };
   s = String(s == null ? "" : s);
   for (let k = 0; k < s.length; k++) {
+    let m;
     if (s.startsWith("**", k)) { flush(); b = !b; k++; }
     else if (s.startsWith("__", k)) { flush(); u = !u; k++; }
     else if (s[k] === "*") { flush(); i = !i; }
+    else if (s[k] === "{" && (m = /^\{(rouge|bleu|vert|orange)\|/.exec(s.slice(k)))) { flush(); cs.push(RT_COUL[m[1]]); k += m[0].length - 1; }
+    else if (s[k] === "}" && cs.length) { flush(); cs.pop(); }
     else buf += s[k];
   }
   flush();
   return out;
 }
-const rt = s =>
-  String(s == null ? "" : s).indexOf("*") < 0 && String(s == null ? "" : s).indexOf("__") < 0
-    ? esc(s)
-    : rtParse(s)
-        .map(g => {
-          let h = esc(g.t);
-          if (g.b) h = `<b>${h}</b>`;
-          if (g.i) h = `<i>${h}</i>`;
-          if (g.u) h = `<u>${h}</u>`;
-          return h;
-        })
-        .join("");
+const rt = s => {
+  s = String(s == null ? "" : s);
+  if (!/\*|__|\{/.test(s)) return esc(s);
+  return rtParse(s)
+    .map(g => {
+      let h = esc(g.t);
+      if (g.b) h = `<b>${h}</b>`;
+      if (g.i) h = `<i>${h}</i>`;
+      if (g.u) h = `<u>${h}</u>`;
+      if (g.c) h = `<span style="color:${g.c}">${h}</span>`;
+      return h;
+    })
+    .join("");
+};
 const norm = s =>
   String(s || "")
     .normalize("NFD")

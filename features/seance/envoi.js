@@ -19,14 +19,15 @@ function envoiTexte(meta, se, id) {
     if (S.objectif) L.push("Objectif : " + S.objectif);
     if (S.educ) L.push("Éducateur : " + S.educ);
     L.push("");
-    const bloc = (L2, titre0) =>
-      L2.forEach(s => {
+    const bloc = (L2, titre0, pre) =>
+      L2.forEach((s, k) => {
         const j = s.views.map(x => nom(x, s.titre)).join(", ");
-        if (s.titre || j) L.push("• " + (s.titre || titre0) + (j ? " : " + j : ""));
+        const g = s.idx && s.idx.length < M.G.length ? " — " + nomsGroupes(M, s.idx) : "";
+        if (s.titre || j) L.push((pre || "") + (s.num || k + 1) + ". " + (s.titre || titre0) + (j ? " : " + j : "") + g);
       });
     if (M.ech.on && M.echSubs.some(x => x.titre || x.views.length)) {
       L.push("Échauffement :");
-      bloc(M.echSubs, "Échauffement");
+      bloc(M.echSubs, "Échauffement", "É");
     }
     L.push("Corps de séance :");
     bloc(M.subs, "Situation");

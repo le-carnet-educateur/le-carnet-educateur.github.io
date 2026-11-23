@@ -9,6 +9,18 @@
     el.dataset &&
     Object.keys(el.dataset).some(k => /^(sm|si|cy|cp|rt)/.test(k));
   const MK = { b: "**", i: "*", u: "__" };
+  function wrapC(el, nom) {
+    const a = el.selectionStart, z = el.selectionEnd;
+    if (a == null || a === z) return;
+    const v = el.value, sel = v.slice(a, z), o = "{" + nom + "|";
+    let nv, nz;
+    if (sel.startsWith(o) && sel.endsWith("}")) { nv = v.slice(0, a) + sel.slice(o.length, -1) + v.slice(z); nz = z - o.length - 1; }
+    else { nv = v.slice(0, a) + o + sel + "}" + v.slice(z); nz = z + o.length + 1; }
+    el.value = nv;
+    el.setSelectionRange(a, nz);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    el.dispatchEvent(new Event("change", { bubbles: true }));
+  }
   function wrap(el, k) {
     const m = MK[k],
       a = el.selectionStart,
@@ -48,11 +60,13 @@
           k =>
             `<button type="button" data-rt="${k}" title="${{ b: "Gras (Ctrl+B)", i: "Italique (Ctrl+I)", u: "Souligné (Ctrl+U)" }[k]}" style="border:0;background:none;color:#fff;width:26px;height:24px;cursor:pointer;font:15px Georgia,serif;${k === "b" ? "font-weight:700" : k === "i" ? "font-style:italic" : "text-decoration:underline"}">${k.toUpperCase()}</button>`
         )
-        .join("");
+        .join("") + Object.keys(RT_COUL).map(n => `<button type="button" data-rtc="${n}" title="Couleur ${n}" style="border:2px solid #fff;background:${RT_COUL[n]};width:16px;height:16px;border-radius:50%;margin:4px 3px 0;cursor:pointer;padding:0"></button>`).join("");
       bar.addEventListener("mousedown", e => e.preventDefault());
       bar.addEventListener("click", e => {
         const b = e.target.closest("[data-rt]");
         if (b && cur) wrap(cur, b.dataset.rt);
+        const c = e.target.closest("[data-rtc]");
+        if (c && cur) wrapC(cur, c.dataset.rtc);
       });
       document.body.appendChild(bar);
     }

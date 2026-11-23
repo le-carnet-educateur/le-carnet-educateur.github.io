@@ -31,6 +31,7 @@ function sepopOuvrir(d, id, copie) {
     1100,
     {
       id: "epop",
+      outils: seOutilsHTML(),
       fond: false,
       avant: () => !SEPOP || !SEPOP.dirty || confirm("Fermer sans enregistrer vos modifications ?"),
       fin: sepopFin,
@@ -52,6 +53,8 @@ function sepopRedraw() {
   if (!b || !SEPOP) return;
   const y = sc.scrollTop;
   b.innerHTML = seanceView();
+  const ou = $("#epopoutils");
+  if (ou) ou.innerHTML = seOutilsHTML();
   seanceBind();
   sc.scrollTop = y;
 }

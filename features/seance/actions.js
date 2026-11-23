@@ -182,7 +182,88 @@ function seDrag(e, rows, from, apply) {
   document.addEventListener("pointerup", fin);
   document.addEventListener("pointercancel", fin);
 }
-const seMoveIn = (arr, from, to) => arr.splice(to, 0, arr.splice(from, 1)[0]);
+/* glisser un exercice (seul ou dans un bloc) : le déposer dans un bloc (à la place voulue), ou entre deux lignes pour en faire un exercice seul */
+function seDragExo(e, id) {
+  e.preventDefault();
+  const f = seFind(id);
+  if (!f) return;
+  const arr = [SE.subs, seEchSubs()].find(a => a.includes(f.s));
+  if (!arr) return;
+  const src = document.querySelector(f.s.items.length === 1 && !document.querySelector(`#ssub-${f.s.id}.bloc`) ? "#ssub-" + f.s.id : `details.sit[data-sd="i${id}"]`);
+  if (src) src.classList.add("gdragging", "xdrag");
+  const unites = () => [...document.querySelectorAll('[id^="ssub-"]')].filter(x => arr.some(u => "ssub-" + u.id === x.id));
+  let cible = null, sy = 0, raf = 0;
+  const clear = () => document.querySelectorAll(".gover-up,.gover-down").forEach(x => x.classList.remove("gover-up", "gover-down"));
+  const calc = ev => {
+    const el = document.elementFromPoint(ev.clientX, ev.clientY);
+    const tu = el && el.closest('[id^="ssub-"]');
+    clear();
+    cible = null;
+    if (!tu) return;
+    const uid = +tu.id.slice(5), unit = arr.find(u => u.id === uid);
+    if (!unit) return;
+    const bloc = tu.classList.contains("bloc");
+    const head = el.closest(".bhead");
+    if (bloc && !head) {
+      const rows = [...tu.querySelectorAll(":scope > details.sit")].filter(r => +r.dataset.sd.slice(1) !== id);
+      if (!rows.length) { cible = { mode: "in", unit, rid: null, after: true }; tu.classList.add("gover-down"); return; }
+      let best = rows[0], d = 1e9;
+      rows.forEach(r => { const b = r.getBoundingClientRect(), dd = Math.abs(ev.clientY - (b.top + b.height / 2)); if (dd < d) { d = dd; best = r; } });
+      const b = best.getBoundingClientRect(), after = ev.clientY > b.top + b.height / 2;
+      cible = { mode: "in", unit, rid: +best.dataset.sd.slice(1), after };
+      best.classList.add(after ? "gover-down" : "gover-up");
+    } else {
+      if (unit === f.s) return;
+      const b = tu.getBoundingClientRect(), after = ev.clientY > b.top + b.height / 2;
+      cible = { mode: "unit", unit, after };
+      tu.classList.add(after ? "gover-down" : "gover-up");
+    }
+  };
+  const move = ev => { sy = ev.clientY; calc(ev); };
+  const roule = () => {
+    const sc = document.getElementById("epop") || document.scrollingElement;
+    if (sy && sy < 70) sc.scrollTop -= 12; else if (sy > innerHeight - 70) sc.scrollTop += 12;
+    raf = requestAnimationFrame(roule);
+  };
+  raf = requestAnimationFrame(roule);
+  const fin = () => {
+    cancelAnimationFrame(raf);
+    document.removeEventListener("pointermove", move);
+    document.removeEventListener("pointerup", fin);
+    document.removeEventListener("pointercancel", fin);
+    clear();
+    if (src) src.classList.remove("gdragging", "xdrag");
+    const bloque = ev => { ev.stopPropagation(); ev.preventDefault(); };
+    document.addEventListener("click", bloque, { capture: true, once: true });
+    setTimeout(() => document.removeEventListener("click", bloque, true), 50);
+    if (!cible) return;
+    const solo = f.s.items.length === 1;
+    const it = f.s.items[f.i];
+    if (cible.mode === "unit" && solo) {
+      arr.splice(arr.indexOf(f.s), 1);
+      arr.splice(arr.indexOf(cible.unit) + (cible.after ? 1 : 0), 0, f.s);
+    } else {
+      f.s.items.splice(f.i, 1);
+      if (cible.mode === "in") {
+        const t = cible.unit;
+        let idx = cible.rid == null ? t.items.length : t.items.findIndex(x => x.id === cible.rid) + (cible.after ? 1 : 0);
+        t.items.splice(idx, 0, it);
+        if (t.items.length > 1) t.solo = false;
+
+      } else {
+        arr.splice(arr.indexOf(cible.unit) + (cible.after ? 1 : 0), 0, { id: SEUID++, solo: true, titre: "", gs: f.s.gs || null, d: f.s.d.slice(), items: [it] });
+      }
+      if (!f.s.items.length) arr.splice(arr.indexOf(f.s), 1);
+    }
+    seSave();
+    buildNav();
+    render();
+  };
+  document.addEventListener("pointermove", move);
+  document.addEventListener("pointerup", fin);
+  document.addEventListener("pointercancel", fin);
+}
+const seMoveIn =  (arr, from, to) => arr.splice(to, 0, arr.splice(from, 1)[0]);
 function seanceBind() {
   if (typeof glBind === "function") glBind();
   const upd = () => {
@@ -193,6 +274,7 @@ function seanceBind() {
     seCtlMaj();
     seBoutonSauve();
     if (typeof seDursMaj === "function") seDursMaj();
+    if (typeof seStick === "function") seStick();
   };
   bilanBind(upd);
   const tb = $("#sTerrain");
@@ -357,6 +439,8 @@ function seanceBind() {
     h.addEventListener("dragstart", e => e.preventDefault());
     h.addEventListener("pointerdown", e => {
       if (h.dataset.udrag) {
+        const u0 = SE.subs.concat(seEchSubs()).find(x => x.id === +h.dataset.udrag);
+        if (u0 && u0.items.length === 1 && !document.querySelector("#ssub-" + u0.id + ".bloc")) return seDragExo(e, u0.items[0].id);
         const el = document.getElementById("ssub-" + h.dataset.udrag),
           rows = [...el.parentElement.children].filter(c => /^ssub-/.test(c.id)),
           ids = rows.map(c => +c.id.slice(5)),
@@ -364,6 +448,7 @@ function seanceBind() {
         if (!arr) return;
         seDrag(e, rows, ids.indexOf(+h.dataset.udrag), (f, t) => seMoveIn(arr, arr.findIndex(x => x.id === ids[f]), arr.findIndex(x => x.id === ids[t])));
       } else {
+        return seDragExo(e, +h.dataset.idrag);
         const f = seFind(+h.dataset.idrag),
           bloc = h.closest(".ssub.bloc");
         if (!f || !bloc) return;
@@ -506,6 +591,7 @@ function seanceBind() {
   const lo = $("#sLogoOff");
   if (lo)
     lo.addEventListener("click", () => {
+      if (!confirm("Supprimer le logo de cette séance ?")) return;
       SMETA.logo = "";
       saveMeta();
       render();
@@ -524,7 +610,18 @@ function seanceBind() {
   seBoutonSauve();
   seCtlMaj();
   seTabAppliquer();
+  seStick();
 }
+/* hauteurs des barres collantes (en-tête de la fenêtre, barre des onglets) : la frise se colle juste dessous */
+function seStick() {
+  const r = document.documentElement.style,
+    pt = SEPOP ? document.querySelector("#epop .poptools") : null,
+    sb = document.querySelector(".sbar");
+  const h1 = pt ? pt.offsetHeight + 10 : 0;
+  r.setProperty("--stk1", h1 + "px");
+  r.setProperty("--stk", h1 + (sb ? sb.offsetHeight : 0) + "px");
+}
+window.addEventListener("resize", () => typeof seStick === "function" && seStick());
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-sa]");
   if (!b || (VIEW !== "seance" && !SEPOP)) return;
@@ -539,7 +636,23 @@ document.addEventListener("click", e => {
   if (a === "sgo") {
     if (b.dataset.tab && typeof seTab === "function") seTab(b.dataset.tab);
     const el = document.getElementById("ssub-" + sid);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    /* accordéon : on ouvre l'élément visé, on ferme les autres, puis on y défile */
+    if (el) {
+      SEOPEN = new Set();
+      document.querySelectorAll("details[data-sd]").forEach(d => {
+        const on = d === el || el.contains(d);
+        d.open = on;
+        const k = d.dataset.sd;
+        if (on) SEOPEN.add(k);
+      });
+      const stk = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--stk")) || 0;
+      const fr = document.querySelector(".frise");
+      const dec = stk + (fr ? fr.offsetHeight : 0) + 8;
+      const sc = document.getElementById("epop");
+      const y = el.getBoundingClientRect().top - dec;
+      if (sc) sc.scrollBy({ top: y, behavior: "smooth" });
+      else window.scrollBy({ top: y, behavior: "smooth" });
+    }
     re = false;
   } else if (a === "sdeplier" || a === "srepli") {
     SEOPEN = new Set();

@@ -60,9 +60,14 @@ function buildSeanceDoc(logo) {
   /* Texte riche : **gras**, *italique*, __souligné__ (renvoie un tableau de runs si besoin) */
   const R = (t, o = {}) => {
     const s = String(t == null ? "" : t);
-    if (!/\*|__/.test(s)) return R1(s, o);
+    if (!/\*|__|\{/.test(s)) return R1(s, o);
     return rtParse(s).map(seg => R1(seg.t, { ...o, b: o.b || seg.b, i: o.i || seg.i, u: seg.u }));
   };
+  const whoRuns = (M, idx) =>
+    idx.length < M.G.length
+      ? idx.map(i => new TextRun({ text: "\u00A0" + M.G[i].nom + "\u00A0", font: FONT, size: 16, bold: true, color: M.G[i].c, shading: { type: ShadingType.CLEAR, fill: "FFFFFF", color: "auto" }, border: { style: BorderStyle.SINGLE, size: 4, color: M.G[i].c, space: 0 } }))
+          .flatMap(r => [R("  "), r])
+      : [];
   const ph = (t, s = 18) => R(t, { i: true, c: "8A93A3", size: s });
   const P = (ch, o = {}) =>
     new Paragraph({
@@ -233,9 +238,7 @@ function buildSeanceDoc(logo) {
           [
             ...runs,
             R(echLabel(s, k) || "Échauffement", { b: true, c: uniteCol(s).wf, size: 17 }),
-            ...(s.idx.length < M.G.length
-              ? [R("  · " + nomsGroupes(M, s.idx) + " seulement", { c: uniteCol(s).wf, size: 16 })]
-              : []),
+            ...whoRuns(M, s.idx),
           ],
           { af: 20 }
         )
@@ -251,6 +254,7 @@ function buildSeanceDoc(logo) {
               [
                 R("▸ ", { c: BLUE, b: true, size: 18 }),
                 R(x.name + (x.v.code ? " (" + x.v.code + ")" : ""), { b: true, size: 18 }),
+                ...(x.v.part ? [R("  · " + x.v.part, { c: "6B7280", size: 16 })] : []),
               ],
               { af: 10 }
             )
@@ -349,14 +353,8 @@ function buildSeanceDoc(logo) {
               P([
                 ...runs,
                 R(s.num + ". " + unitLabel(s, k), { b: true, c: uniteCol(s).wf, size: 17 }),
-                ...(s.idx.length < M.G.length
-                  ? [
-                      R("  · " + nomsGroupes(M, s.idx) + " seulement", {
-                        c: uniteCol(s).wf,
-                        size: 16,
-                      }),
-                    ]
-                  : []),
+                ...whoRuns(M, s.idx),
+                ...(s.views[0] && s.views[0].same && s.views[0].v.part ? [R("  · " + s.views[0].v.part, { c: uniteCol(s).wf, size: 16 })] : []),
               ]),
             ],
             { w: T[0], f: uniteCol(s).w, m: { top: 40, bottom: 40, left: 140, right: 100 } }
@@ -392,6 +390,7 @@ function buildSeanceDoc(logo) {
                       ]
                     : [R((x.n ? x.n + " " : "") + x.name, { b: true })]),
                   ...(v.code ? [R("  (" + v.code + ")", { c: "6B7280", size: 16 })] : []),
+                  ...(v.part ? [R("  · " + v.part, { c: "6B7280", size: 16 })] : []),
                 ],
                 { af: 30 }
               ),

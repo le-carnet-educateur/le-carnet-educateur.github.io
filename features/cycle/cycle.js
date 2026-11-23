@@ -420,7 +420,7 @@ function buildCycleDoc(cy) {
     });
   const R = (t, o = {}) => {
     const s = String(t == null ? "" : t);
-    if (!/\*|__/.test(s)) return R1(s, o);
+    if (!/\*|__|\{/.test(s)) return R1(s, o);
     return rtParse(s).map(g => R1(g.t, { ...o, b: o.b || g.b, i: o.i || g.i, u: g.u }));
   };
   const P = (ch, af = 0) =>

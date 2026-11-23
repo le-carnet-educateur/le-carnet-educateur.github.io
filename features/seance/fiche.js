@@ -74,9 +74,9 @@ function itemView(it) {
       url: gameUrl(key(g)),
       desc: itemDesc(it, g),
       obj: (it.obj || "").trim(),
+      part: g["Participants"] || "",
       meta: [
-        g["Participants"],
-        g["Espace"],
+                g["Espace"],
         (typeof it.mat === "string" ? it.mat : g["Matériel"]) && "Matériel : " + (typeof it.mat === "string" ? it.mat : g["Matériel"]),
         (it.dos || g["Dosage"]) && "Dosage : " + (it.dos || g["Dosage"]),
       ]
@@ -100,7 +100,8 @@ function itemView(it) {
     code: "",
     desc: it.desc || "",
     obj: (it.obj || "").trim(),
-    meta: [it.part, it.mat && "Matériel : " + it.mat, it.dos && "Dosage : " + it.dos].filter(Boolean).join(" · "),
+    part: it.part || "",
+    meta: [it.mat && "Matériel : " + it.mat, it.dos && "Dosage : " + it.dos].filter(Boolean).join(" · "),
     dos: it.dos || "",
     plus: it.plus,
     moins: it.moins,
@@ -192,6 +193,12 @@ function seModel() {
   };
 }
 /* « A », « A et B », « A, B et C » */
+/* groupes concernés : pastilles dans la couleur de chaque groupe (rien si tous les groupes) */
+const whoHTML = (M, idx) =>
+  idx.length < M.G.length
+    ? " " + idx.map(i => `<span style="display:inline-block;background:#fff;color:${M.G[i].c};border:1px solid ${M.G[i].c};padding:0 6px;margin-left:3px;font-weight:700;font-size:11px">${esc(M.G[i].nom)}</span>`).join("")
+    : "";
+const partHTML = v => (v && v.part ? ` <span style="font-weight:400;color:#6B7280;font-size:11px">· ${esc(v.part)}</span>` : "");
 const nomsGroupes = (M, idx) => {
   const n = idx.map(i => M.G[i].nom);
   return n.length > 1 ? n.slice(0, -1).join(", ") + " et " + n[n.length - 1] : n[0] || "";
@@ -279,7 +286,7 @@ function sheetHTML() {
     const img = v.schOn && schemaPlace() !== "page" && (v.img || v.imgJeu) ? `<div style="margin:4px 0 0 12px"><img src="${esc(v.img || v.imgJeu)}" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:200px;object-fit:contain" onerror="this.remove()"></div>` : "";
     const tete = x.same
       ? ""
-      : `<b style="color:${C1}">▸</b> ${lk(v, `<b>${esc(x.name)}</b>`)}${v.code ? ` <span style="color:#6B7280;font-size:11px">(${esc(v.code)})</span>` : ""}`;
+      : `<b style="color:${C1}">▸</b> ${lk(v, `<b>${esc(x.name)}</b>`)}${v.code ? ` <span style="color:#6B7280;font-size:11px">(${esc(v.code)})</span>` : ""}${partHTML(v)}`;
     const corps = lines(v.desc).length
       ? `<div style="white-space:pre-line;${x.same ? "" : "margin-left:12px"}">${rt(v.desc)}</div>`
       : `<div style="margin-left:12px">${ph("[Décrire le déroulé : qui fait quoi, combien de temps]")}</div>`;
@@ -289,10 +296,7 @@ function sheetHTML() {
   if (M.ech.on) {
     h += band(tgs(M, M.ce, M.all), "ÉCHAUFFEMENT", PAL.b.ech[0], PAL.b.ech[1]);
     M.echSubs.forEach((s, k) => {
-      const who =
-        s.idx.length < M.G.length
-          ? ` <span style="font-weight:400">· ${esc(nomsGroupes(M, s.idx))} seulement</span>`
-          : "";
+      const who = whoHTML(M, s.idx);
       const uc = uniteCol(s);
       h += `<div style="background:${uc.bg};padding:4px 10px;font-size:12px;font-weight:700;color:${uc.fg};margin-top:2px">${tgs(M, s.d, s.idx)
         .map(
@@ -325,7 +329,7 @@ function sheetHTML() {
     const objx = v.obj ? `<div style="margin:0 0 3px"><b>Objectif :</b> ${rt(v.obj)}</div>` : "";
     const first = objx + (x.same
       ? `<div style="margin:0 0 3px">${x.steps.map(l => `<div><b style="color:${C1}">▸</b> ${rt(l)}</div>`).join("")}</div>`
-      : `<b style="color:${C1}">▸</b> ${lk(v, `<b>${x.n ? x.n + " " : ""}${nm}</b>`)}${v.code ? ` <span style="color:#6B7280;font-size:11px">(${esc(v.code)})</span>` : ""}<div style="margin:2px 0;white-space:pre-line">${rt(v.desc)}</div>`);
+      : `<b style="color:${C1}">▸</b> ${lk(v, `<b>${x.n ? x.n + " " : ""}${nm}</b>`)}${v.code ? ` <span style="color:#6B7280;font-size:11px">(${esc(v.code)})</span>` : ""}${partHTML(v)}<div style="margin:2px 0;white-space:pre-line">${rt(v.desc)}</div>`);
     const desc = `<div style="padding:6px 10px;border-bottom:1px solid #D5DAE5;font-size:12px">${first}<div style="color:#6B7280;font-size:11px;font-style:italic">${x.same && v.code ? lk(v, `Fiche ${esc(v.code)} ↗`) + " · " : ""}${esc(v.meta)}</div>${avecSchema && v.schOn && schemaPlace() !== "page" && (v.img || v.imgJeu) ? `<div style="margin-top:6px;text-align:center"><img src="${esc(v.img || v.imgJeu)}" onerror="this.remove()" alt="Schéma : ${esc(x.name)}" style="max-width:100%;max-height:200px;object-fit:contain"></div>` : ""}</div>`;
     const cells = (schema ? "" : col(v.plus, PV.pT, "+", PV.pB)) +
       (schema ? "" : col(v.moins, PV.mT, "–", PV.mB)) +
@@ -338,10 +342,7 @@ function sheetHTML() {
     let n = 0;
     h += `<div style="display:grid;grid-template-columns:${schema ? "1.6fr 1.4fr" : "3.2fr 1.2fr 1.2fr 1.3fr"};margin-top:8px"><div style="background:${PAL.th};color:#fff;font-weight:700;font-size:11px;padding:5px 10px">EXERCICE / DÉFI / JEU</div>${schema ? "" : th("PLUS DIFFICILE (+)", PV.pH[0], PV.pH[1])}${schema ? "" : th("PLUS FACILE (–)", PV.mH[0], PV.mH[1])}${schema ? th("SCHÉMA", "#2B5A9E", "#E3EEF8") : th("CRITÈRES DE RÉUSSITE", PV.cH[0], PV.cH[1])}`;
     M.subs.forEach((s, k) => {
-      const who =
-        s.idx.length < M.G.length
-          ? ` <span style="font-weight:400">· ${esc(nomsGroupes(M, s.idx))} seulement</span>`
-          : "";
+      const who = whoHTML(M, s.idx);
       const uc = uniteCol(s);
       const ttl = `<div style="background:${uc.bg};padding:4px 10px;font-size:12px;font-weight:700;color:${uc.fg}">${tgs(
         M,
@@ -354,7 +355,7 @@ function sheetHTML() {
         )
         .join(
           ""
-        )} &nbsp;${s.num}. ${esc(unitLabel(s, k))}${who}</div>`;
+        )} &nbsp;${s.num}. ${esc(unitLabel(s, k))}${who}${s.views[0] && s.views[0].same ? partHTML(s.views[0].v) : ""}</div>`;
       if (!s.views.length) h += ttl;
       s.views.forEach((x, i) => {
         h += exo(x, n, i === 0 ? ttl + (schema ? `<div style="background:${PV.cB}"></div>` : "") : "");

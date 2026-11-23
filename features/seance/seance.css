@@ -411,7 +411,7 @@ body.trOn > *:not(#terrain):not(#trImg):not(#hors):not(#trStop) {
 
 .trjeu{margin-top:6px;display:inline-block;font-size:15px;font-weight:700;color:#B4500F;background:#FFF1E6;padding:2px 10px;border-radius:6px}
 /* barre d'outils du formulaire de séance : toujours visible au défilement */
-.sbar{position:sticky;top:0;z-index:30;background:#fff;padding:8px 10px;margin-left:-10px;margin-right:-10px;border-bottom:1px solid #D5DAE5;box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.sbar{position:sticky;top:var(--stk1,0px);z-index:30;background:#fff;padding:8px 10px;margin-left:-10px;margin-right:-10px;border-bottom:1px solid #D5DAE5;box-shadow:0 2px 6px rgba(0,0,0,.08)}
 #epop .poptools{z-index:40}
 #epop{padding-top:0}
 #epop .sbar{top:40px}
@@ -464,7 +464,7 @@ body.trOn > *:not(#terrain):not(#trImg):not(#hors):not(#trStop) {
 .sitmore>summary::before{content:"▸";display:inline-block;font-size:11px;transition:transform .15s}
 .sitmorebody{padding:0 10px 10px}
 /* frise du déroulé (fine) */
-.frise{margin:0 0 10px}
+.frise{margin:0 0 10px;position:sticky;top:var(--stk,0px);z-index:25;background:#F4F7FB;padding:4px 0}
 .frise-bar{display:flex;flex-wrap:wrap;gap:3px}
 .fr-b{display:flex;align-items:center;gap:6px;padding:2px 7px;border-radius:6px;min-width:0;font-size:11.5px;line-height:1.5;white-space:nowrap;overflow:hidden}
 .fr-b.go{cursor:pointer}
@@ -525,3 +525,12 @@ body.trOn > *:not(#terrain):not(#trImg):not(#hors):not(#trStop) {
 
 /* onglet Contrôle et bilan : les cadres reprennent la couleur de l'onglet */
 [data-stab=ctl] .box{border-left-color:#2E9E6B!important;background:#EAF6F1!important}
+/* en-tête de l'éditeur : boutons alignés à droite */
+.poutils{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mnu.r > .mnu-d{left:auto;right:0}
+.logo-h{position:relative;display:inline-block;cursor:pointer}
+.logo-m{position:absolute;top:100%;left:0;z-index:40;background:#fff;border:1px solid #D5DAE5;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);display:none;min-width:120px;overflow:hidden;padding-top:0}
+.logo-h:hover .logo-m,.logo-h:focus-within .logo-m{display:block}
+.logo-m .mnu-i{display:flex}
+.xdrag{pointer-events:none}
+.ssub.bloc.gover-down{box-shadow:0 3px 0 #26364D}

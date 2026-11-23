@@ -63,6 +63,15 @@ function seDursMaj() {
   }
 }
 const seDeplierBtns = () => `<span class="frise-act noprint"><a class="chip" data-sa="sdeplier">Tout déplier</a> <a class="chip" data-sa="srepli">Tout replier</a></span>`;
+/* boutons de l'éditeur : Enregistrer · Logo · Palette · Actions (dans l'en-tête de la fenêtre « Modifier la séance », sinon dans la barre de la page) */
+function seOutilsHTML() {
+  const S = SMETA;
+  const logo = S.logo
+    ? `<span class="logo-h" tabindex="0" title="Logo de la salle"><img src="${esc(S.logo)}" alt="Logo" style="height:30px;border-radius:4px;border:1px solid #D5DAE5;display:block"><span class="logo-m"><label class="mnu-i" style="margin:0">Modifier<input type="file" id="sLogo" accept="image/*" hidden></label><a class="mnu-i danger" id="sLogoOff">Supprimer</a></span></span>`
+    : `<label class="chip" style="cursor:pointer">🖼 Logo<input type="file" id="sLogo" accept="image/*" hidden></label>`;
+  const act = `<div class="mnu r"><a class="chip" data-mnu tabindex="0" role="button">⋯ Actions ▾</a><div class="mnu-d"><a class="mnu-i" id="sCopy" title="Copie un résumé de la séance en texte, à coller dans un message">⧉ Copier le texte</a>${SEPOP ? "" : '<a class="mnu-i danger" id="sClear">🗑 Effacer le contenu de la page</a>'}</div></div>`;
+  return `<a class="chip" id="sSave" style="cursor:pointer;background:#26364D;color:#fff;border-color:#26364D">☁ Enregistrer</a>${logo}${palSelect("seance", S.palette)}${act}<span id="sMsg" style="color:#2E7D4F;font-weight:700"></span>`;
+}
 /* ---------- éditeur ---------- */
 function seanceView() {
   seDefaults();
@@ -135,10 +144,10 @@ function seanceView() {
           if (!v2) return "";
           return `<label class="sml" style="margin-top:8px"><b>+ Variantes plus difficiles</b> ${aide("Une variante par ligne. Toujours dans la fiche.")}<textarea rows="3" data-si="vp" data-id="${it2.id}">${esc(v2.plus || "")}</textarea></label><label class="sml" style="margin-top:6px"><b>– Variantes plus faciles</b> ${aide("Une variante par ligne. Toujours dans la fiche.")}<textarea rows="3" data-si="vm" data-id="${it2.id}">${esc(v2.moins || "")}</textarea></label>`;
         };
-        const nmf = `<label class="sml">${cl("Nom dans la fiche", "Situation : nom dans la fiche")}<input data-si="nom" data-id="${it.id}" value="${esc(it.nom || "")}" placeholder="${esc(vw ? vw.def : v.titre)}"></label>`;
+        const nmf = `<label class="sml">${cl("Nom affiché dans la fiche", "Situation : nom dans la fiche")}<input data-si="nom" data-id="${it.id}" value="${esc(it.nom || "")}" placeholder="${esc(vw ? vw.def : v.titre)}"></label>`;
         const objf = isCreps() ? "" : `<label class="sml" style="margin-top:8px"><b>Objectif</b> ${aide("Facultatif. S'il est rempli, la fiche l'écrit en gras (« Objectif : … ») en tête de la cellule de l'exercice.")}<input data-si="obj" data-id="${it.id}" value="${esc(it.obj || "")}" placeholder="Ex. Poser les pieds sans bruit"></label>`;
         const unites = ech ? M.echSubs : M.subs;
-        const mvto = unites.length > 1 || sv.items.length > 1 ? `<label class="sml noprint" style="margin-top:8px"><b>Déplacer vers</b> ${aide("Range cet exercice dans un autre bloc, ou sors-le du bloc pour en faire un exercice seul.")}<select data-imv data-id="${it.id}"><option value="">Choisir une destination…</option>${unites.filter(u => u.id !== sv.id).map((u, q) => { const kk = unites.indexOf(u); return `<option value="${u.id}">${u.items.length > 1 || !u.solo ? "Bloc" : "Exercice"} ${ech ? "" : u.num + ". "}${esc(ech ? echLabel(u, kk) || "Échauffement" : unitLabel(u, kk))}</option>`; }).join("")}${sv.items.length > 1 ? '<option value="new">↗ Sortir du bloc : exercice seul</option>' : ""}</select></label>` : "";
+        const mvto = "";
         const schf = v.img || v.imgJeu ? `<label class="fl noprint" style="margin:8px 0 0;display:block"><input type="checkbox" data-isch="1" data-id="${it.id}" ${v.schOn ? "checked" : ""}> 🖼 Afficher le schéma dans la fiche</label>` : "";
         const open = SEOPEN.has("i" + it.id),
           openM = SEOPEN.has("m" + it.id);
@@ -159,8 +168,8 @@ function seanceView() {
         return wrap(
           "",
           `<b class="sitcode" style="color:#B7791F">✎</b><span class="sitname">${esc(it.titre || "Exercice libre")}</span><span class="sitbadge free">libre</span>`,
-          `<div class="smg">${f("titre", cl("Nom de l'exercice", "Situation (nom)"), "Ex. Le pied muet")}${nmf}${isCreps() ? "" : f("obj", "Objectif", "Ex. Poser les pieds sans bruit")}${f("desc", cl("Consigne / déroulé", "Consignes et règles du jeu"), "Qui joue, ce qu'on fait, comment on gagne…", 3)}</div>`,
-          mvto + `<div class="smg">${f("part", "Participants", "Ex. binômes")}${f("mat", "Matériel", "Aucun")}${DISC === "prepa" ? f("dos", "Séries × répétitions", "Ex. 3 × 12, repos 45 s") : ""}${ech ? "" : f("plus", cl("Plus difficile (+) — un par ligne", "Variantes : plus difficile si réussite (une par ligne)"), "• …", 2) + f("moins", cl("Plus facile (–) — un par ligne", "Variantes : plus facile si échec (une par ligne)"), "• …", 2) + f("crit", "Critères de réussite — un par ligne", "Ex. Le pied est posé sans bruit", 2)}</div>${schf}<div style="margin-top:6px"><a class="chip" data-sa="tolib" data-id="${it.id}" style="cursor:pointer">＋ Ajouter cet exercice à la bibliothèque</a></div>${crepsItemHTML(it, CL)}`
+          `<div class="smg">${f("titre", cl("Nom affiché dans la fiche", "Situation (nom)"), "Ex. Le pied muet")}${nmf}${isCreps() ? "" : f("obj", "Objectif", "Ex. Poser les pieds sans bruit")}${f("desc", cl("Consigne / déroulé", "Consignes et règles du jeu"), "Qui joue, ce qu'on fait, comment on gagne…", 3)}</div>`,
+          mvto + `<div class="smg">${f("part", "Répartition", "Ex. binômes, 2 équipes de 4")}${f("mat", "Matériel", "Aucun")}${DISC === "prepa" ? f("dos", "Séries × répétitions", "Ex. 3 × 12, repos 45 s") : ""}${ech ? "" : f("plus", cl("Plus difficile (+) — un par ligne", "Variantes : plus difficile si réussite (une par ligne)"), "• …", 2) + f("moins", cl("Plus facile (–) — un par ligne", "Variantes : plus facile si échec (une par ligne)"), "• …", 2) + f("crit", "Critères de réussite — un par ligne", "Ex. Le pied est posé sans bruit", 2)}</div>${schf}<div style="margin-top:6px"><a class="chip" data-sa="tolib" data-id="${it.id}" style="cursor:pointer">＋ Ajouter cet exercice à la bibliothèque</a></div>${crepsItemHTML(it, CL)}`
         );
       })
       .join("");
@@ -171,7 +180,7 @@ function seanceView() {
      <div class="sadd"><button class="chip" data-sa="rxopen" data-sub="${s.id}" style="background:#26364D;color:#fff;border-color:#26364D">${ech ? "🔍 Chercher un jeu de la bibliothèque" : "🔍 Chercher un exercice de la bibliothèque"}</button><button class="chip" data-sa="addfree" data-sub="${s.id}">＋ Exercice libre</button></div></div>`;
   };
   const dl = "";
-  const bar = `<div class="tools noprint sbar" style="margin-bottom:14px">${SEPOP ? "" : '<a class="chip" id="sClear" style="cursor:pointer;color:#B2263A;border-color:#E8B4BC">🗑 Effacer le contenu de la page</a>'}<label class="chip" style="cursor:pointer">🖼 ${S.logo ? "Changer le logo" : "Ajouter le logo de la salle"}<input type="file" id="sLogo" accept="image/*" hidden></label>${S.logo ? `<img src="${esc(S.logo)}" alt="Logo" style="height:30px;border-radius:4px;border:1px solid #D5DAE5"><a class="chip" id="sLogoOff" style="cursor:pointer">Retirer le logo</a>` : ""}${palSelect("seance", S.palette)}${palGrisChip()}<span class="grow" style="flex:1"></span><a class="chip" id="sCopy" style="cursor:pointer" title="Copie un résumé de la séance en texte, à coller dans un message">⧉ Copier le texte</a><span id="sMsg" style="color:#2E7D4F;font-weight:700"></span><a class="chip" id="sSave" style="cursor:pointer;background:#26364D;color:#fff;border-color:#26364D">☁ Enregistrer</a><div class="stabs noprint">${SE_ONGLETS.map(([k, t]) => `<button class="stab-b${(typeof SETAB === "undefined" ? "info" : SETAB) === k ? " on" : ""}" data-stabgo="${k}">${t}</button>`).join("")}</div><div id="sCtl" class="noprint" style="flex-basis:100%;font-size:12.5px;line-height:1.2;white-space:nowrap;overflow-x:auto"></div><div id="sSaved" class="noprint" style="flex-basis:100%;text-align:left;color:#2E7D4F;font-weight:700;font-size:13px;line-height:1.1;display:none"></div></div>${SE.id ? `<p class="hint noprint" style="margin:-6px 0 12px">✎ Tu modifies une séance déjà enregistrée dans la bibliothèque : « Enregistrer » remplace la version actuelle (la précédente reste dans « Versions »).</p>` : ""}`;
+  const bar = `<div class="tools noprint sbar" style="margin-bottom:14px">${SEPOP ? "" : seOutilsHTML()}<span class="grow" style="flex:1"></span><div class="stabs noprint">${SE_ONGLETS.map(([k, t]) => `<button class="stab-b${(typeof SETAB === "undefined" ? "info" : SETAB) === k ? " on" : ""}" data-stabgo="${k}">${t}</button>`).join("")}</div><div id="sCtl" class="noprint" style="flex-basis:100%;font-size:12.5px;line-height:1.2;white-space:nowrap;overflow-x:auto"></div><div id="sSaved" class="noprint" style="flex-basis:100%;text-align:left;color:#2E7D4F;font-weight:700;font-size:13px;line-height:1.1;display:none"></div></div>${SE.id ? `<p class="hint noprint" style="margin:-6px 0 12px">✎ Tu modifies une séance déjà enregistrée dans la bibliothèque : « Enregistrer » remplace la version actuelle (la précédente reste dans « Versions »).</p>` : ""}`;
   return (
     head +
     bar +

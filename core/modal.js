@@ -19,7 +19,7 @@ function modal(titre, corps, largeur = 640, opts = {}) {
   MODALS[id] = { fin: opts.fin || null, avant: opts.avant || null };
   const p = document.createElement("div");
   p.id = id;
-  p.innerHTML = `<div class="popbox" style="max-width:${largeur}px"><div class="poptools"><b style="flex:1">${titre}</b><a class="chip" data-modal="fermer" data-mid="${id}">✕ Fermer</a></div><div id="${id}body">${corps}</div></div>`;
+  p.innerHTML = `<div class="popbox" style="max-width:${largeur}px"><div class="poptools"><b style="flex:1">${titre}</b>${opts.outils ? `<span id="${id}outils" class="poutils">${opts.outils}</span><span style="width:18px"></span>` : ""}<a class="chip" data-modal="fermer" data-mid="${id}">✕ Fermer</a></div><div id="${id}body">${corps}</div></div>`;
   p.addEventListener("mousedown", e => {
     p._bg = e.target === p;
   });

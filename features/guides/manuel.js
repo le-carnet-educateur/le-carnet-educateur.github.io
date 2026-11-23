@@ -36,7 +36,7 @@ const MANUEL = [
   ],
   [
     "Mettre en forme le texte",
-    `<p>Dans les champs de texte des séances et des cycles : sélectionnez des mots puis utilisez la mini-barre <b>B</b> / <i>I</i> / <u>U</u> ou les raccourcis <b>Ctrl+B</b>, <b>Ctrl+I</b>, <b>Ctrl+U</b>. Le texte est entouré de <code>**</code> (gras), <code>*</code> (italique) ou <code>__</code> (souligné) ; la mise en forme apparaît dans l'aperçu, l'impression et le Word.</p>`,
+    `<p>Dans les champs de texte des séances et des cycles : sélectionnez des mots puis utilisez la mini-barre <b>B</b> / <i>I</i> / <u>U</u> ou les raccourcis <b>Ctrl+B</b>, <b>Ctrl+I</b>, <b>Ctrl+U</b>. Le texte est entouré de <code>**</code> (gras), <code>*</code> (italique) ou <code>__</code> (souligné) ; les 4 pastilles de couleur donnent du texte rouge, bleu, vert ou orange (<code>{rouge|texte}</code>) ; la mise en forme apparaît dans l'aperçu, l'impression et le Word.</p>`,
     "Enregistrer, retrouver et partager",
     `<ul><li>Pour <b>enregistrer</b> une séance dans votre bibliothèque, connectez-vous avec Google (menu « Se connecter »), puis cliquez sur « Enregistrer ».</li>
     <li><b>Séances et cycles</b> liste vos séances et celles qui sont partagées avec vous. Une séance peut être ouverte, modifiée, dupliquée (« copie ») ou supprimée.</li>

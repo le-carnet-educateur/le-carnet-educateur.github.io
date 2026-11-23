@@ -17,7 +17,7 @@ const PROP_CHAMPS = [
     rows: 5,
     aide: "3 à 6 phrases courtes : qui joue, ce qu'on fait, comment on gagne, quand ça s'arrête.",
   },
-  { k: "Participants", req: 1, aide: "Ex. : 2 équipes de 3 à 6, binômes, groupe entier." },
+  { k: "Participants", lab: "Répartition", req: 1, aide: "Ex. : 2 équipes de 3 à 6, binômes, groupe entier." },
   { k: "Matériel", req: 1, aide: "« Aucun » si rien." },
   { k: "Espace", aide: "Ex. : pan de mur, traversée basse." },
   { k: "Durée", req: 1, aide: "Ex. : 10 min." },
