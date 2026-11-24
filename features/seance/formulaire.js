@@ -144,7 +144,8 @@ function seanceView() {
           if (!v2) return "";
           return `<label class="sml" style="margin-top:8px"><b>+ Variantes plus difficiles</b> ${aide("Une variante par ligne. Toujours dans la fiche.")}<textarea rows="3" data-si="vp" data-id="${it2.id}">${esc(v2.plus || "")}</textarea></label><label class="sml" style="margin-top:6px"><b>– Variantes plus faciles</b> ${aide("Une variante par ligne. Toujours dans la fiche.")}<textarea rows="3" data-si="vm" data-id="${it2.id}">${esc(v2.moins || "")}</textarea></label>`;
         };
-        const nmf = `<label class="sml">${cl("Nom affiché dans la fiche", "Situation : nom dans la fiche")}<input data-si="nom" data-id="${it.id}" value="${esc(it.nom || "")}" placeholder="${esc(vw ? vw.def : v.titre)}"></label>`;
+        /* jeu de la bibliothèque : le nom est celui du jeu (non modifiable ici) ; un ancien renommage éventuel reste respecté à l'affichage */
+        const nmf = `<label class="sml">${cl("Nom du jeu", "Situation : nom")}<input value="${esc((it.nom || "").trim() || (vw ? vw.def : v.titre))}" readonly style="background:#F3F5F9;color:#4A5568"></label>`;
         const objf = isCreps() ? "" : `<label class="sml" style="margin-top:8px"><b>Objectif</b> ${aide("Facultatif. S'il est rempli, la fiche l'écrit en gras (« Objectif : … ») en tête de la cellule de l'exercice.")}<input data-si="obj" data-id="${it.id}" value="${esc(it.obj || "")}" placeholder="Ex. Poser les pieds sans bruit"></label>`;
         const unites = ech ? M.echSubs : M.subs;
         const mvto = "";
@@ -168,7 +169,7 @@ function seanceView() {
         return wrap(
           "",
           `<b class="sitcode" style="color:#B7791F">✎</b><span class="sitname">${esc(it.titre || "Exercice libre")}</span><span class="sitbadge free">libre</span>`,
-          `<div class="smg">${f("titre", cl("Nom affiché dans la fiche", "Situation (nom)"), "Ex. Le pied muet")}${nmf}${isCreps() ? "" : f("obj", "Objectif", "Ex. Poser les pieds sans bruit")}${f("desc", cl("Consigne / déroulé", "Consignes et règles du jeu"), "Qui joue, ce qu'on fait, comment on gagne…", 3)}</div>`,
+          `<div class="smg">${f("titre", cl("Nom de l'exercice", "Situation (nom)"), "Ex. Le pied muet")}${isCreps() ? "" : f("obj", "Objectif", "Ex. Poser les pieds sans bruit")}${f("desc", cl("Consigne / déroulé", "Consignes et règles du jeu"), "Qui joue, ce qu'on fait, comment on gagne…", 3)}</div>`,
           mvto + `<div class="smg">${f("part", "Répartition", "Ex. binômes, 2 équipes de 4")}${f("mat", "Matériel", "Aucun")}${DISC === "prepa" ? f("dos", "Séries × répétitions", "Ex. 3 × 12, repos 45 s") : ""}${ech ? "" : f("plus", cl("Plus difficile (+) — un par ligne", "Variantes : plus difficile si réussite (une par ligne)"), "• …", 2) + f("moins", cl("Plus facile (–) — un par ligne", "Variantes : plus facile si échec (une par ligne)"), "• …", 2) + f("crit", "Critères de réussite — un par ligne", "Ex. Le pied est posé sans bruit", 2)}</div>${schf}<div style="margin-top:6px"><a class="chip" data-sa="tolib" data-id="${it.id}" style="cursor:pointer">＋ Ajouter cet exercice à la bibliothèque</a></div>${crepsItemHTML(it, CL)}`
         );
       })

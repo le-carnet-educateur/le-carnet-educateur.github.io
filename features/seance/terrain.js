@@ -25,7 +25,7 @@ function bilanFicheHTML() {
   )
     .map(
       ([k, t]) =>
-        `<div style="margin-top:4px"><b>${esc(t)} :</b> ${esc(b[k]).replace(/\n/g, "<br>")}</div>`
+        `<div style="margin-top:4px"><b>${esc(t)} :</b> ${rt(b[k]).replace(/\n/g, "<br>")}</div>`
     )
     .join("")}</div>`;
 }
@@ -297,7 +297,7 @@ function terrainDessin() {
     M.G.length > 1
       ? `<div class="trg">${M.G.map(g => `<a data-tr="grp" data-i="${g.i}" class="${g.i === TR.gi ? "on" : ""}" style="--c:${g.c}">${esc(g.nom)}</a>`).join("")}</div>`
       : "";
-  const puces = a => (a.length ? `<ul>${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : "");
+  const puces = a => (a.length ? `<ul>${a.map(x => `<li>${rt(x)}</li>`).join("")}</ul>` : "");
   let corps = "";
   if (c.type === "bilan") {
     const b = TR.meta.bilan || {};
@@ -307,7 +307,7 @@ function terrainDessin() {
       c.dur
         ? `<div class="trt"><div id="trT" class="${TR.restant <= 0 ? "fin" : ""}">${mmss(TR.restant)}</div><div class="trtb"><a data-tr="m1">−1</a><a data-tr="play" class="big">${TR.tourne ? "⏸" : "▶"}</a><a data-tr="p1">+1</a><a data-tr="rst">↺</a></div></div>${TR.tourne ? '<div class="trnote">⏱ Le chrono tourne. Il sonne seulement si l\'écran reste allumé : ne verrouille pas ton téléphone.</div>' : ""}`
         : ""
-    }${c.img ? `<div style="margin:8px 0"><a class="trbtn" data-tr="img" style="background:#2B5A9E">🖼 Voir le schéma en grand</a></div>` : ""}${c.dos ? `<div class="trs"><b>Dosage :</b> ${esc(c.dos)}</div>` : ""}${c.mat ? `<div class="trs"><b>Matériel :</b> ${esc(c.mat)}</div>` : ""}${puces(c.steps)}${c.crit && c.crit.length ? `<div class="trs"><b>✔ Critères de réussite</b>${puces(c.crit)}</div>` : ""}${c.moins ? `<div class="trs trv" style="background:#F1F8F2;color:#1F4F2E"><b style="color:#2E6F3E">↓ Plus facile :</b> ${esc(c.moins)}</div>` : ""}${c.plus ? `<div class="trs trv" style="background:#FDF3F2;color:#5A2A1E"><b style="color:#C2571A">↑ Plus difficile :</b> ${esc(c.plus)}</div>` : ""}`;
+    }${c.img ? `<div style="margin:8px 0"><a class="trbtn" data-tr="img" style="background:#2B5A9E">🖼 Voir le schéma en grand</a></div>` : ""}${c.dos ? `<div class="trs"><b>Dosage :</b> ${rt(c.dos)}</div>` : ""}${c.mat ? `<div class="trs"><b>Matériel :</b> ${rt(c.mat)}</div>` : ""}${puces(c.steps)}${c.crit && c.crit.length ? `<div class="trs"><b>✔ Critères de réussite</b>${puces(c.crit)}</div>` : ""}${c.moins ? `<div class="trs trv" style="background:#F1F8F2;color:#1F4F2E"><b style="color:#2E6F3E">↓ Plus facile :</b> ${rt(c.moins)}</div>` : ""}${c.plus ? `<div class="trs trv" style="background:#FDF3F2;color:#5A2A1E"><b style="color:#C2571A">↑ Plus difficile :</b> ${rt(c.plus)}</div>` : ""}`;
   }
   o.innerHTML = `<div class="trh"><a data-tr="close">✕ Quitter</a><span>${TR.k + 1} / ${n}</span></div>${groupes}<div class="trbar"><i style="width:${((TR.k + 1) / n) * 100}%;background:${c.couleur}"></i></div><div class="trc" style="border-top:6px solid ${c.couleur}"><div class="trtit" style="background:${c.bg};color:${c.fg}"><div class="trsec">${esc(c.sec)}</div><h2>${c.code ? `<small>${esc(c.code)}</small> ` : ""}${esc(c.titre)}</h2>${c.jeu && norm(c.jeu) !== norm(c.titre) ? `<div class="trjeu">🎲 ${esc(c.jeu)}</div>` : ""}</div>${c.sous ? `<div class="trsub">${esc(c.sous)}</div>` : ""}${c.dur ? `<div class="trsub">${c.dur} min prévues</div>` : ""}${corps}</div><div class="trf"><a data-tr="prev" ${TR.k === 0 ? 'class="off"' : ""}>◀ Précédent</a><a data-tr="next" ${TR.k === n - 1 ? 'class="off"' : ""}>Suivant ▶</a></div>`;
   const ta = o.querySelector(".trc");
