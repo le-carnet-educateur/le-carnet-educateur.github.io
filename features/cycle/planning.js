@@ -293,6 +293,7 @@ function cpCreerFiche(w, k) {
   cySave();
   try {
     sessionStorage.setItem("cpCree", JSON.stringify({ w, j: k }));
+    sessionStorage.setItem("cpRetour", JSON.stringify({ w, titre: CY.titre || "" }));
   } catch (e) {}
   SEPOP = null;
   SE = seNew();
@@ -301,6 +302,28 @@ function cpCreerFiche(w, k) {
   saveMeta();
   buildNav();
   go("seance");
+}
+/* lien « Retour au cycle » affiché sur la fiche créée depuis un jour de cours */
+function cpRetourHTML() {
+  let c = null;
+  try {
+    c = JSON.parse(sessionStorage.getItem("cpRetour") || "null");
+  } catch (e) {}
+  if (!c || !CY || !CY.plan) return "";
+  return `<p class="noprint" style="margin:0 0 10px"><a class="chip" id="cpBack" style="cursor:pointer">← Retour au cycle${c.titre ? " « " + esc(c.titre) + " »" : ""} (semaine ${c.w + 1})</a></p>`;
+}
+function cpRetourAller() {
+  let c = null;
+  try {
+    c = JSON.parse(sessionStorage.getItem("cpRetour") || "null");
+    sessionStorage.removeItem("cpRetour");
+  } catch (e) {}
+  go("cycle");
+  if (c)
+    setTimeout(() => {
+      const w = document.querySelectorAll(".cpw")[c.w];
+      if (w) w.scrollIntoView({ block: "center" });
+    }, 250);
 }
 /* appelé après l'enregistrement d'une séance (biblio/seances.js) */
 function cpApresEnregistrement(id) {

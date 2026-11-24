@@ -15,6 +15,11 @@ function route() {
 }
 function show(v) {
   VIEW = v;
+  if (v !== "seance") {
+    try {
+      sessionStorage.removeItem("cpRetour");
+    } catch (e) {}
+  }
   S.q = S.q;
   buildNav();
   render();

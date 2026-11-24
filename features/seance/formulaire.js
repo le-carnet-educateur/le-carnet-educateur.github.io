@@ -95,7 +95,7 @@ function seanceView() {
   const gl = i => esc(M.G[i].nom);
   const head = SEPOP
     ? ""
-    : `<h2 class="pt">Créer une séance ${aide("<b>Comment faire ?</b><br>1. Remplissez les informations générales (titre, date, thème…).<br>2. Ajoutez des exercices : un jeu du site (bouton « Ajouter à ma séance » sur sa fiche) ou un exercice libre.<br>3. Enregistrez dans la bibliothèque, ou exportez en Word, PDF ou texte.<br>Votre brouillon reste dans ce navigateur.")}</h2><p class="lead">Construisez votre séance comme dans votre modèle : accueil, échauffement, puis un corps de séance fait d'exercices seuls et de blocs (un bloc regroupe plusieurs petits exercices), pour tous les groupes ou seulement certains (deux groupes par défaut, quatre au maximum). Les exercices viennent de la bibliothèque de jeux ou s'écrivent librement. Tout est enregistré dans ce navigateur ; exportez en Word, en PDF ou en texte.</p>`;
+    : `${typeof cpRetourHTML === "function" ? cpRetourHTML() : ""}<h2 class="pt">Créer une séance ${aide("<b>Comment faire ?</b><br>1. Remplissez les informations générales (titre, date, thème…).<br>2. Ajoutez des exercices : un jeu du site (bouton « Ajouter à ma séance » sur sa fiche) ou un exercice libre.<br>3. Enregistrez dans la bibliothèque, ou exportez en Word, PDF ou texte.<br>Votre brouillon reste dans ce navigateur.")}</h2><p class="lead">Construisez votre séance comme dans votre modèle : accueil, échauffement, puis un corps de séance fait d'exercices seuls et de blocs (un bloc regroupe plusieurs petits exercices), pour tous les groupes ou seulement certains (deux groupes par défaut, quatre au maximum). Les exercices viennent de la bibliothèque de jeux ou s'écrivent librement. Tout est enregistré dans ce navigateur ; exportez en Word, en PDF ou en texte.</p>`;
   const inp = (k, l, p, span) =>
     `<label class="sml" style="${span ? "grid-column:1/-1" : ""}">${l}<input data-sm="${k}" value="${esc(S[k])}" placeholder="${esc(p)}"></label>`;
   const colf = (cls, c) => `border-left:4px solid ${c};padding-left:8px`;
@@ -144,8 +144,9 @@ function seanceView() {
           if (!v2) return "";
           return `<label class="sml" style="margin-top:8px"><b>+ Variantes plus difficiles</b> ${aide("Une variante par ligne. Toujours dans la fiche.")}<textarea rows="3" data-si="vp" data-id="${it2.id}">${esc(v2.plus || "")}</textarea></label><label class="sml" style="margin-top:6px"><b>– Variantes plus faciles</b> ${aide("Une variante par ligne. Toujours dans la fiche.")}<textarea rows="3" data-si="vm" data-id="${it2.id}">${esc(v2.moins || "")}</textarea></label>`;
         };
-        /* jeu de la bibliothèque : le nom est celui du jeu (non modifiable ici) ; un ancien renommage éventuel reste respecté à l'affichage */
-        const nmf = `<label class="sml">${cl("Nom du jeu", "Situation : nom")}<input value="${esc((it.nom || "").trim() || (vw ? vw.def : v.titre))}" readonly style="background:#F3F5F9;color:#4A5568"></label>`;
+        /* jeu de la bibliothèque : nom modifiable pour cette séance, avec rappel du nom d'origine (non modifiable) */
+        const orig = vw ? vw.def : v.titre;
+        const nmf = `<label class="sml">${cl("Nom du jeu dans la fiche", "Situation : nom dans la fiche")}<input data-si="nom" data-id="${it.id}" value="${esc(it.nom || "")}" placeholder="${esc(orig)}"></label><div style="font-size:12px;color:#6B7280;margin:-2px 0 6px">Nom d'origine : <b>${esc(orig)}</b>${v.code ? " (" + esc(v.code) + ")" : ""}</div>`;
         const objf = isCreps() ? "" : `<label class="sml" style="margin-top:8px"><b>Objectif</b> ${aide("Facultatif. S'il est rempli, la fiche l'écrit en gras (« Objectif : … ») en tête de la cellule de l'exercice.")}<input data-si="obj" data-id="${it.id}" value="${esc(it.obj || "")}" placeholder="Ex. Poser les pieds sans bruit"></label>`;
         const unites = ech ? M.echSubs : M.subs;
         const mvto = "";

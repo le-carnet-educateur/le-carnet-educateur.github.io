@@ -614,6 +614,15 @@ function seanceBind() {
       await enregistrerSeance();
       render();
     });
+  const bk = $("#cpBack");
+  if (bk)
+    bk.addEventListener("click", async () => {
+      if (seSale()) {
+        if ((SMETA.titre || "").trim()) await enregistrerSeance();
+        else if (!confirm("Cette séance n'a pas de titre et n'est pas enregistrée. Retourner au cycle quand même ?")) return;
+      }
+      cpRetourAller();
+    });
   seBoutonSauve();
   seCtlMaj();
   seTabAppliquer();
