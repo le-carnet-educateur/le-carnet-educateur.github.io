@@ -527,6 +527,13 @@ function seanceBind() {
       render();
     })
   );
+  const ao = $("#seAccOn");
+  if (ao)
+    ao.addEventListener("change", e => {
+      SMETA.groups.forEach(g => (g.acc = e.target.checked ? 5 : 0));
+      seSave();
+      render();
+    });
   const eo = $("#seEchOn");
   if (eo)
     eo.addEventListener("change", e => {

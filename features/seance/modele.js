@@ -42,6 +42,8 @@ const palVar = () => {
     cT: PAL.cr[1] === "#FFFFFF" ? PAL.cr[0] : PAL.cr[1],
   };
 };
+/* accueil : prévu tant qu'au moins un groupe a une durée > 0 (mettre 0 partout = pas d'accueil) */
+const accOn = M => M.G.some(g => +g.acc > 0);
 const SECU_DEFAUT =
   "On ne court pas sur les tapis, tapis dégagés quand on grimpe, pas de saut depuis le haut, on se déplace loin des murs.";
 let SE = null;

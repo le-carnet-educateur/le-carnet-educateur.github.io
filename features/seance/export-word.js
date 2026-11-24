@@ -199,6 +199,7 @@ function buildSeanceDoc(logo) {
     );
     return [tbl([row(cs)], ws), sp()];
   };
+  if (accOn(M))
   out.push(
     ...band(
       tg(

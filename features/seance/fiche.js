@@ -263,16 +263,17 @@ function sheetHTML() {
   const logoSite = S.logo ? "" : `<img src="${LOGO_URL}" alt="" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);width:44px;height:44px;border-radius:50%;opacity:.9;pointer-events:none" onerror="this.remove()">`;
   let h = `<div class="sheet" style="font-size:13px;color:#2B2F36;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact">
   <div style="background:${NAVYC};color:${PAL.ink};${PAL.hb ? "border-bottom:4px solid " + PAL.hb + ";" : ""}display:grid;grid-template-columns:${cols.join(" ")};gap:14px;padding:12px 16px;align-items:center;position:relative">${cases.join("")}${logoSite}</div>`;
-  h += band(
-    tgs(
-      M,
-      M.G.map(g => g.acc),
-      M.all
-    ),
-    "ACCUEIL",
-    PAL.b.acc[0],
-    PAL.b.acc[1]
-  );
+  if (accOn(M))
+    h += band(
+      tgs(
+        M,
+        M.G.map(g => g.acc),
+        M.all
+      ),
+      "ACCUEIL",
+      PAL.b.acc[0],
+      PAL.b.acc[1]
+    );
   /* lien vers la fiche : s'ouvre en fenêtre (on reste sur la page) */
   const lk = (v, inner) =>
     v.code
