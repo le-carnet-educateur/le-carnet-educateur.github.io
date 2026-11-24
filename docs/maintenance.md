@@ -665,3 +665,4 @@ Tout est dans `features/seance/terrain.js` (chargé avant `controle.js`).
 - **v179** : accueil optionnel : case « Prévoir un temps d'accueil » dans Informations ; `accOn(M)` = au moins un groupe > 0 ; sinon bande Accueil absente (fiche, Word, frise, texte copié, terrain).
 - **v180** : jeu de la bibliothèque : « Nom du jeu dans la fiche » modifiable (`it.nom`) + rappel du nom d'origine non modifiable.
 - **v181** : lien « ← Retour au cycle » sur la fiche créée depuis un jour de cours (`cpRetourHTML/cpRetourAller`, sessionStorage `cpRetour`, effacé dès qu'on quitte la page séance) ; enregistre d'abord si la séance a un titre, sinon confirmation.
+- **v182** : pastille « Tous » (gris foncé) dans l'en-tête des exercices quand tous les groupes sont concernés (si plusieurs groupes) — fiche et Word.

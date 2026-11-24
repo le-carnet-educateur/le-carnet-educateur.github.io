@@ -63,10 +63,12 @@ function buildSeanceDoc(logo) {
     if (!/\*|__|\{/.test(s)) return R1(s, o);
     return rtParse(s).map(seg => R1(seg.t, { ...o, b: o.b || seg.b, i: o.i || seg.i, u: seg.u }));
   };
+  const whoRun = (txt, c) => new TextRun({ text: "\u00A0" + txt + "\u00A0", font: FONT, size: 16, bold: true, color: c, shading: { type: ShadingType.CLEAR, fill: "FFFFFF", color: "auto" }, border: { style: BorderStyle.SINGLE, size: 4, color: c, space: 0 } });
   const whoRuns = (M, idx) =>
     idx.length < M.G.length
-      ? idx.map(i => new TextRun({ text: "\u00A0" + M.G[i].nom + "\u00A0", font: FONT, size: 16, bold: true, color: M.G[i].c, shading: { type: ShadingType.CLEAR, fill: "FFFFFF", color: "auto" }, border: { style: BorderStyle.SINGLE, size: 4, color: M.G[i].c, space: 0 } }))
-          .flatMap(r => [R("  "), r])
+      ? idx.flatMap(i => [R("  "), whoRun(M.G[i].nom, M.G[i].c)])
+      : M.G.length > 1
+      ? [R("  "), whoRun("Tous", "374151")]
       : [];
   const ph = (t, s = 18) => R(t, { i: true, c: "8A93A3", size: s });
   const P = (ch, o = {}) =>

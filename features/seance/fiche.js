@@ -194,9 +194,12 @@ function seModel() {
 }
 /* « A », « A et B », « A, B et C » */
 /* groupes concernés : pastilles dans la couleur de chaque groupe (rien si tous les groupes) */
+const SE_TOUS = "#374151"; /* gris foncé : distinct des couleurs de groupes */
 const whoHTML = (M, idx) =>
   idx.length < M.G.length
     ? " " + idx.map(i => `<span style="display:inline-block;background:#fff;color:${M.G[i].c};border:1px solid ${M.G[i].c};padding:0 6px;margin-left:3px;font-weight:700;font-size:11px">${esc(M.G[i].nom)}</span>`).join("")
+    : M.G.length > 1
+    ? ` <span style="display:inline-block;background:#fff;color:${SE_TOUS};border:1px solid ${SE_TOUS};padding:0 6px;margin-left:3px;font-weight:700;font-size:11px">Tous</span>`
     : "";
 const partHTML = v => (v && v.part ? ` <span style="font-weight:400;color:#6B7280;font-size:11px">· ${esc(v.part)}</span>` : "");
 const nomsGroupes = (M, idx) => {
